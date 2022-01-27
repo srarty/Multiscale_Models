@@ -55,7 +55,7 @@ input_current_E = 0     # Excitatory interneurons (Spiny Stellate)
 input_spike_rate = 0 # spikes/ms/cell
 
 #%% parameters  --------------------------------------------------------------
-simulation_time = 3 * second
+simulation_time = 1 * second
 dt_ = 100 * usecond
 T = linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector for plots (in seconds)
 # T_u = linspace(0, simulation_time, round(simulation_time/u_dt)) # Time vector for u for plots (in seconds)
@@ -67,13 +67,13 @@ N_E = int(N)    # excitatory neurons (spiny stellate)
 N_I = int(N)    # interneurons
 
 # Probability of connection
-p_IP = 0.2 #* 135/N      # Inhibitory to Pyramidal
-p_PI = 0.2 #* 135/N      # Pyramidal to Inhibitory
-p_PE =  0.2 #* 135/N      # Pyramidal to Excitatory
-p_EP =  0.2 #* 135/N      # Excitatory to Pyramidal
-p_PP =  0.2 #* 135/N      # recurrent excitation (pyramidal) # Generally less than PI, IP connectivity (Bryson et al., 2021)
-p_II =  0.2 #* 135/N      # recurrent inhibition
-p_input = 0.2 #* 135/N 
+p_IP = 0.2 * 100/N #* 135/N      # Inhibitory to Pyramidal
+p_PI = 0.2 * 100/N #* 135/N      # Pyramidal to Inhibitory
+p_PE =  0.2 * 100/N #* 135/N      # Pyramidal to Excitatory
+p_EP =  0.2 * 100/N #* 135/N      # Excitatory to Pyramidal
+p_PP =  0.2 * 100/N #* 135/N      # recurrent excitation (pyramidal) # Generally less than PI, IP connectivity (Bryson et al., 2021)
+p_II =  0.2 * 100/N #* 135/N      # recurrent inhibition
+p_input = 0.2 * 100/N #* 135/N 
 
 # voltage
 V_leak = -70. * mV      # Resting membrane potential
@@ -145,18 +145,18 @@ timed_rate = TimedArray(timed_rate, dt=dt_)
 
 # Synaptic efficacies
 # AMPA (excitatory)
-j_AMPA_rec_P = -10.5 * pA * 100/N # * p_PP * 4000 / N_P
-j_AMPA_rec_P_spi = -10.5 * pA * 100/N
-j_AMPA_rec_E = -10.5 * pA * 100/N
-j_AMPA_rec_I = -10.5 * pA  * 100/N # -14 * pA
+j_AMPA_rec_P = -10.5 * pA #* 100/N # * p_PP * 4000 / N_P
+j_AMPA_rec_P_spi = -10.5 * pA # * 100/N
+j_AMPA_rec_E = -10.5 * pA #* 100/N
+j_AMPA_rec_I = -10.5 * pA # * 100/N # -14 * pA
 
     
 j_AMPA_cor_P = -10.5 * pA # -13.75 * pA
 j_AMPA_cor_I = -10.5 * pA # -19 * pA
 
 # GABAergic (inhibitory)
-j_GABA_P = 71.4 * pA * 100/N # 54 * pA # 42.5 * pA # * p_IP * 1000 / N_I #* p_IP * (N/135)
-j_GABA_I = 71.4 * pA * 100/N # 54 * pA # * p_II * 1000 / N_I #* p_II * (N/135)
+j_GABA_P = 71.4 * pA # * 100/N # 54 * pA # 42.5 * pA # * p_IP * 1000 / N_I #* p_IP * (N/135)
+j_GABA_I = 71.4 * pA # * 100/N # 54 * pA # * p_II * 1000 / N_I #* p_II * (N/135)
 
 # Alpha function's parameter
 alpha = 1 / ms # 0.62 / ms # Dimmensionless?, check Nicola and Campbell 2013
@@ -546,7 +546,7 @@ for i in range(N_activity_plot):
 #%% Save simulation  ------------------------------------------------------------
 if SAVE:
     i = 0
-    while os.path.exists('C:\\Users\artemios\Documents\Multiscale_Models_Data\lfp_%s.mat' % i):
+    while os.path.exists('C://Users/artemios/Documents/Multiscale_Models_Data/lfp_%s.mat' % i):
         i += 1
         
     alpha_1 = j_GABA_P * N_I * p_IP /pA
@@ -582,8 +582,11 @@ if SAVE:
                     'input_current': input_current}   
         
     # Save as lfp_last
-    scipy.io.savemat('simulations/CUBN/lfp_last.mat',
+    scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/lfp_last.mat',
                      mdict = save_dictionary)
+    
+    # scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/lfp_%s.mat' % i,
+    #                  mdict = save_dictionary)
     
     # # Save at the end to keep all recordings
     # if RECURRENT_PYRAMIDAL:
