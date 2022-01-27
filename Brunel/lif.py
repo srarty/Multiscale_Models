@@ -41,18 +41,18 @@ devices.device.size = []
 # Options:
 RECURRENT_PYRAMIDAL = False     # Self excitation 
 RECURRENT_INHIBITORY = False    # Self inhibition
-INHIBIT_INPUT = False            # Excitatory cortical input to inhibitory population
+INHIBIT_INPUT = True            # Excitatory cortical input to inhibitory population
 ACTIVE_INTERNEURONS = True      # Inhibitory population
 ACTIVE_SPINY = False            # Spiny Stellate population
 SAVE = False                     # Save ground truth data
 PLOT = True                    # Plot results
 
 # Balanced-rate network (?) with input currents: Py = 500.01 pA, In = 398 pA
-input_current = 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
-input_current_I = 398 # 400.01     # Inhibitory interneurons
+input_current = 0 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
+input_current_I = 0 # 398 # 400.01     # Inhibitory interneurons
 input_current_E = 0     # Excitatory interneurons (Spiny Stellate)         
 
-input_spike_rate = 0 # spikes/ms/cell
+input_spike_rate = 11 # spikes/ms/cell # Threshold ~= 11 
 
 #%% parameters  --------------------------------------------------------------
 simulation_time = 1 * second
@@ -61,7 +61,7 @@ T = linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector for p
 # T_u = linspace(0, simulation_time, round(simulation_time/u_dt)) # Time vector for u for plots (in seconds)
    
 # populations
-N = 100 # 135 # 675
+N = 500 # 135 # 675
 N_P = int(N*4)  # pyramidal neurons
 N_E = int(N)    # excitatory neurons (spiny stellate) 
 N_I = int(N)    # interneurons
@@ -73,7 +73,7 @@ p_PE =  0.2 * 100/N #* 135/N      # Pyramidal to Excitatory
 p_EP =  0.2 * 100/N #* 135/N      # Excitatory to Pyramidal
 p_PP =  0.2 * 100/N #* 135/N      # recurrent excitation (pyramidal) # Generally less than PI, IP connectivity (Bryson et al., 2021)
 p_II =  0.2 * 100/N #* 135/N      # recurrent inhibition
-p_input = 0.2 * 100/N #* 135/N 
+# p_input = 0.2 * 100/N #* 135/N # Not in use
 
 # voltage
 V_leak = -70. * mV      # Resting membrane potential
@@ -151,8 +151,8 @@ j_AMPA_rec_E = -10.5 * pA #* 100/N
 j_AMPA_rec_I = -10.5 * pA # * 100/N # -14 * pA
 
     
-j_AMPA_cor_P = -10.5 * pA # -13.75 * pA
-j_AMPA_cor_I = -10.5 * pA # -19 * pA
+j_AMPA_cor_P = -21 * pA # Double as in the inhibitory population to compensate for the membrane time constant # -10.5 * pA # -13.75 * pA
+j_AMPA_cor_I = -16 * pA# -13.125 * pA # -19 * pA
 
 # GABAergic (inhibitory)
 j_GABA_P = 71.4 * pA # * 100/N # 54 * pA # 42.5 * pA # * p_IP * 1000 / N_I #* p_IP * (N/135)
