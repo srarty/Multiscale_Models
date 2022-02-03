@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jan 19 13:20:17 2022
+Created on Thu Feb  3 17:23:29 2022
 
 @author: Artemio Soto-Breceda [artemios]
 
@@ -25,7 +25,7 @@ References:
 
 """
 TODO: Test delayed diff of exponentials
-
+TODO: Decide the synaptic function for external input
 """
 
 import os
@@ -185,7 +185,8 @@ eqs_P = '''
     I_tot = I_AMPA_cor + I_AMPA_rec + I_AMPA_spi + I_GABA_rec + I_injected : amp
     
     I_AMPA_cor = j_AMPA_cor_P * s_AMPA_cor : amp
-    ds_AMPA_cor / dt = - s_AMPA_cor / (tau_d_AMPA_P + tau_r_AMPA_P) : 1
+    ds_AMPA_cor / dt = - s_AMPA_cor / tau_d_AMPA_P + alpha * x_cor * (1 - s_AMPA_cor) : 1
+    dx_cor / dt = - x_cor / tau_r_AMPA_P : 1 
     
     I_GABA_rec = j_GABA_P * s_GABA : amp
     s_GABA : 1
@@ -196,6 +197,7 @@ eqs_P = '''
     I_AMPA_spi = j_AMPA_rec_P * s_AMPA_spi : amp
     s_AMPA_spi : 1
 '''
+    # ds_AMPA_cor / dt = - s_AMPA_cor / (tau_d_AMPA_P + tau_r_AMPA_P) : 1
     
 
 eqs_E = '''
@@ -367,7 +369,8 @@ C_E_P.active = ACTIVE_SPINY
 
 # external input
 # Poisson input
-C_Cor_P = PoissonInput(P_P, 's_AMPA_cor', num_inputs, (input_spike_rate*1000/num_inputs) * Hz, 1)
+# C_Cor_P = PoissonInput(P_P, 's_AMPA_cor', num_inputs, (input_spike_rate*1000/num_inputs) * Hz, 1)
+C_Cor_P = PoissonInput(P_P, 'x_cor', num_inputs, (input_spike_rate*1000/num_inputs) * Hz, 32.5)
 C_Cor_I = PoissonInput(P_I, 's_AMPA_cor', num_inputs, (input_spike_rate*1000/num_inputs) * Hz, 1)
 # Poisson population
 # C_Cor_P = Synapses(Pop_Cor, P_P, model=eqs_cor_P, on_pre=eqs_pre_cor_P, method='rk4', dt=dt_, delay=delay, name='synapses_pext')
