@@ -24,7 +24,8 @@ References:
 """
 
 """
-TODO: Calculate the PSP for each population and save it in the output file. Instead of the membrane potentials.
+TODO: Test delayed diff of exponentials
+
 """
 
 import os
@@ -41,29 +42,29 @@ devices.device.size = []
 # Options:
 RECURRENT_PYRAMIDAL = False     # Self excitation 
 RECURRENT_INHIBITORY = False    # Self inhibition
-INHIBIT_INPUT = True            # Excitatory cortical input to inhibitory population
+INHIBIT_INPUT = False            # Excitatory cortical input to inhibitory population
 ACTIVE_INTERNEURONS = True      # Inhibitory population
 ACTIVE_SPINY = False            # Spiny Stellate population
-SAVE = False                     # Save ground truth data
+SAVE = True                     # Save ground truth data
 PLOT = True                    # Plot results
 
 # Balanced-rate network (?) with input currents: Py = 500.01 pA, In = 398 pA
-input_current = 0 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
-input_current_I = 0 # 398 # 400.01     # Inhibitory interneurons
+input_current = 437.5 #437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
+input_current_I = 398 # 350 # 398 # 400.01     # Inhibitory interneurons
 input_current_E = 0     # Excitatory interneurons (Spiny Stellate)         
 
-input_spike_rate = 11 # spikes/ms/cell # Threshold ~= 11 
+input_spike_rate = 5 # spikes/ms/cell # Threshold ~= 11 
 
 spiny_constant = 20 # temporal variable to  explore Spiny excitability
 
 #%% parameters  --------------------------------------------------------------
-simulation_time = 5 * second
+simulation_time = 1 * second
 dt_ = 100 * usecond
 T = linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector for plots (in seconds)
 # T_u = linspace(0, simulation_time, round(simulation_time/u_dt)) # Time vector for u for plots (in seconds)
    
 # populations
-N = 500 # 135 # 675
+N = 100 # 135 # 675
 N_P = int(N*4)  # pyramidal neurons
 N_E = int(N)    # excitatory neurons (spiny stellate) 
 N_I = int(N)    # interneurons
@@ -118,8 +119,8 @@ tau_rp_E = 1 * ms # 2 * ms
 tau_rp_I = 1 * ms
 
 # Synaptic delay
-delay = 1 * ms # 1 * ms # 0.5 * ms # 0.5 * ms in Brunel and Wang 2001
-
+delay = 0 * ms # 1 * ms # 0.5 * ms # 0.5 * ms in Brunel and Wang 2001
+delay_2 = 0 * ms
 
 # Cortical input
 num_inputs = 800                    # Both thalamo-cortical and cortico-cortical 
@@ -127,13 +128,13 @@ num_inputs = 800                    # Both thalamo-cortical and cortico-cortical
 
 # Timed array -> input firing rate
 l = simulation_time/dt_
-segments = 5 # Number of segments of different spike rate
+segments = 3 # Number of segments of different spike rate
 timed_rate = ones(int(l))
 timed_rate[:] = input_spike_rate
 ## Uncomment the following lines for a timed array of rates, i.e. different input rates trhoughout a single simulation
-# timed_rate[0 : int(l/segments)] = 5
-# timed_rate[int(1*l/segments) : int(2*l/segments)] = 10
-# timed_rate[int(2*l/segments) : int(3*l/segments)] = 20
+timed_rate[0 : int(l/segments)] = 0.5
+timed_rate[int(1*l/segments) : int(2*l/segments)] = 1
+timed_rate[int(2*l/segments) : int(3*l/segments)] = 2
 # timed_rate[int(3*l/segments) : int(4*l/segments)] = 30
 # timed_rate[int(4*l/segments) : int(5*l/segments)] = 40
 # timed_rate[int(5*l/segments) : int(6*l/segments)] = 50
@@ -141,7 +142,7 @@ timed_rate[:] = input_spike_rate
 # timed_rate[int(7*l/segments) : int(8*l/segments)] = 125
 # timed_rate[int(8*l/segments) : int(9*l/segments)] = 150
 # timed_rate[int(9*l/segments) :] = 200
-timed_rate = timed_rate * Hz
+timed_rate = (timed_rate * 1000/num_inputs) * Hz
 timed_rate = TimedArray(timed_rate, dt=dt_)
 
 
@@ -153,7 +154,7 @@ j_AMPA_rec_I = -10.5 * pA # * 100/N # -14 * pA
 
     
 j_AMPA_cor_P = -21 * pA # Double as in the inhibitory population to compensate for the membrane time constant # -10.5 * pA # -13.75 * pA
-j_AMPA_cor_I = -16 * pA # -13.125 * pA # -19 * pA
+j_AMPA_cor_I = -16 * pA # -16 * pA  
 
 # GABAergic (inhibitory)
 j_GABA_P = 54 * pA # 71.4 * pA
@@ -178,6 +179,9 @@ I_injected_E = -input_current_E * pA # Input current to Pyramidal population. Se
 eqs_P = '''
     dv / dt = (-v + V_leak - (I_tot/g_m_P)) / tau_m_P : volt (unless refractory)
     
+    dv_pe /dt = (-v_pe - ((I_AMPA_spi + I_AMPA_cor) / g_m_P)) / tau_m_P : volt (unless refractory)
+    dv_pi /dt = (-v_pi - ( I_GABA_rec               / g_m_P)) / tau_m_P : volt (unless refractory)
+
     I_tot = I_AMPA_cor + I_AMPA_rec + I_AMPA_spi + I_GABA_rec + I_injected : amp
     
     I_AMPA_cor = j_AMPA_cor_P * s_AMPA_cor : amp
@@ -192,12 +196,12 @@ eqs_P = '''
     I_AMPA_spi = j_AMPA_rec_P * s_AMPA_spi : amp
     s_AMPA_spi : 1
 '''
-    # dv_e/dt = (-v + V_leak - ((I_AMPA_spi + I_AMPA_cor)/g_m_P)) / tau_m_P : volt (unless refractory)
-    # dv_i/dt = (-v + V_leak - (I_GABA_rec/g_m_P)) / tau_m_P : volt (unless refractory)
     
 
 eqs_E = '''
     dv / dt = (-v + V_leak - (I_tot/g_m_E)) / tau_m_E : volt (unless refractory)
+    
+    dv_ep /dt = (-v_ep -(I_AMPA_rec / g_m_P)) / tau_m_P : volt (unless refractory)
     
     I_tot = I_AMPA_rec + I_injected_E : amp        
     
@@ -207,6 +211,8 @@ eqs_E = '''
 
 eqs_I = '''
     dv / dt = (-v + V_leak - (I_tot/g_m_I)) / tau_m_I : volt (unless refractory)
+
+    dv_ip /dt = (-v_ip -(I_AMPA_rec / g_m_P)) / tau_m_P : volt (unless refractory)
     
     I_tot = I_AMPA_cor + I_AMPA_rec + I_GABA_rec + I_injected_I : amp
     
@@ -221,13 +227,13 @@ eqs_I = '''
 '''
 
 # Neuron groups
-P_P = NeuronGroup(N_P, eqs_P, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp_P, method='rk4', dt=dt_) # Pyramidal population
+P_P = NeuronGroup(N_P, eqs_P, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp_P, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
 P_P.v = V_leak
 
-P_E = NeuronGroup(N_E, eqs_E, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp_E, method='rk4', dt=dt_) # Pyramidal population
+P_E = NeuronGroup(N_E, eqs_E, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp_E, method='rk4', dt=dt_, name='SpinyPop') # Excitatory interneuron population
 P_E.v = V_leak
 
-P_I = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp_I, method='rk4', dt=dt_) # Interneuron population
+P_I = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp_I, method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
 P_I.v = V_leak
 
 # sigma_sq_noise = 0.16 * volt * volt   # Ornstein-Uhlenbeck process (cortico-cortical) units need to be volt^2 for units in the population's equation to be consistent. Makes sense, because sigma should be in volts, hence sigma^2 in volts^2. Check cavalleri 2014
@@ -314,38 +320,38 @@ s_AMPA_cor += 1
    
 # Synapses
 # P to P
-C_P_P = Synapses(P_P, P_P, model=eqs_glut_P, on_pre=eqs_pre_glut_P, method='rk4', dt=dt_, delay=delay)
+C_P_P = Synapses(P_P, P_P, model=eqs_glut_P, on_pre=eqs_pre_glut_P, method='rk4', dt=dt_, delay=delay, name='synapses_pp')
 C_P_P.connect('i != j', p = p_PP)
 C_P_P.active = RECURRENT_PYRAMIDAL    # Testing no recursive connections to match NMM
 
 # P to E
-C_P_E = Synapses(P_P, P_E, model=eqs_glut_E, on_pre=eqs_pre_glut_E, method='rk4', dt=dt_, delay=delay)
+C_P_E = Synapses(P_P, P_E, model=eqs_glut_E, on_pre=eqs_pre_glut_E, method='rk4', dt=dt_, delay=delay, name='synapses_pe')
 C_P_E.connect(p = p_PE)
 C_P_E.active = ACTIVE_SPINY   
     
 # P to I
-C_P_I = Synapses(P_P, P_I, model=eqs_glut_I , on_pre=eqs_pre_glut_I, method='rk4', dt=dt_, delay=delay)
+C_P_I = Synapses(P_P, P_I, model=eqs_glut_I , on_pre=eqs_pre_glut_I, method='rk4', dt=dt_, delay=delay, name='synapses_pi')
 C_P_I.connect(p = p_PI)     
 C_P_I.active = ACTIVE_INTERNEURONS
 
 # I to I
-C_I_I = Synapses(P_I, P_I, model=eqs_gaba_I, on_pre=eqs_pre_gaba_I, method='rk4', dt=dt_, delay=delay)
+C_I_I = Synapses(P_I, P_I, model=eqs_gaba_I, on_pre=eqs_pre_gaba_I, method='rk4', dt=dt_, delay=delay, name='synapses_ii')
 C_I_I.connect('i != j', p = p_II)
 C_I_I.active = RECURRENT_INHIBITORY    # Testing no recursive connections to match NMM
 
 # I to P
-C_I_P = Synapses(P_I, P_P, model=eqs_gaba_P, on_pre=eqs_pre_gaba_P, method='rk4', dt=dt_, delay=delay)
+C_I_P = Synapses(P_I, P_P, model=eqs_gaba_P, on_pre=eqs_pre_gaba_P, method='rk4', dt=dt_, delay=delay_2, name='synapses_ip')
 C_I_P.connect(p = p_IP)    
 C_I_P.active = ACTIVE_INTERNEURONS
 
 # E to P
-C_E_P = Synapses(P_E, P_P, model=eqs_spi_P, on_pre=eqs_pre_spi_P, method='rk4', dt=dt_, delay=delay)
+C_E_P = Synapses(P_E, P_P, model=eqs_spi_P, on_pre=eqs_pre_spi_P, method='rk4', dt=dt_, delay=delay, name='synapses_ep')
 C_E_P.connect(p = p_EP)    
 C_E_P.active = ACTIVE_SPINY
 
 # external input
-C_Cor_P = PoissonInput(P_P, 's_AMPA_cor', num_inputs, (input_spike_rate*1000/num_inputs) * Hz, '1')
-C_Cor_I = PoissonInput(P_I, 's_AMPA_cor', num_inputs, (input_spike_rate*1000/num_inputs) * Hz, '1')
+C_Cor_P = PoissonInput(P_P, 's_AMPA_cor', num_inputs, (input_spike_rate*1000/num_inputs) * Hz, 1)
+C_Cor_I = PoissonInput(P_I, 's_AMPA_cor', num_inputs, (input_spike_rate*1000/num_inputs) * Hz, 1)
 C_Cor_I.active = INHIBIT_INPUT # Innactive cortico-cortical -> interneuron
 
 #%% monitors  -----------------------------------------------------------------
@@ -371,38 +377,20 @@ st_AMPA_I = StateMonitor(P_I, 's_AMPA', record = 0)
 st_GABA_I = StateMonitor(P_I, 's_GABA', record = 0)
 st_AMPA_cor_I = StateMonitor(P_I, 's_AMPA_cor', record = 0)
 
-# Py_monitor = StateMonitor(P_P, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'I_tot', 'v', 'v_e', 'v_i'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
-Py_monitor = StateMonitor(P_P, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'I_tot', 'v'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
-In_monitor = StateMonitor(P_I, ['v'], record = True)
-Ex_monitor = StateMonitor(P_E, ['v'], record = True)
+Py_monitor = StateMonitor(P_P, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'I_tot', 'v', 'v_pe', 'v_pi'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
+In_monitor = StateMonitor(P_I, ['v', 'v_ip'], record = True)
+Ex_monitor = StateMonitor(P_E, ['v', 'v_ep'], record = True)
 
 #%% simulate  -----------------------------------------------------------------
 net = Network(collect())
 net.run(simulation_time, report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
 
-# update prameteres here, then run the next segment:
-# j_GABA_P = j_GABA_P * 5
-# I_inj_spiny = I_inj_spiny * 2
-# net.run(simulation_time/3, report='stdout') # Run second segment
-
-# # j_GABA_P = j_GABA_P / 5
-# I_inj_spiny = I_inj_spiny * 2
-# net.run(simulation_time/3, report='stdout') # Run second segment
-
+# # update prameteres here, then run the next segment:net.run(simulation_time/3, report='stdout') # Run second segment
+# C_Cor_P.rate = 1
+# C_Cor_I.rate = 1
+# net.run(simulation_time/4, report='stdout') # Run second segment
 
 #%% analysis ------------------------------------------------------------------
-# Generate LFP
-# current based
-# lfp = abs(Py_monitor.I_AMPA_cor) + abs(Py_monitor.I_AMPA_rec) + abs(Py_monitor.I_GABA_rec) # Absolute sum of currents
-# lfp = (Py_monitor.I_GABA_rec) - (Py_monitor.I_AMPA_cor + Py_monitor.I_AMPA_rec + Py_monitor.I_AMPA_spi + I_injected) # Difference of currents
-lfp = (Py_monitor.I_GABA_rec) - (Py_monitor.I_AMPA_cor + Py_monitor.I_AMPA_rec + Py_monitor.I_AMPA_spi) # Difference of currents
-lfp_ = sum(lfp,0) / g_m_P # Sum across all Pyramidal neurons and divide by the leak conductance to get volts
-
-# voltage based
-mean_v_Py = np.transpose(mean(Py_monitor.v,0) - V_leak) * 1e3
-lfp_v = mean_v_Py/volt
-
-
 # spike rates
 window_size = 100.1 * ms # Size of the window for the smooth spike rate # 100.1 instead of 100 to avoid an annoying warning at the end of the simulation
 
@@ -422,10 +410,20 @@ if shape(r_I_rate) != shape(r_I.t):
 # if shape(r_Cor_rate) != shape(r_Cor.t):
 #     r_Cor_rate = r_Cor_rate[1:]
 
-# Calculate PSP (NMM states)
-Py_EPSP = mean((Py_monitor.I_AMPA_cor + Py_monitor.I_AMPA_rec + Py_monitor.I_AMPA_spi)/g_m_P, 0)
-Py_IPSP = mean(Py_monitor.I_GABA_rec/g_m_P, 0)
+# Calculate mean PSP (NMM states)
+v_pi = mean(Py_monitor.v_pi, 0)
+v_ip = mean(In_monitor.v_ip, 0)
 
+# Generate LFP
+# current based
+# lfp = abs(Py_monitor.I_AMPA_cor) + abs(Py_monitor.I_AMPA_rec) + abs(Py_monitor.I_GABA_rec) # Absolute sum of currents
+# lfp = (Py_monitor.I_GABA_rec) - (Py_monitor.I_AMPA_cor + Py_monitor.I_AMPA_rec + Py_monitor.I_AMPA_spi + I_injected) # Difference of currents
+lfp = (Py_monitor.I_GABA_rec) - (Py_monitor.I_AMPA_cor + Py_monitor.I_AMPA_rec + Py_monitor.I_AMPA_spi) # Difference of currents
+lfp_ = sum(lfp,0) / g_m_P # Sum across all Pyramidal neurons and divide by the leak conductance to get volts
+
+# voltage based
+mean_v_Py = np.transpose(mean(Py_monitor.v,0) - V_leak) * 1e3
+lfp_v = mean_v_Py/volt
        
 #%% plotting  -----------------------------------------------------------------
 if PLOT:
@@ -485,25 +483,36 @@ if PLOT:
     axs[3].set_ylabel('mV')
     axs[3].spines["top"].set_visible(False)
     axs[3].spines["right"].set_visible(False)
-    axs[3].plot(T*1000, np.transpose(lfp_v), label='LFP_V')
+    axs[3].plot(T*1000, np.transpose(lfp_v), lw=0.5, label='LFP_V')
+    axs[3].plot(T*1000, np.transpose(lfp_), lw=0.5, label='LFP_I')
     axs[3].legend(loc=1)
 
     f.tight_layout() # Fixes the positions of subplots and labels
         
-    # Second figure. LFPs
+    # Second figure. PSP
     f2, axs = plt.subplots(2, 1, sharex=True, figsize=(10, 6.25)) # New figure with two subplots
     
-    axs[0].set_title('LFP (from voltage)')
+    axs[0].set_title('Pyramidal population (v_pi)')
     axs[0].set_xlabel('Time (ms)')
-    axs[0].set_ylabel('mV')
-    axs[0].plot(T*1000, np.transpose(lfp_v), label='LFP_V')
-    axs[0].legend()
-
-    axs[1].set_title('LFP (from current)')
+    axs[0].set_ylabel('IPSP (mV)')
+    axs[0].plot(T*1000, np.transpose(v_pi)*1000)
+    
+    axs[1].set_title('Pyramidal population (v_ip)')
     axs[1].set_xlabel('Time (ms)')
-    axs[1].set_ylabel('mV')
-    axs[1].plot(T*1000, np.transpose(lfp_), label='LFP_I')
-    axs[1].legend()
+    axs[1].set_ylabel('EPSP (mV)')
+    axs[1].plot(T*1000, np.transpose(v_ip)*1000)
+
+    # axs[0].set_title('LFP (from voltage)')
+    # axs[0].set_xlabel('Time (ms)')
+    # axs[0].set_ylabel('mV')
+    # axs[0].plot(T*1000, np.transpose(lfp_v), label='LFP_V')
+    # axs[0].legend()
+
+    # axs[1].set_title('LFP (from current)')
+    # axs[1].set_xlabel('Time (ms)')
+    # axs[1].set_ylabel('mV')
+    # axs[1].plot(T*1000, np.transpose(lfp_), label='LFP_I')
+    # axs[1].legend()
     
     # Third figure. Membrane potential
     if ACTIVE_SPINY:
@@ -574,6 +583,10 @@ if SAVE:
                     'isi_P': isi_P,
                     'V_py': Py_monitor.v,
                     'V_in': In_monitor.v,
+                    'v_pi': Py_monitor.v_pi,
+                    'v_pe': Py_monitor.v_pe,
+                    'v_ip': In_monitor.v_ip,
+                    'v_ep': Ex_monitor.v_ep,
                     'RECURRENT_PYRAMIDAL': RECURRENT_PYRAMIDAL,
                     'RECURRENT_INHIBITORY': RECURRENT_INHIBITORY,
                     'INHIBIT_INPUT': INHIBIT_INPUT,
