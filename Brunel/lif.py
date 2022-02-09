@@ -276,18 +276,6 @@ eqs_pre_gaba_P = '''
 x += 1
 '''
 
-# Pyramidal (external input)
-eqs_cor_P = '''
-s_AMPA_cor_post = s_AMPA_cor_syn : 1(summed)
-ds_AMPA_cor_syn / dt = - s_AMPA_cor_syn / tau_d_AMPA_P + alpha * x * (1 - s_AMPA_cor_syn) : 1 (clock-driven)
-dx / dt = - x / tau_r_AMPA_P : 1 (clock-driven)
-'''
-
-eqs_pre_cor_P = '''
-x += 1
-'''
-# s_AMPA_cor += 1
-
 # Excitatory (glutamate, pyramidal to spiny)
 eqs_glut_E = '''
 s_AMPA_post = s_AMPA_syn : 1(summed)
@@ -320,18 +308,6 @@ dx / dt = - x / tau_r_GABA_I : 1 (clock-driven)
 eqs_pre_gaba_I = '''
 x += 1
 '''
-
-# Interneurons (external excitatory input)
-eqs_cor_I ='''
-s_AMPA_cor_post = s_AMPA_cor_syn : 1(summed)
-ds_AMPA_cor_syn / dt = - s_AMPA_cor_syn / tau_d_AMPA_I + alpha * x * (1 - s_AMPA_cor_syn) : 1 (clock-driven)
-dx / dt = - x / tau_r_AMPA_I : 1 (clock-driven)
-'''
-
-eqs_pre_cor_I = '''
-x += 1
-''' 
-# s_AMPA_cor += 1
 
    
 # Synapses
