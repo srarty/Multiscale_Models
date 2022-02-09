@@ -55,17 +55,17 @@ tau_rp = 2 * ms
 delay = 0 * ms # 1 * ms # 0.5 * ms # 0.5 * ms in Brunel and Wang 2001
 
 # Cortical input
-num_inputs = 1                    # Both thalamo-cortical and cortico-cortical 
+num_inputs = 800                    # Both thalamo-cortical and cortico-cortical 
 
 # Synaptic efficacies
 # AMPA (excitatory)
 j = -21 * pA 
-alpha_weight = 35.25 # 16.3424 # To adjust the weight of each increase of 'x' vs 's' for alpha vs single exp, respectively
-single_exp_weight = 1 # 0.722615
-double_exp_weight = 1 # 0.722615
+alpha_weight = 35.25 # To adjust the weight of each increase of 'x' vs 's' for alpha vs single exp, respectively # single_exp = 1 -> alpha = 35.25
+single_exp_weight = 1 # 0.091608 # alpha = 1 -> single_exp = 0.091608
+double_exp_weight = 10.413 # single_exp = 1 -> double_exp = 10.413
 
-# Alpha function's parameter
-alpha = 1 / ms # 0.62 / ms # Dimmensionless?, check Nicola and Campbell 2013
+# Alpha function's parameter (and double exponential) to fix the units in ds/dt
+k = 1 / ms # Dimmensionless?, check Nicola and Campbell 2013
 
 #%%
 # model equations
@@ -83,7 +83,7 @@ eqs = '''
     ds_AMPA1 / dt = -s_AMPA1 / (tau_d + tau_r) : 1
     
     I_AMPA2 = j * s_AMPA2 : amp
-    ds_AMPA2 / dt = - s_AMPA2 / tau_d + alpha * x2 * (1 - s_AMPA2) : 1
+    ds_AMPA2 / dt = - s_AMPA2 / tau_d + k * x2 * (1 - s_AMPA2) : 1
     dx2 / dt = -x2 / tau_r : 1
     
     I_AMPA3 = j * s_AMPA3 : amp
@@ -103,7 +103,7 @@ x2 += alpha_weight
 
 eqs_ampa3 ='''
 s_AMPA3_post = s_AMPA3_syn : 1(summed)
-ds_AMPA3_syn / dt = - s_AMPA3_syn / tau_d + alpha * x3 * (1 - s_AMPA3_syn) : 1 (clock-driven)
+ds_AMPA3_syn / dt = - s_AMPA3_syn / tau_d + k * x3 * (1 - s_AMPA3_syn) : 1 (clock-driven)
 dx3 / dt = - x3 / tau_r : 1 (clock-driven)
 '''
 
@@ -113,8 +113,8 @@ x3 += alpha_weight
 
 eqs_ampa4 ='''
 s_AMPA4_post = s_AMPA4_syn : 1(summed)
-ds_AMPA4_syn / dt = - s_AMPA4_syn / tau_r + x4 : 1 (clock-driven)
-dx4 / dt = -x4/tau_d + 1/(tau_r + tau_d) : 1 (clock-driven)
+ds_AMPA4_syn / dt = - s_AMPA4_syn / tau_r + (k * x4) : 1 (clock-driven)
+dx4 / dt = -x4/tau_d: 1 (clock-driven)
 '''
 
 eqs_pre_ampa4 = '''
@@ -132,14 +132,14 @@ Input = PoissonGroup(num_inputs, rates=input_spike_rate * Hz, dt=dt_)
 AMPA1_synapses = Synapses(Input, Pyramidal, on_pre=eqs_pre_ampa1, method='rk4', clock=Input.clock)
 AMPA1_synapses.connect(p = 1)
 
-AMPA2_synapses = Synapses(Input, Pyramidal, on_pre=eqs_pre_ampa2, method='rk4', clock=Input.clock, order=1)
+AMPA2_synapses = Synapses(Input, Pyramidal, on_pre=eqs_pre_ampa2, method='rk4', clock=Input.clock)
 AMPA2_synapses.connect(p = 1)
 
 AMPA3_synapses = Synapses(Input, Pyramidal, model=eqs_ampa3, on_pre=eqs_pre_ampa3, method='rk4', dt=10*usecond) # When model eqs are used here, we need a smaller dt for resolution.
 AMPA3_synapses.connect(p = 1)
 
-# AMPA4_synapses = Synapses(Input, Pyramidal, model=eqs_ampa4, on_pre=eqs_pre_ampa4, method='rk4', dt=10*usecond)
-# AMPA4_synapses.connect(p = 1)
+AMPA4_synapses = Synapses(Input, Pyramidal, model=eqs_ampa4, on_pre=eqs_pre_ampa4, method='rk4', dt=10*usecond)
+AMPA4_synapses.connect(p = 1)
 
 Py_monitor = StateMonitor(Pyramidal, ['v1', 'v2', 'v3', 'v4', 's_AMPA1', 's_AMPA2', 's_AMPA3', 's_AMPA4'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
 
@@ -150,7 +150,7 @@ net.run(simulation_time, report='stdout')
 #%% Plot
 f, axs = plt.subplots(1, 1, sharex=True, figsize=(10, 6.25)) # New figure with two subplots
     
-axs.set_title('Pyramidal Vm | weight: {}, j: {}'.format(alpha_weight, j/pA))
+axs.set_title('Pyramidal EPSP | weight: {}, j: {}'.format(double_exp_weight, j/pA))
 axs.set_xlabel('Time (ms)')
 axs.set_ylabel('mV')
 axs.plot((np.transpose(Py_monitor.v1) * 1e3), lw=1, label='v1 (single_exp)')
