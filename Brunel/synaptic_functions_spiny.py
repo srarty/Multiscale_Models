@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Feb  4 14:58:39 2022
+Created on Fri Feb 11 12:01:41 2022
 
 @author: Artemio Soto-Breceda [artemios]
-
-Testing different synaptic functions
 """
+
 
 import os
 import scipy.io
@@ -20,7 +19,7 @@ devices.device.size = []
 
 
 #%% parameters  --------------------------------------------------------------
-input_spike_rate = 2 # spikes/ms/cell # Threshold ~= 11 
+input_spike_rate = 1 # spikes/ms/cell # Threshold ~= 11 
 
 simulation_time = 1 * second
 dt_ = 100 * usecond
@@ -157,8 +156,8 @@ Input = PoissonGroup(num_inputs, rates=input_spike_rate * Hz, dt=dt_)
 AMPA1_synapses = Synapses(Input, Pyramidal, on_pre=eqs_pre_ampa1, method='rk4', clock=Input.clock) # 
 AMPA1_synapses.connect(p = 1)
 
-AMPA2_synapses = Synapses(Input, Pyramidal, model=eqs_ampa2, on_pre=eqs_pre_ampa2, method='rk4', clock=Input.clock, delay = tau_l)
-AMPA2_synapses.connect(p = 1)
+# AMPA2_synapses = Synapses(Input, Pyramidal, model=eqs_ampa2, on_pre=eqs_pre_ampa2, method='rk4', clock=Input.clock, delay = tau_l)
+# AMPA2_synapses.connect(p = 1)
 
 # AMPA3_synapses = Synapses(Input, Pyramidal, model=eqs_ampa3, on_pre=eqs_pre_ampa3, method='rk4', dt=10*usecond) # When model eqs are used here, we need a smaller dt for resolution.
 # AMPA3_synapses.connect(p = 1)
@@ -182,7 +181,7 @@ axs.set_title('Pyramidal EPSP | weight: {}, j: {}'.format(alpha_simple_weight, j
 axs.set_xlabel('Time (ms)')
 axs.set_ylabel('mV')
 axs.plot((np.transpose(Py_monitor.v1) * 1e3), lw=1, label='v1 (single_exp)')
-axs.plot((np.transpose(Py_monitor.v2) * 1e3), lw=1, label='v2 (delayed diff exp)')
+# axs.plot((np.transpose(Py_monitor.v2) * 1e3), lw=1, label='v2 (delayed diff exp)')
 # axs.plot((np.transpose(Py_monitor.v3) * 1e3), lw=1, label='v3 (alpha)')
 # axs.plot((np.transpose(Py_monitor.v4) * 1e3), lw=1, label='v4 (double exp)')
 axs.plot((np.transpose(Py_monitor.v5) * 1e3), lw=1, label='v5 (alpha NMM)')
@@ -194,7 +193,7 @@ f, axs = plt.subplots(1, 1, sharex=True, figsize=(10, 6.25)) # New figure with t
     
 axs.set_xlabel('Time (ms)')
 axs.plot(np.transpose(Py_monitor.s_AMPA1), lw=1, label='s_AMPA1 (single_exp)')
-axs.plot(np.transpose(Py_monitor.s_AMPA2), lw=1, label='s_AMPA2 (delayed diff exp)')
+# axs.plot(np.transpose(Py_monitor.s_AMPA2), lw=1, label='s_AMPA2 (delayed diff exp)')
 # axs.plot(np.transpose(Py_monitor.s_AMPA3), lw=1, label='s_AMPA3 (alpha)')
 # axs.plot(np.transpose(Py_monitor.s_AMPA4), lw=1, label='s_AMPA4 (double exp)')
 axs.plot(np.transpose(Py_monitor.s_AMPA5), lw=1, label='s_AMPA5 (alpha NMM)')
