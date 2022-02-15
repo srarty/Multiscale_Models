@@ -21,8 +21,8 @@ from lif_model import set_params
 #%% options  --------------------------------------------------------------
 
 neuron_type     = 'inhibitory'   # pyramidal, inhibitory or spiny
-synaptic_type   = 'AMPA'        # AMPA or GABA
-external        = False         # When AMPA, synapsis can be external or recurrent (local)
+synaptic_type   = 'GABA'        # AMPA or GABA
+external        = True         # When AMPA, synapsis can be external or recurrent (local)
 input_spike_rate = 1            # spikes/ms/cell 
 simulation_time = 0.25 * second
 
@@ -52,13 +52,12 @@ g_m = params["g_leak"]
 tau_m = C_m / g_m
 
 # connectivity time constants
-# Interneurons
 if synaptic_type == 'AMPA':
     tau_d =  params["tau_AMPA_d"]      # Decay time constant (From Brunel and Wang 2001)
     tau_r =  params["tau_AMPA_r"] # Rising time constant (< 1 ms)
 else:
-    tau_d =  params["tau_AMPA_d"]      # Decay time constant (From Brunel and Wang 2001)
-    tau_r =  params["tau_AMPA_r"] # Rising time constant (< 1 ms)
+    tau_d =  params["tau_GABA_d"]      # Decay time constant (From Brunel and Wang 2001)
+    tau_r =  params["tau_GABA_r"] # Rising time constant (< 1 ms)
     
 tau_s = 0.5 * (tau_d + tau_r) + 0.05*ms      # "Lumped" time constant for alpha function. 
 tau_l = 1 * ms
@@ -81,9 +80,9 @@ else:
     j =  params["j_GABA"]
         
 
-single_exp_weight = 1 # Inverse: 1/1.52 = 0.6578947368421053
-alpha_simple_weight = 2.85
-delayed_exp_weight = 6.20 # Inverse 1.52/6.0995 = 0.24920075416017706
+single_exp_weight = 1 # params["single_exp_weight"] # Inverse: 1/1.52 = 0.6578947368421053
+alpha_simple_weight = 0.69 # params["alpha_simple_weight"]
+delayed_exp_weight = 0 # params["delayed_exp_weight"] # Inverse 1.52/6.0995 = 0.24920075416017706
 
 # Alpha function's parameter (and double exponential) to fix the units in ds/dt
 k = 1 / ms # Dimmensionless?, check Nicola and Campbell 2013

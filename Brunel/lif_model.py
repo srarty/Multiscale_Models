@@ -38,7 +38,8 @@ def set_params(type='pyramidal'):
         # Defined experimentally with 'synaptic_functions.py'. Based on the 
         # unitary increment of the single exponential.
         single_exp_weight = 1 # Inverse: 1/1.52 = 0.6578947368421053
-        alpha_simple_weight = 1.52
+        alpha_simple_weight_AMPA = 1.52
+        alpha_simple_weight_GABA = 0.69
         delayed_exp_weight = 6.0995 # Inverse 1.52/6.0995 = 0.24920075416017706
         
     elif type == 'inhibitory':
@@ -61,12 +62,13 @@ def set_params(type='pyramidal'):
         j_AMPA_ext = -19 * pA
         
         # Delta function weight (increment with each input spike)
-        single_exp_weight = 1 # Inverse: 1/1.52 = 0.6578947368421053
-        alpha_simple_weight = 1.52
-        delayed_exp_weight = 6.0995 # Inverse 1.52/6.0995 = 0.24920075416017706
+        single_exp_weight = 1
+        alpha_simple_weight_AMPA = 2.85
+        alpha_simple_weight_GABA = 0.69
+        delayed_exp_weight = 6.13 
         
     elif type == 'spiny':
-        
+        # TODO
         g_leak = 25 * nS # Leak conductance
         C = 0.5 * nF # Membrane capacitance
 
@@ -86,7 +88,8 @@ def set_params(type='pyramidal'):
 
         # Delta function weight (increment with each input spike)
         single_exp_weight = 1 # Inverse: 1/1.52 = 0.6578947368421053
-        alpha_simple_weight = 1.52
+        alpha_simple_weight_AMPA = 1.52
+        alpha_simple_weight_GABA = 1.52 
         delayed_exp_weight = 6.0995 # Inverse 1.52/6.0995 = 0.24920075416017706
 
     else:
@@ -105,7 +108,9 @@ def set_params(type='pyramidal'):
         "tau_l":        tau_l,
         "j_GABA":       j_GABA,
         "j_AMPA":       j_AMPA,
-        "j_AMPA_ext":   j_AMPA_ext
+        "j_AMPA_ext":   j_AMPA_ext,
+        "alpha_weight_AMPA": alpha_simple_weight_AMPA,
+        "alpha_weight_GABA": alpha_simple_weight_GABA
     }
     
     return params
