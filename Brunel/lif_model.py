@@ -38,9 +38,12 @@ def set_params(type='pyramidal'):
         # Defined experimentally with 'synaptic_functions.py'. Based on the 
         # unitary increment of the single exponential.
         single_exp_weight = 1 # Inverse: 1/1.52 = 0.6578947368421053
-        alpha_simple_weight_AMPA = 1.52
-        alpha_simple_weight_GABA = 0.69
-        delayed_exp_weight = 6.0995 # Inverse 1.52/6.0995 = 0.24920075416017706
+        alpha_simple_weight_AMPA = 12.5
+        alpha_simple_weight_AMPA_ext = 12.5
+        single_exponential_weight = 8.2
+        alpha_simple_weight_GABA = 2.6
+        delayed_exp_weight_AMPA = 6.0995 # Inverse 1.52/6.0995 = 0.24920075416017706
+        delayed_exp_weight_GABA = 6.0995 # TODO
         
     elif type == 'inhibitory':
         
@@ -63,9 +66,12 @@ def set_params(type='pyramidal'):
         
         # Delta function weight (increment with each input spike)
         single_exp_weight = 1
-        alpha_simple_weight_AMPA = 2.85
-        alpha_simple_weight_GABA = 0.69
-        delayed_exp_weight = 6.13 
+        alpha_simple_weight_AMPA = 13 # 2.85
+        alpha_simple_weight_AMPA_ext = 23
+        single_exponential_weight = 8.2
+        alpha_simple_weight_GABA = 1.25 # 0.69
+        delayed_exp_weight_AMPA = 27.96 
+        delayed_exp_weight_GABA = 39
         
     elif type == 'spiny':
         # TODO
@@ -89,8 +95,11 @@ def set_params(type='pyramidal'):
         # Delta function weight (increment with each input spike)
         single_exp_weight = 1 # Inverse: 1/1.52 = 0.6578947368421053
         alpha_simple_weight_AMPA = 1.52
+        alpha_simple_weight_AMPA_ext = 1.52
+        single_exponential_weight = 8.2 # TODO
         alpha_simple_weight_GABA = 1.52 
-        delayed_exp_weight = 6.0995 # Inverse 1.52/6.0995 = 0.24920075416017706
+        delayed_exp_weight_AMPA = 6.0995 # Inverse 1.52/6.0995 = 0.24920075416017706
+        delayed_exp_weight_GABA = 6.0995 # Inverse 1.52/6.0995 = 0.24920075416017706
 
     else:
         return 0
@@ -109,8 +118,10 @@ def set_params(type='pyramidal'):
         "j_GABA":       j_GABA,
         "j_AMPA":       j_AMPA,
         "j_AMPA_ext":   j_AMPA_ext,
-        "alpha_weight_AMPA": alpha_simple_weight_AMPA,
-        "alpha_weight_GABA": alpha_simple_weight_GABA
+        "alpha_weight_AMPA":        alpha_simple_weight_AMPA,
+        "alpha_weight_AMPA_ext":    alpha_simple_weight_AMPA_ext,
+        "alpha_weight_GABA":        alpha_simple_weight_GABA,
+        "single_exp":               single_exponential_weight
     }
     
     return params

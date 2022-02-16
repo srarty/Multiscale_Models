@@ -20,9 +20,9 @@ from lif_model import set_params
 
 #%% options  --------------------------------------------------------------
 
-neuron_type     = 'inhibitory'   # pyramidal, inhibitory or spiny
-synaptic_type   = 'GABA'        # AMPA or GABA
-external        = True         # When AMPA, synapsis can be external or recurrent (local)
+neuron_type     = 'pyramidal'   # pyramidal, inhibitory or spiny
+synaptic_type   = 'AMPA'        # AMPA or GABA
+external        = True          # When AMPA, synapsis can be external or recurrent (local)
 input_spike_rate = 1            # spikes/ms/cell 
 simulation_time = 0.25 * second
 
@@ -66,7 +66,7 @@ tau_rp =  params["tau_rp"] # refractory period
 
 
 # Cortical input
-num_inputs = 1                    # Both thalamo-cortical and cortico-cortical 
+num_inputs = 800                    # Both thalamo-cortical and cortico-cortical 
 I_input = -300 * pA
 
 # Synaptic efficacies
@@ -74,15 +74,17 @@ I_input = -300 * pA
 if synaptic_type == 'AMPA':
     if external:
         j =  params["j_AMPA_ext"]
+        alpha_weight = params["alpha_weight_AMPA_ext"]
     else:
         j =  params["j_AMPA"]        
+        alpha_weight = params["alpha_weight_AMPA"]
 else:
     j =  params["j_GABA"]
+    alpha_weight = params["alpha_weight_GABA"]
         
 
-single_exp_weight = 1 # params["single_exp_weight"] # Inverse: 1/1.52 = 0.6578947368421053
-alpha_simple_weight = 0.69 # params["alpha_simple_weight"]
-delayed_exp_weight = 0 # params["delayed_exp_weight"] # Inverse 1.52/6.0995 = 0.24920075416017706
+single_exp_weight = 8.2 # params["single_exp_weight"] # Inverse: 1/1.52 = 0.6578947368421053
+# delayed_exp_weight = 0 # 6.13 # params["delayed_exp_weight"] # Inverse 1.52/6.0995 = 0.24920075416017706
 
 # Alpha function's parameter (and double exponential) to fix the units in ds/dt
 k = 1 / ms # Dimmensionless?, check Nicola and Campbell 2013
@@ -95,36 +97,20 @@ dv / dt = (-v + V_leak - (I_input/g_m)) / tau_m : volt (unless refractory)
 '''
 
 # Population
-if external:
-    eqs = '''
-        dv / dt = (-v + V_leak - (I_tot/g_m)) / tau_m : volt (unless refractory)
+eqs = '''
+    dv / dt = (-v + V_leak - (I_tot/g_m)) / tau_m : volt (unless refractory)
+    
+    dv1 / dt = (-v1 - (I_AMPA1/g_m)) / tau_m : volt (unless refractory)
+    dv5 / dt = (-v5 - (I_AMPA5/g_m)) / tau_m : volt (unless refractory)
         
-        dv1 / dt = (-v1 - (I_AMPA1/g_m)) / tau_m : volt (unless refractory)
-        dv5 / dt = (-v5 - (I_AMPA5/g_m)) / tau_m : volt (unless refractory)
-            
-        I_tot = I_AMPA1 + I_AMPA5: amp
-        
-        I_AMPA1 = j * s_AMPA1 : amp
-        ds_AMPA1 / dt = -s_AMPA1 / (tau_d + tau_r) : 1
-        
-        I_AMPA5 = j * s_AMPA5 : amp
-        s_AMPA5 : 1
-    '''
-else:
-    eqs = '''
-        dv / dt = (-v + V_leak - (I_tot/g_m)) / tau_m : volt (unless refractory)
-        
-        dv1 / dt = (-v1 - (I_AMPA1/g_m)) / tau_m : volt (unless refractory)
-        dv5 / dt = (-v5 - (I_AMPA5/g_m)) / tau_m : volt (unless refractory)
-            
-        I_tot = I_AMPA1 + I_AMPA5: amp
-        
-        I_AMPA1 = j * s_AMPA1 : amp
-        s_AMPA1 : 1
-        
-        I_AMPA5 = j * s_AMPA5 : amp
-        s_AMPA5 : 1
-    '''
+    I_tot = I_AMPA1 + I_AMPA5: amp
+    
+    I_AMPA1 = j * s_AMPA1 : amp
+    ds_AMPA1 / dt = -s_AMPA1 / (tau_d + tau_r) : 1
+    
+    I_AMPA5 = j * s_AMPA5 : amp
+    s_AMPA5 : 1
+'''
 
 eqs_pre_ampa1 = '''
 s_AMPA1 += single_exp_weight
@@ -147,7 +133,7 @@ dx5 / dt = - x5 / (tau_s) : 1 (clock-driven)
 '''
 
 eqs_pre_ampa5 = '''
-x5 += alpha_simple_weight
+x5 += alpha_weight
 ''' 
 
 Pyramidal = NeuronGroup(N_P, eqs, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
@@ -162,13 +148,11 @@ else:
     Input = NeuronGroup(num_inputs, input_eqs, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp, method='rk4', dt=dt_) # Pyramidal population
 
 if external:
-    AMPA1_synapses = Synapses(Input, Pyramidal, on_pre=eqs_pre_ampa1, method='rk4', clock=Input.clock) # 
-    AMPA1_synapses.connect(p = 1)
-else:
-    AMPA1_synapses = Synapses(Input, Pyramidal, model=eqs_ampa2, on_pre=eqs_pre_ampa2, method='rk4', clock=Input.clock, delay = tau_l)
+    AMPA1_synapses = Synapses(Input, Pyramidal, on_pre=eqs_pre_ampa1, method='rk4', clock=Input.clock)
     AMPA1_synapses.connect(p = 1)
 
-AMPA5_synapses = Synapses(Input, Pyramidal, model=eqs_ampa5, on_pre=eqs_pre_ampa5, method='rk4', dt=10*usecond)
+
+AMPA5_synapses = Synapses(Input, Pyramidal, model=eqs_ampa5, on_pre=eqs_pre_ampa5, method='rk4')#, dt=10*usecond)
 AMPA5_synapses.connect(p = 1)
 
 Py_monitor = StateMonitor(Pyramidal, ['v1', 'v5', 's_AMPA1', 's_AMPA5'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
@@ -178,33 +162,21 @@ net = Network(collect())
 net.run(simulation_time, report='stdout')
 
 #%% Plot
-f, axs = plt.subplots(1, 1, sharex=True, figsize=(10, 6.25)) # New figure with two subplots
+f, axs = plt.subplots(2, 1, sharex=True, figsize=(10, 6.25)) # New figure with two subplots
     
+axs[0].set_title('Neuron type: {} | Synapses: {} | j: {} pA'.format(neuron_type, synaptic_type, j/pA))
+axs[0].set_ylabel('PSP (mV)')
+axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v5) * 1e3), lw=1, label='alpha')
 if external:
-    axs.set_title('{} PSP | weight: {}, j: {}'.format(neuron_type, alpha_simple_weight, j/pA))
-    axs.set_xlabel('Time (ms)')
-    axs.set_ylabel('mV')
-    axs.plot((np.transpose(Py_monitor.v1) * 1e3), lw=1, label='v1 (single_exp)')
-else:
-    axs.set_title('{} PSP | weight: {}, j: {}'.format(neuron_type, delayed_exp_weight, j/pA))
-    axs.set_xlabel('Time (ms)')
-    axs.set_ylabel('mV')
-    axs.plot((np.transpose(Py_monitor.v1) * 1e3), lw=1, label='v1 (delayed diff exp)')
-axs.plot((np.transpose(Py_monitor.v5) * 1e3), lw=1, label='v5 (alpha NMM)')
-
-f.legend()
-# f.tight_layout()
-
-f, axs = plt.subplots(1, 1, sharex=True, figsize=(10, 6.25)) # New figure with two subplots
+    axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v1) * 1e3), lw=1, label='single exp')
+axs[0].legend()
     
-axs.set_xlabel('Time (ms)')
+axs[1].set_xlabel('Time (ms)')
+axs[1].set_ylabel('PSC (pA)')
+axs[1].plot(T * 1e3, np.transpose(Py_monitor.s_AMPA5)*j/pA, lw=1)
 if external:
-    axs.plot(np.transpose(Py_monitor.s_AMPA1), lw=1, label='s_AMPA1 (single_exp)')
-else:
-    axs.plot(np.transpose(Py_monitor.s_AMPA1), lw=1, label='s_AMPA1 (delayed diff exp)')
-axs.plot(np.transpose(Py_monitor.s_AMPA5), lw=1, label='s_AMPA5 (alpha NMM)')
+    axs[1].plot(T * 1e3, (np.transpose(Py_monitor.s_AMPA1)*j/pA), lw=1)
 
-f.legend()
 # f.tight_layout()
 
 plt.show()
