@@ -21,11 +21,8 @@ References:
     [3] MAIMON (2009) Experimental firing rates. Mean firing rate = 16.6 Hz,max firing rate ~= 140 spikes/s (monkey, visual and motor cortex)
     
     [4] ZIBURKUS (2006) Same as above. Different firing rates for Inhibitory and Pyramidal neurons
-"""
-
-"""
-TODO: Test delayed diff of exponentials
-
+    
+    [5] CAVALLARI, Stefano et al (2014)
 """
 
 import os
@@ -39,6 +36,10 @@ prefs.codegen.target = 'numpy'  # use the Python fallback instead of C compilati
 devices.device.shape = []       # This and the following line remove an annoying warning when brian2 is imported and loaded into RAM
 devices.device.size = []
 
+from lif_model import set_params
+
+# def brunel(corriente=0):
+
 # Options:
 RECURRENT_PYRAMIDAL = False     # Self excitation 
 RECURRENT_INHIBITORY = True     # Self inhibition
@@ -49,12 +50,13 @@ SAVE = False                     # Save ground truth data
 PLOT = True                     # Plot results (main Figure)
 PLOT_EXTRA = True              # Plot extra things.
 
+corriente = 0
 # Balanced-rate network (?) with input currents: Py = 500.01 pA, In = 398 pA
-input_current = 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
-input_current_I = 350 # 398 # 400.01     # Inhibitory interneurons
+input_current = corriente # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
+input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 input_current_E = 0     # Excitatory interneurons (Spiny Stellate)         
 
-input_spike_rate = 1 # spikes/ms/cell # Threshold ~= 11 
+input_spike_rate = 5 # spikes/ms/cell # Threshold ~= 11 
 
 spiny_constant = 30 # temporal variable to  explore Spiny excitability
 
@@ -71,53 +73,62 @@ N_E = int(N)    # excitatory neurons (spiny stellate)
 N_I = int(N)    # interneurons
 
 # Probability of connection
-p_IP = 0.2 * 100/N #* 135/N      # Inhibitory to Pyramidal
-p_PI = 0.2 * 100/N #* 135/N      # Pyramidal to Inhibitory
-p_PE =  0.2 * 100/N #* 135/N      # Pyramidal to Excitatory
-p_EP =  0.2 * 100/N #* 135/N      # Excitatory to Pyramidal
-p_PP =  0.2 * 100/N #* 135/N      # recurrent excitation (pyramidal) # Generally less than PI, IP connectivity (Bryson et al., 2021)
-p_II =  0.2 * 100/N #* 135/N      # recurrent inhibition
-# p_input = 0.2 * 100/N #* 135/N # Not in use
+p_IP =  0.2 * 100/N # Inhibitory to Pyramidal
+p_PI =  0.2 * 100/N # Pyramidal to Inhibitory
+p_PE =  0.2 * 100/N # Pyramidal to Excitatory
+p_EP =  0.2 * 100/N # Excitatory to Pyramidal
+p_PP =  0.2 * 100/N # recurrent excitation (pyramidal) # Generally less than PI, IP connectivity (Bryson et al., 2021)
+p_II =  0.2 * 100/N # recurrent inhibition
 
 # voltage
 V_leak = -70. * mV      # Resting membrane potential
 V_thr = -50 * mV        # Threshold
 V_reset = -59 * mV # -59 * mV      # Reset voltage. Equal to V_leak-> To use Burkitt's, 2006 Eq. (12)
 
+# set populations parameters
+params_py = set_params('pyramidal')
+params_in = set_params('inhibitory')
+params_ex = set_params('spiny')
+
 # membrane capacitance
-C_m_P = 0.5 * nF
-C_m_E = 0.1 * nF #0.2 * nF
-C_m_I = 0.2 * nF
+C_m_P = params_py.get('C')
+C_m_I = params_in.get('C')
+C_m_E = params_ex.get('C')
 
 # membrane leak
-g_m_P = 25. * nS
-g_m_E = 10. * nS # 25. * nS
-g_m_I = 20. * nS
+g_m_P = params_py.get('g_leak')
+g_m_I = params_in.get('g_leak')
+g_m_E = params_ex.get('g_leak')
 
 # membrane time constants
-tau_m_P = C_m_P / g_m_P
-tau_m_E = C_m_E / g_m_E
-tau_m_I = C_m_I / g_m_I
+tau_m_P = params_py.get('tau_m')
+tau_m_I = params_in.get('tau_m')
+tau_m_E = params_ex.get('tau_m')
 
 # connectivity time constants
 # Pyramidal
-tau_d_AMPA_P = 2 * ms       # Decay time constant (From Brunel and Wang 2001)
-tau_r_AMPA_P = 0.05 * ms    # Rising time constant (< 1 ms), set to 0.05 isntead of 0.4 to match the ratio from GABA
-tau_d_GABA_P = 10 * ms      # From Brunel and Wang 2001
-tau_r_GABA_P =  0.25 * ms
-# Spiny Stellate
-tau_d_AMPA_E = 4 * ms # 2 * ms       # Decay time constant
-tau_r_AMPA_E = 0.1 * ms # 0.4 * ms     # Rising time constant
+tau_d_AMPA_P = params_py.get('tau_AMPA_d') # Decay time constant (From Brunel and Wang 2001)
+tau_r_AMPA_P = params_py.get('tau_AMPA_r')   # Rising time constant (< 1 ms), set to 0.05 isntead of 0.4 to match the ratio from GABA
+tau_d_GABA_P = params_py.get('tau_GABA_d') # From Brunel and Wang 2001
+tau_r_GABA_P = params_py.get('tau_GABA_r')
+tau_s_AMPA_P = 0.5 * (tau_d_AMPA_P + tau_r_AMPA_P) + 0.05*ms      # "Lumped" time constant for alpha function. 
+tau_s_GABA_P = 0.5 * (tau_d_GABA_P + tau_r_GABA_P) + 0.05*ms      # "Lumped" time constant for alpha function. 
 #Inhibitory Interneurons
-tau_d_AMPA_I = 2 * ms # 1 * ms       # Decay time constant
-tau_r_AMPA_I = 0.05 * ms # 0.2 * ms     # Rising time constant
-tau_d_GABA_I = 10 * ms
-tau_r_GABA_I = 0.25 * ms
+tau_d_AMPA_I = params_in.get('tau_AMPA_d')  
+tau_r_AMPA_I = params_in.get('tau_AMPA_r')
+tau_d_GABA_I = params_in.get('tau_GABA_d')
+tau_r_GABA_I = params_in.get('tau_GABA_r')
+tau_s_AMPA_I = 0.5 * (tau_d_AMPA_I + tau_r_AMPA_I) + 0.05*ms      # "Lumped" time constant for alpha function. 
+tau_s_GABA_I = 0.5 * (tau_d_GABA_I + tau_r_GABA_I) + 0.05*ms      # "Lumped" time constant for alpha function. 
+# Spiny Stellate
+tau_d_AMPA_E = params_ex.get('tau_AMPA_d')  # TODO
+tau_r_AMPA_E = params_ex.get('tau_AMPA_r')  
+tau_s_AMPA_E = 0.5 * (tau_d_AMPA_E + tau_r_AMPA_E) + 0.05*ms      # "Lumped" time constant for alpha function. 
 
 # refractory period
-tau_rp_P = 2 * ms
-tau_rp_E = 1 * ms # 2 * ms
-tau_rp_I = 1 * ms
+tau_rp_P = params_py.get('tau_rp')
+tau_rp_E = params_ex.get('tau_rp')
+tau_rp_I = params_in.get('tau_rp')
 
 # Synaptic delay
 delay = 0 * ms # 1 * ms # 0.5 * ms # 0.5 * ms in Brunel and Wang 2001
@@ -148,22 +159,38 @@ timed_rate = TimedArray(timed_rate, dt=dt_)
 
 # Synaptic efficacies
 # AMPA (excitatory)
-j_AMPA_rec_P = -10.5 * pA #* 100/N # * p_PP * 4000 / N_P
-j_AMPA_rec_E = -10.5 * pA * spiny_constant # -10.5 * pA #* 100/N
-j_AMPA_rec_I = -10.5 * pA * 2# * 100/N # -14 * pA
-
+j_AMPA_rec_P = params_py.get('j_AMPA')
+j_AMPA_rec_E = params_ex.get('j_AMPA')
+j_AMPA_rec_I = params_in.get('j_AMPA')
     
-j_AMPA_cor_P = -21 * pA # Double as in the inhibitory population to compensate for the membrane time constant # -10.5 * pA # -13.75 * pA
-j_AMPA_cor_I = -16 * pA # -16 * pA  
+j_AMPA_cor_P = params_py.get('j_AMPA_ext')
+j_AMPA_cor_I = params_in.get('j_AMPA_ext')
 
 # GABAergic (inhibitory)
-j_GABA_P = 54 * pA # 71.4 * pA
-j_GABA_I = 54 * pA # 71.4 * pA
+j_GABA_P = params_py.get('j_GABA')
+j_GABA_I = params_py.get('j_GABA')
 
-# Alpha function's parameter
-alpha = 1 / ms # 0.62 / ms # Dimmensionless?, check Nicola and Campbell 2013
-alpha_pi = 1 * alpha
-alpha_ip = 1 * alpha
+# Weight constants. Amplitude of the synaptic input
+# Pyramidal 
+increment_AMPA_P = params_py.get('alpha_weight_AMPA')
+increment_AMPA_ext_P = params_py.get('single_exp')
+increment_GABA_P = params_py.get('alpha_weight_GABA')
+
+# Inhibitory interneurons
+increment_AMPA_I = params_in.get('alpha_weight_AMPA')
+increment_AMPA_ext_I = params_in.get('single_exp')
+increment_GABA_I = params_in.get('alpha_weight_GABA')
+
+# Excitatory interneurons
+increment_AMPA_E = params_ex.get('alpha_weight_AMPA')
+increment_AMPA_ext_E = params_ex.get('single_exp')
+increment_GABA_E = params_ex.get('alpha_weight_GABA')
+
+
+
+# Alpha function's parameter (and double exponential) to fix the units in ds/dt
+k = 1 / ms # 0.62 / ms # Dimmensionless?, check Nicola and Campbell 2013
+
 
 # Injected current
 I_injected = -input_current * pA # Input current to Pyramidal population. Sets a baseline spiking rate
@@ -185,7 +212,7 @@ eqs_P = '''
     I_tot = I_AMPA_cor + I_AMPA_rec + I_AMPA_spi + I_GABA_rec + I_injected : amp
     
     I_AMPA_cor = j_AMPA_cor_P * s_AMPA_cor : amp
-    ds_AMPA_cor / dt = - s_AMPA_cor / (tau_d_AMPA_P + tau_r_AMPA_P) : 1
+    ds_AMPA_cor / dt = -s_AMPA_cor / (tau_d_AMPA_P + tau_r_AMPA_P) : 1    
     
     I_GABA_rec = j_GABA_P * s_GABA : amp
     s_GABA : 1
@@ -227,14 +254,14 @@ eqs_I = '''
 '''
 
 # Neuron groups
-P_P = NeuronGroup(N_P, eqs_P, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp_P, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
-P_P.v = V_leak
+Py_Pop = NeuronGroup(N_P, eqs_P, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp_P, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
+Py_Pop.v = V_leak
 
-P_E = NeuronGroup(N_E, eqs_E, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp_E, method='rk4', dt=dt_, name='SpinyPop') # Excitatory interneuron population
-P_E.v = V_leak
+Ex_Pop = NeuronGroup(N_E, eqs_E, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp_E, method='rk4', dt=dt_, name='SpinyPop') # Excitatory interneuron population
+Ex_Pop.v = V_leak
 
-P_I = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp_I, method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
-P_I.v = V_leak
+In_Pop = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp_I, method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
+In_Pop.v = V_leak
 
 # Pop_Cor = PoissonGroup(num_inputs, rates = (input_spike_rate*1000/num_inputs)*Hz, dt=dt_) # poisson input
 
@@ -246,139 +273,136 @@ P_I.v = V_leak
 # Pyramidal (autoexcitatory)
 eqs_glut_P = '''
 s_AMPA_post = s_AMPA_syn : 1 (summed)
-ds_AMPA_syn / dt = - s_AMPA_syn / tau_d_AMPA_P + alpha * x * (1 - s_AMPA_syn) : 1 (clock-driven)
-dx / dt = - x / tau_r_AMPA_P : 1 (clock-driven)
-'''    
-
+ds_AMPA_syn / dt = - s_AMPA_syn / tau_s_AMPA_P + k * x : 1 (clock-driven)
+dx / dt = - x / tau_s_AMPA_P : 1 (clock-driven)
+'''
 eqs_pre_glut_P = '''
-x += 1
+x += increment_AMPA_P
 '''
 
-# Pyramidal (AMPA from Spiny Stellate to Pyramidal)
-eqs_spi_P = '''
+# Pyramidal (from spiny)
+eqs_glut_spi_P = '''
 s_AMPA_spi_post = s_AMPA_spi_syn : 1 (summed)
-ds_AMPA_spi_syn / dt = - s_AMPA_spi_syn / tau_d_AMPA_P + alpha * x * (1 - s_AMPA_spi_syn) : 1 (clock-driven)
-dx / dt = - x / tau_r_AMPA_P : 1 (clock-driven)
-'''    
-
-eqs_pre_spi_P = '''
-x += 1
+ds_AMPA_spi_syn / dt = - s_AMPA_spi_syn / tau_s_AMPA_P + k * x : 1 (clock-driven)
+dx / dt = - x / tau_s_AMPA_P : 1 (clock-driven)
 '''
+eqs_pre_glut_spi_P = '''
+x += increment_AMPA_P
+'''
+
 
 # Pyramidal (gabaergic, inhibitory to pyramidal)
 eqs_gaba_P = '''
 s_GABA_post = s_GABA_syn : 1 (summed)
-ds_GABA_syn / dt = - s_GABA_syn / tau_d_GABA_P + alpha_ip * x * (1 - s_GABA_syn) : 1 (clock-driven)
-dx / dt = - x / tau_r_GABA_P : 1 (clock-driven)
+ds_GABA_syn / dt = - s_GABA_syn / tau_s_GABA_P + k * x : 1 (clock-driven)
+dx / dt = - x / tau_s_GABA_P : 1 (clock-driven)
 '''
-
 eqs_pre_gaba_P = '''
-x += 1
+x += increment_GABA_P
 '''
 
 # Excitatory (glutamate, pyramidal to spiny)
 eqs_glut_E = '''
-s_AMPA_post = s_AMPA_syn : 1(summed)
-ds_AMPA_syn / dt = - s_AMPA_syn / tau_d_AMPA_E + alpha * x * (1 - s_AMPA_syn) : 1 (clock-driven)
-dx / dt = - x / tau_r_AMPA_E : 1 (clock-driven)
+s_AMPA_post = s_AMPA_syn : 1 (summed)
+ds_AMPA_syn / dt = - s_AMPA_syn / tau_s_AMPA_E + k * x : 1 (clock-driven)
+dx / dt = - x / tau_s_AMPA_E : 1 (clock-driven)
 '''
-
 eqs_pre_glut_E = '''
-x += 1
+x += increment_AMPA_E
 '''
 
 # Interneurons (glutamate, pyramidal to inhibitory)
 eqs_glut_I = '''
 s_AMPA_post = s_AMPA_syn : 1 (summed)
-ds_AMPA_syn / dt = - s_AMPA_syn / tau_d_AMPA_I + alpha_pi * x * (1 - s_AMPA_syn) : 1 (clock-driven)
-dx / dt = - x / tau_r_AMPA_I : 1 (clock-driven)
-''' 
-
+ds_AMPA_syn / dt = - s_AMPA_syn / tau_s_AMPA_I + k * x : 1 (clock-driven)
+dx / dt = - x / tau_s_AMPA_I : 1 (clock-driven)
+'''
 eqs_pre_glut_I = '''
-x += 1
+x += increment_AMPA_I
 '''
 
 # Interneurons (autoinhibiton)
 eqs_gaba_I = '''
 s_GABA_post = s_GABA_syn : 1 (summed)
-ds_GABA_syn / dt = - s_GABA_syn / tau_d_GABA_I + alpha * x * (1 - s_GABA_syn) : 1 (clock-driven)
-dx / dt = - x / tau_r_GABA_I : 1 (clock-driven)
+ds_GABA_syn / dt = - s_GABA_syn / tau_s_GABA_I + k * x : 1 (clock-driven)
+dx / dt = - x / tau_s_GABA_I : 1 (clock-driven)
+'''
+eqs_pre_gaba_I = '''
+x += increment_GABA_I
 '''
 
-eqs_pre_gaba_I = '''
-x += 1
-'''
 
    
 # Synapses
 # P to P
-C_P_P = Synapses(P_P, P_P, model=eqs_glut_P, on_pre=eqs_pre_glut_P, method='rk4', dt=dt_, delay=delay, name='synapses_pp')
+C_P_P = Synapses(Py_Pop, Py_Pop, model=eqs_glut_P, on_pre=eqs_pre_glut_P, method='rk4', dt=dt_, delay=delay, name='synapses_pp')
 C_P_P.connect('i != j', p = p_PP)
 C_P_P.active = RECURRENT_PYRAMIDAL    # Testing no recursive connections to match NMM
 
 # P to E
-C_P_E = Synapses(P_P, P_E, model=eqs_glut_E, on_pre=eqs_pre_glut_E, method='rk4', dt=dt_, delay=delay, name='synapses_pe')
+C_P_E = Synapses(Py_Pop, Ex_Pop, model=eqs_glut_E, on_pre=eqs_pre_glut_E, method='rk4', dt=dt_, delay=delay, name='synapses_pe')
 C_P_E.connect(p = p_PE)
 C_P_E.active = ACTIVE_SPINY   
     
 # P to I
-C_P_I = Synapses(P_P, P_I, model=eqs_glut_I , on_pre=eqs_pre_glut_I, method='rk4', dt=dt_, delay=delay, name='synapses_pi')
+C_P_I = Synapses(Py_Pop, In_Pop, model=eqs_glut_I , on_pre=eqs_pre_glut_I, method='rk4', dt=dt_, delay=delay, name='synapses_pi')
 C_P_I.connect(p = p_PI)     
 C_P_I.active = ACTIVE_INTERNEURONS
 
 # I to I
-C_I_I = Synapses(P_I, P_I, model=eqs_gaba_I, on_pre=eqs_pre_gaba_I, method='rk4', dt=dt_, delay=delay, name='synapses_ii')
+C_I_I = Synapses(In_Pop, In_Pop, model=eqs_gaba_I, on_pre=eqs_pre_gaba_I, method='rk4', dt=dt_, delay=delay, name='synapses_ii')
 C_I_I.connect('i != j', p = p_II)
 C_I_I.active = RECURRENT_INHIBITORY    # Testing no recursive connections to match NMM
 
 # I to P
-C_I_P = Synapses(P_I, P_P, model=eqs_gaba_P, on_pre=eqs_pre_gaba_P, method='rk4', dt=dt_, delay=delay, name='synapses_ip')
+C_I_P = Synapses(In_Pop, Py_Pop, model=eqs_gaba_P, on_pre=eqs_pre_gaba_P, method='rk4', dt=dt_, delay=delay, name='synapses_ip')
 C_I_P.connect(p = p_IP)    
 C_I_P.active = ACTIVE_INTERNEURONS
 
 # E to P
-C_E_P = Synapses(P_E, P_P, model=eqs_spi_P, on_pre=eqs_pre_spi_P, method='rk4', dt=dt_, delay=delay, name='synapses_ep')
+C_E_P = Synapses(Ex_Pop, Py_Pop, model=eqs_glut_spi_P, on_pre=eqs_pre_glut_spi_P, method='rk4', dt=dt_, delay=delay, name='synapses_ep')
 C_E_P.connect(p = p_EP)    
 C_E_P.active = ACTIVE_SPINY
 
 # external input
 # Poisson input
-C_Cor_P = PoissonInput(P_P, 's_AMPA_cor', num_inputs, (input_spike_rate*1000/num_inputs) * Hz, 1)
-C_Cor_I = PoissonInput(P_I, 's_AMPA_cor', num_inputs, (input_spike_rate*1000/num_inputs) * Hz, 1)
+C_Cor_P = PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate*1000/num_inputs) * Hz, increment_AMPA_ext_P)
+C_Cor_I = PoissonInput(In_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate*1000/num_inputs) * Hz, increment_AMPA_ext_I)
+
 # Poisson population
-# C_Cor_P = Synapses(Pop_Cor, P_P, model=eqs_cor_P, on_pre=eqs_pre_cor_P, method='rk4', dt=dt_, delay=delay, name='synapses_pext')
+# C_Cor_P = Synapses(Pop_Cor, Py_Pop, model=eqs_cor_P, on_pre=eqs_pre_cor_P, method='rk4', dt=dt_, delay=delay, name='synapses_pext')
 # C_Cor_P.connect(p = 1)    
-# C_Cor_I = Synapses(Pop_Cor, P_I, model=eqs_cor_I, on_pre=eqs_pre_cor_I, method='rk4', dt=dt_, delay=delay, name='synapses_iext')
+# C_Cor_I = Synapses(Pop_Cor, In_Pop, model=eqs_cor_I, on_pre=eqs_pre_cor_I, method='rk4', dt=dt_, delay=delay, name='synapses_iext')
 # C_Cor_I.connect(p = 1)    
 
 C_Cor_I.active = INHIBIT_INPUT # Innactive cortico-cortical -> interneuron
 
 #%% monitors  -----------------------------------------------------------------
 N_activity_plot = 30 # How many neurons in the raster plots (too large takes longer to monitor and plot)
-sp_P = SpikeMonitor(P_P[:N_activity_plot])
-sp_E = SpikeMonitor(P_E[:N_activity_plot])
-sp_I = SpikeMonitor(P_I[:N_activity_plot])
+sp_P = SpikeMonitor(Py_Pop[:N_activity_plot])
+sp_E = SpikeMonitor(Ex_Pop[:N_activity_plot])
+sp_I = SpikeMonitor(In_Pop[:N_activity_plot])
 # sp_Cor = SpikeMonitor(input_cortical[:N_activity_plot])
 
 
-r_P = PopulationRateMonitor(P_P) # [0:N_activity_plot])
-r_E = PopulationRateMonitor(P_E) # [0:N_activity_plot])
-r_I = PopulationRateMonitor(P_I)
+r_P = PopulationRateMonitor(Py_Pop) # [0:N_activity_plot])
+r_E = PopulationRateMonitor(Ex_Pop) # [0:N_activity_plot])
+r_I = PopulationRateMonitor(In_Pop)
 # r_Cor = PopulationRateMonitor(input_cortical)
 
-st_AMPA_P = StateMonitor(P_P, ('s_AMPA'), record = 0)
-st_GABA_P = StateMonitor(P_P, 's_GABA', record = 0)
-st_AMPA_cor_P = StateMonitor(P_P, 's_AMPA_cor', record = 0)
+st_AMPA_P = StateMonitor(Py_Pop, ('s_AMPA'), record = 0)
+st_GABA_P = StateMonitor(Py_Pop, 's_GABA', record = 0)
+st_AMPA_cor_P = StateMonitor(Py_Pop, 's_AMPA_cor', record = 0)
 
-st_AMPA_E = StateMonitor(P_E, ('s_AMPA'), record = 0)
+st_AMPA_E = StateMonitor(Ex_Pop, ('s_AMPA'), record = 0)
 
-st_AMPA_I = StateMonitor(P_I, 's_AMPA', record = 0)
-st_GABA_I = StateMonitor(P_I, 's_GABA', record = 0)
-st_AMPA_cor_I = StateMonitor(P_I, 's_AMPA_cor', record = 0)
+st_AMPA_I = StateMonitor(In_Pop, 's_AMPA', record = 0)
+st_GABA_I = StateMonitor(In_Pop, 's_GABA', record = 0)
+st_AMPA_cor_I = StateMonitor(In_Pop, 's_AMPA_cor', record = 0)
 
-Py_monitor = StateMonitor(P_P, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'I_tot', 'v', 'v_pe', 'v_pi'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
-In_monitor = StateMonitor(P_I, ['v', 'v_ip'], record = True)
-Ex_monitor = StateMonitor(P_E, ['v', 'v_ep'], record = True)
+Py_monitor = StateMonitor(Py_Pop, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'I_tot', 'v', 'v_pe', 'v_pi'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
+In_monitor = StateMonitor(In_Pop, ['v', 'v_ip'], record = True)
+Ex_monitor = StateMonitor(Ex_Pop, ['v', 'v_ep'], record = True)
 
 #%% simulate  -----------------------------------------------------------------
 net = Network(collect())
@@ -574,6 +598,7 @@ if SAVE:
                     'LFP_V': lfp_v,
                     'lfp_dt' : dt_,
                     'Vm': -(I_injected/g_m_P), # To calculate the nonlinearity, need to simulate single cell disconnected network 
+                    'Vm_interneurons': -(I_injected_I/g_m_I), # To calculate the nonlinearity, need to simulate single cell disconnected network 
                     'R_py': r_P_rate, # 1/diff(np.array(sp_P.t)).mean(),
                     'R_ex': r_E_rate,
                     'R_in': r_I_rate,
@@ -599,8 +624,15 @@ if SAVE:
     scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/lfp_last.mat',
                      mdict = save_dictionary)
     
+    i = 0
+    while os.path.exists('C://Users/artemios/Documents/Multiscale_Models_Data/nonlinearity/lfp_inputCurrent_%s_%s.mat' % (floor(input_current),i)):
+        i += 1
+    
+    scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/nonlinearity/lfp_inputCurrent_%s_%s.mat' % (floor(input_current),i),
+                      mdict=save_dictionary)
+
     # scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/lfp_%s.mat' % i,
-    #                  mdict = save_dictionary)
+    #                   mdict = save_dictionary)
     
     # # Save at the end to keep all recordings
     # if RECURRENT_PYRAMIDAL:
@@ -645,12 +677,18 @@ else:
     print(colored('Attention! Results of simulation were not saved. SAVE = False', 'yellow'))
 
 
+
 # Run iteratively. Need to uncomment the def line at the start of the file.
-# a = np.arange(500, 501, 0.05)
-# b = np.arange(501, 510, 1)
-# c = np.arange(510, 700, 10)
-# d = np.arange(0, 1600, 100)
-# ranges = np.concatenate((a, b, c, d))
+# e = np.arange(350, 500, 5)
+# f = np.arange(400, 401, 0.05)
+# # a = np.arange(500, 501, 0.05)
+# # b = np.arange(501, 510, 1)
+# # c = np.arange(510, 700, 10)
+# # d = np.arange(0, 1600, 100)
+# # ranges = np.concatenate((e, a, b, c, d))
+# ranges = f
+# for iterations in ranges:
+#     brunel(corriente=iterations)
 
 # ranges = np.arange(0.1, 5.1, 0.1)
 # for iterations in ranges:
