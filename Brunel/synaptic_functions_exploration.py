@@ -22,7 +22,7 @@ from lif_model import set_params
 
 neuron_type     = 'pyramidal'   # pyramidal, inhibitory or spiny
 synaptic_type   = 'AMPA'        # AMPA or GABA
-external        = True          # When AMPA, synapsis can be external or recurrent (local)
+external        = False          # When AMPA, synapsis can be external or recurrent (local)
 input_spike_rate = 1            # spikes/ms/cell 
 simulation_time = 0.25 * second
 
@@ -66,7 +66,7 @@ tau_rp =  params["tau_rp"] # refractory period
 
 
 # Cortical input
-num_inputs = 800                    # Both thalamo-cortical and cortico-cortical 
+num_inputs = 1                    # Both thalamo-cortical and cortico-cortical 
 I_input = -300 * pA
 
 # Synaptic efficacies

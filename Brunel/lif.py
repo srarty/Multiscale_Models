@@ -38,22 +38,25 @@ devices.device.size = []
 
 from lif_model import set_params
 
+# def brunel(corriente=0):
+
 # Options:
 RECURRENT_PYRAMIDAL = False     # Self excitation 
-RECURRENT_INHIBITORY = False     # Self inhibition
-INHIBIT_INPUT = False            # Excitatory cortical input to inhibitory population
+RECURRENT_INHIBITORY = True     # Self inhibition
+INHIBIT_INPUT = True            # Excitatory cortical input to inhibitory population
 ACTIVE_INTERNEURONS = True      # Inhibitory population
 ACTIVE_SPINY = False            # Spiny Stellate population
 SAVE = False                     # Save ground truth data
 PLOT = True                     # Plot results (main Figure)
 PLOT_EXTRA = True              # Plot extra things.
 
+corriente = 0
 # Balanced-rate network (?) with input currents: Py = 500.01 pA, In = 398 pA
-input_current = 0 # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
-input_current_I = 0 # 350 # 398 # 400.01     # Inhibitory interneurons
+input_current = corriente # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
+input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 input_current_E = 0     # Excitatory interneurons (Spiny Stellate)         
 
-input_spike_rate = 15 # spikes/ms/cell # Threshold ~= 11 
+input_spike_rate = 5 # spikes/ms/cell # Threshold ~= 11 
 
 spiny_constant = 30 # temporal variable to  explore Spiny excitability
 
@@ -70,13 +73,12 @@ N_E = int(N)    # excitatory neurons (spiny stellate)
 N_I = int(N)    # interneurons
 
 # Probability of connection
-p_IP = 0.2 * 100/N #* 135/N      # Inhibitory to Pyramidal
-p_PI = 0.2 * 100/N #* 135/N      # Pyramidal to Inhibitory
-p_PE =  0.2 * 100/N #* 135/N      # Pyramidal to Excitatory
-p_EP =  0.2 * 100/N #* 135/N      # Excitatory to Pyramidal
-p_PP =  0.2 * 100/N #* 135/N      # recurrent excitation (pyramidal) # Generally less than PI, IP connectivity (Bryson et al., 2021)
-p_II =  0.2 * 100/N #* 135/N      # recurrent inhibition
-# p_input = 0.2 * 100/N #* 135/N # Not in use
+p_IP =  0.2 * 100/N # Inhibitory to Pyramidal
+p_PI =  0.2 * 100/N # Pyramidal to Inhibitory
+p_PE =  0.2 * 100/N # Pyramidal to Excitatory
+p_EP =  0.2 * 100/N # Excitatory to Pyramidal
+p_PP =  0.2 * 100/N # recurrent excitation (pyramidal) # Generally less than PI, IP connectivity (Bryson et al., 2021)
+p_II =  0.2 * 100/N # recurrent inhibition
 
 # voltage
 V_leak = -70. * mV      # Resting membrane potential
@@ -596,6 +598,7 @@ if SAVE:
                     'LFP_V': lfp_v,
                     'lfp_dt' : dt_,
                     'Vm': -(I_injected/g_m_P), # To calculate the nonlinearity, need to simulate single cell disconnected network 
+                    'Vm_interneurons': -(I_injected_I/g_m_I), # To calculate the nonlinearity, need to simulate single cell disconnected network 
                     'R_py': r_P_rate, # 1/diff(np.array(sp_P.t)).mean(),
                     'R_ex': r_E_rate,
                     'R_in': r_I_rate,
@@ -621,8 +624,15 @@ if SAVE:
     scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/lfp_last.mat',
                      mdict = save_dictionary)
     
+    i = 0
+    while os.path.exists('C://Users/artemios/Documents/Multiscale_Models_Data/nonlinearity/lfp_inputCurrent_%s_%s.mat' % (floor(input_current),i)):
+        i += 1
+    
+    scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/nonlinearity/lfp_inputCurrent_%s_%s.mat' % (floor(input_current),i),
+                      mdict=save_dictionary)
+
     # scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/lfp_%s.mat' % i,
-    #                  mdict = save_dictionary)
+    #                   mdict = save_dictionary)
     
     # # Save at the end to keep all recordings
     # if RECURRENT_PYRAMIDAL:
@@ -667,12 +677,18 @@ else:
     print(colored('Attention! Results of simulation were not saved. SAVE = False', 'yellow'))
 
 
+
 # Run iteratively. Need to uncomment the def line at the start of the file.
-# a = np.arange(500, 501, 0.05)
-# b = np.arange(501, 510, 1)
-# c = np.arange(510, 700, 10)
-# d = np.arange(0, 1600, 100)
-# ranges = np.concatenate((a, b, c, d))
+# e = np.arange(350, 500, 5)
+# f = np.arange(400, 401, 0.05)
+# # a = np.arange(500, 501, 0.05)
+# # b = np.arange(501, 510, 1)
+# # c = np.arange(510, 700, 10)
+# # d = np.arange(0, 1600, 100)
+# # ranges = np.concatenate((e, a, b, c, d))
+# ranges = f
+# for iterations in ranges:
+#     brunel(corriente=iterations)
 
 # ranges = np.arange(0.1, 5.1, 0.1)
 # for iterations in ranges:
