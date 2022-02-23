@@ -39,9 +39,10 @@ devices.device.size = []
 from lif_model import set_params
 
 # def brunel(corriente=0):
-
+plt.close('all')
+    
 # Options:
-RECURRENT_PYRAMIDAL = False     # Self excitation 
+RECURRENT_PYRAMIDAL = True     # Self excitation 
 RECURRENT_INHIBITORY = True     # Self inhibition
 INHIBIT_INPUT = True            # Excitatory cortical input to inhibitory population
 ACTIVE_INTERNEURONS = True      # Inhibitory population
@@ -52,11 +53,12 @@ PLOT_EXTRA = True              # Plot extra things.
 
 corriente = 0
 # Balanced-rate network (?) with input currents: Py = 500.01 pA, In = 398 pA
-input_current = corriente # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
+input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 input_current_E = 0     # Excitatory interneurons (Spiny Stellate)         
 
-input_spike_rate = 5 # spikes/ms/cell # Threshold ~= 11 
+input_spike_rate = 1.5 # spikes/ms/cell (driving input)
+input_spike_rate_thalamic = 0 # 1.5 # spikes/ms/cell (spontaneous activity)
 
 spiny_constant = 30 # temporal variable to  explore Spiny excitability
 
@@ -137,24 +139,24 @@ delay = 0 * ms # 1 * ms # 0.5 * ms # 0.5 * ms in Brunel and Wang 2001
 num_inputs = 800                    # Both thalamo-cortical and cortico-cortical 
 
 
-# Timed array -> input firing rate
-l = simulation_time/dt_
-segments = 3 # Number of segments of different spike rate
-timed_rate = ones(int(l))
-timed_rate[:] = input_spike_rate
-## Uncomment the following lines for a timed array of rates, i.e. different input rates trhoughout a single simulation
-timed_rate[0 : int(l/segments)] = 0.5
-timed_rate[int(1*l/segments) : int(2*l/segments)] = 1
-timed_rate[int(2*l/segments) : int(3*l/segments)] = 2
-# timed_rate[int(3*l/segments) : int(4*l/segments)] = 30
-# timed_rate[int(4*l/segments) : int(5*l/segments)] = 40
-# timed_rate[int(5*l/segments) : int(6*l/segments)] = 50
-# timed_rate[int(6*l/segments) : int(7*l/segments)] = 100
-# timed_rate[int(7*l/segments) : int(8*l/segments)] = 125
-# timed_rate[int(8*l/segments) : int(9*l/segments)] = 150
-# timed_rate[int(9*l/segments) :] = 200
-timed_rate = (timed_rate * 1000/num_inputs) * Hz
-timed_rate = TimedArray(timed_rate, dt=dt_)
+# # Timed array -> input firing rate
+# l = simulation_time/dt_
+# segments = 3 # Number of segments of different spike rate
+# timed_rate = ones(int(l))
+# timed_rate[:] = input_spike_rate
+# ## Uncomment the following lines for a timed array of rates, i.e. different input rates trhoughout a single simulation
+# timed_rate[0 : int(l/segments)] = 0.5
+# timed_rate[int(1*l/segments) : int(2*l/segments)] = 1
+# timed_rate[int(2*l/segments) : int(3*l/segments)] = 2
+# # timed_rate[int(3*l/segments) : int(4*l/segments)] = 30
+# # timed_rate[int(4*l/segments) : int(5*l/segments)] = 40
+# # timed_rate[int(5*l/segments) : int(6*l/segments)] = 50
+# # timed_rate[int(6*l/segments) : int(7*l/segments)] = 100
+# # timed_rate[int(7*l/segments) : int(8*l/segments)] = 125
+# # timed_rate[int(8*l/segments) : int(9*l/segments)] = 150
+# # timed_rate[int(9*l/segments) :] = 200
+# timed_rate = (timed_rate * 1000/num_inputs) * Hz
+# timed_rate = TimedArray(timed_rate, dt=dt_)
 
 
 # Synaptic efficacies
@@ -228,7 +230,7 @@ eqs_P = '''
 eqs_E = '''
     dv / dt = (-v + V_leak - (I_tot/g_m_E)) / tau_m_E : volt (unless refractory)
     
-    dv_ep /dt = (-v_ep -(I_AMPA_rec / g_m_P)) / tau_m_P : volt (unless refractory)
+    dv_ep /dt = (-v_ep -(I_AMPA_rec / g_m_E)) / tau_m_P : volt (unless refractory)
     
     I_tot = I_AMPA_rec + I_injected_E : amp        
     
@@ -239,7 +241,7 @@ eqs_E = '''
 eqs_I = '''
     dv / dt = (-v + V_leak - (I_tot/g_m_I)) / tau_m_I : volt (unless refractory)
 
-    dv_ip /dt = (-v_ip -(I_AMPA_rec / g_m_P)) / tau_m_P : volt (unless refractory)
+    dv_ip /dt = (-v_ip -(I_AMPA_rec / g_m_I)) / tau_m_P : volt (unless refractory)
     
     I_tot = I_AMPA_cor + I_AMPA_rec + I_GABA_rec + I_injected_I : amp
     
@@ -365,17 +367,19 @@ C_E_P.connect(p = p_EP)
 C_E_P.active = ACTIVE_SPINY
 
 # external input
-# Poisson input
+# Poisson input (Cortico-cortical)
 C_Cor_P = PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate*1000/num_inputs) * Hz, increment_AMPA_ext_P)
 C_Cor_I = PoissonInput(In_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate*1000/num_inputs) * Hz, increment_AMPA_ext_I)
+C_Cor_I.active = INHIBIT_INPUT # Innactive cortico-cortical -> interneuron
+# Poisson input (Thalamic, baseline spike rate)
+C_Tha_P = PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_P)
+C_Tha_I = PoissonInput(In_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_I)
 
 # Poisson population
 # C_Cor_P = Synapses(Pop_Cor, Py_Pop, model=eqs_cor_P, on_pre=eqs_pre_cor_P, method='rk4', dt=dt_, delay=delay, name='synapses_pext')
 # C_Cor_P.connect(p = 1)    
 # C_Cor_I = Synapses(Pop_Cor, In_Pop, model=eqs_cor_I, on_pre=eqs_pre_cor_I, method='rk4', dt=dt_, delay=delay, name='synapses_iext')
 # C_Cor_I.connect(p = 1)    
-
-C_Cor_I.active = INHIBIT_INPUT # Innactive cortico-cortical -> interneuron
 
 #%% monitors  -----------------------------------------------------------------
 N_activity_plot = 30 # How many neurons in the raster plots (too large takes longer to monitor and plot)
@@ -521,7 +525,7 @@ if PLOT_EXTRA:
     axs[0].set_ylabel('IPSP (mV)')
     axs[0].plot(T*1000, np.transpose(v_pi)*1000)
     
-    axs[1].set_title('Pyramidal population (v_ip)')
+    axs[1].set_title('Inhibitory population (v_ip)')
     axs[1].set_xlabel('Time (ms)')
     axs[1].set_ylabel('EPSP (mV)')
     axs[1].plot(T*1000, np.transpose(v_ip)*1000)
