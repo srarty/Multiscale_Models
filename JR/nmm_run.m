@@ -90,8 +90,9 @@ y_fast = [0.033765242898424 0.169395306766868 0.380690406958402 0.96623475710157
 % phi = [f_e; f_i]; % Only the important indexes. This phi should be equal to the 2nd and 4th entries of phi_c
 
 C_inhibit = C; % Auxiliary matrix C_inhibit, same as C but the inhibitory element is negative to include it in the nonlinearity as inhibition
-C_inhibit(2,3) = -C_inhibit(2,3);
+% C_inhibit(4,1) = -C_inhibit(4,1);
 phi_c = non_linear_sigmoid(C_inhibit*x,r,v0, sigma_vector); % Complete phi from C
+% phi_c = gompertz(C_inhibit*x,nmm.params); % Complete phi from C
 switch mode
     case 'transition'                
         % Nonlinear transition model
@@ -298,8 +299,8 @@ switch mode
 end % End switch
 
 % Optional outputs
-varargout{3} = phi_c(2);%f_e;
-varargout{4} = phi_c(4);%f_i;
+varargout{3} = phi_c(4);%f_e firing rate of Pyramidal neurons. This is the output of the nonlinearity, i.e. phi(Cx)
+varargout{4} = phi_c(2);%f_i firing rate of Inhibitory interneurons. This is the output of the nonlinearity
 
 % Increase the counter of iterations if everything went well.
 % nmm.t = nmm.t + 1; 

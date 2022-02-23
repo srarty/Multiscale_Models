@@ -67,7 +67,7 @@ rng(0);
 %% Initialization
 % params = set_parameters('alpha', mu);     % Set params.u from the input argument 'mu' of set_params
 % params = set_parameters('alpha');         % Chose params.u from a constant value in set_params
-params = set_parameters('brunel', 20);    % params.u = 19.3, minimum oscillatory behaviour
+params = set_parameters('brunel', 100);    % params.u = 19.3, minimum oscillatory behaviour
 
 N = 1000;%9800; % 148262; % LFP size: 10000 (can change) % Seizure 1 size: 148262; % number of samples
 if (TRUNCATE && REAL_DATA), N = TRUNCATE; end % If TRUNCATE ~=0, only take N = TRUNCATE samples of the recording or simulation
@@ -215,12 +215,12 @@ if ~ESTIMATE
     % Plot x(1) and ECoG
     figure
     ax1=subplot(211);
-    plot(1000*t,x(1,:)');
+    plot(t,x(1,:)');
     ylabel('State 1');
     ax2=subplot(212);
-    plot(1000*t,y);
+    plot(t,y);
     ylabel('ECoG (mV)');
-    xlabel('Time (ms)');
+    xlabel('Time (s)');
     linkaxes([ax1 ax2],'x');
 
     % Plot all 4 states
@@ -228,11 +228,11 @@ if ~ESTIMATE
     axs = nan(NStates,1); % Axes handles to link subplots x-axis
     for i = 1:NStates
         axs(i) = subplot(NStates, 1, i);
-        plot(1000*t(1:min(length(t),size(x,2))),x(i,1:min(length(t),size(x,2)))');
+        plot(t(1:min(length(t),size(x,2))),x(i,1:min(length(t),size(x,2)))');
         ylabel(['State ' num2str(i)]);
     end
     linkaxes(axs, 'x');
-    xlabel('Time (ms)');
+    xlabel('time');
     
     % Plot external input and augmented parameters
     figure
@@ -242,11 +242,11 @@ if ~ESTIMATE
     ylabel('External input');
     for i = 2:NAugmented - NStates
         axs(i) = subplot(NAugmented - NStates, 1, i);
-        plot(1000*t(1:min(length(t),size(x,2))),x(NStates + i,1:min(length(t),size(x,2)))*nmm.delump(i-1)');
+        plot(t(1:min(length(t),size(x,2))),x(NStates + i,1:min(length(t),size(x,2)))*nmm.delump(i-1)');
         ylabel(['Parameter ' num2str(i)]);
     end
     linkaxes(axs, 'x');
-    xlabel('Time (ms)');
+    xlabel('Time (s)');
     
     % Firing rates (Output of the nonlinearity)
     figure
@@ -260,10 +260,10 @@ if ~ESTIMATE
     
     ax2 = subplot(2,1,2);
 %     yyaxis left
-    plot(1000*t, f_i);
+    plot(t, f_i);
     ylabel('f_i: Inhibitory rate?');
     linkaxes([ax1 ax2],'x');
-    xlabel('Time (ms)');
+    xlabel('Time (s)');
 %     yyaxis right
 %     plot(t, f_i * params.e0);
     

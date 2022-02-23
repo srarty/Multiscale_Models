@@ -15,16 +15,21 @@ end
 switch mode
     case 'brunel'
         params.e0 = 70; % max firing rate
-        params.r = 1; % 2.773; %8.08; %1.318; % dbl exp: 1.04; %12.5; % Sigmoid slope
-        params.v0 = 21; % 23.35; %27.9; %21.36; % dbl exp: 49.66; %40; % Firing Threshold
+        params.r = 1;%1;   % Sigmoid slope
+        params.v0 = 21;%21; % Firing Threshold
+        
+        params.gompertz.a = 70;
+        params.gompertz.b = 14;
+        params.gompertz.c = 14.49;
+        params.gompertz.d = 0.3292;
         
         % inverse time constants
-        params.decay_e = 50; % 100;% (1/ tau_e)
-        params.decay_i = 100; % 50; % (1/tau_i)
+        params.decay_e = 223.7074;   % Excitatory synapse (AMPA) into inhibitory interneurons 1/tau_e
+        params.decay_i = 88.4151;   % Inhibitory synapse (GABA) into pyramidal cells (1/tau_i)
         
-        params.u = mu;%11;%220;%15;%11;        % mean input mem potential
-        params.alpha_ei = 3.25;% 1.005; %7.46;     % Gains (a_ei = excitatory), lumped parameter will look like: % alpha_i = 162500
-        params.alpha_ie = 6.25;% 0.233; %10.05;  % (a_ie = inhibitory), % alpha_e = 440000
+        params.u = mu; %11;%220;%15;%11;        % mean input mem potential
+        params.alpha_ei = 171.2; % Excitatory gain into interneuron (Py -> Interneuron)
+        params.alpha_ie = -238.6; % Inhibitory gain into pyramidal (Interneuron -> Py)
 
         params.dt = 0.001;     % sampling time step         
         params.scale = 1; % Scale to fix mismatch in state amplitudes. Not to be confused with the scael in analytic_kalman_filter_2

@@ -47,16 +47,19 @@ for ii = 1:no_files
     membrane_potentials(ii) = 1000*Vm;
 %     membrane_potentials(ii) = 1000*Vm_interneurons;
     pyramidal_rates(ii) = mean(R_py); %R_py/params.e0;
-    inhibitory_rates(ii) = mean(R_in); %/params.e0;
+%     pyramidal_rates(ii) = mean(R_in); %/params.e0;
 end
 
 % % Append zeros in the beginning for a better fit
-membrane_potentials = [0 membrane_potentials];
-pyramidal_rates = [0 pyramidal_rates];
+membrane_potentials = [0 0 membrane_potentials 40 50];
+pyramidal_rates = [0 0 pyramidal_rates 70 70];
 
 % When there's no spike, R_py is NaN. Fix it:
 pyramidal_rates(isnan(pyramidal_rates)) = 0;
 
+
+warning('remove next line, it''s dodgy');
+pyramidal_rates(1:19) = 0;
 %%
 fig = figure;
 yyaxis left
@@ -65,18 +68,17 @@ xlabel('Membrane potential (mV)');
 ylabel('Pyramidal firing rate');
 
 %% Fit
-ft = fittype( '(0.5*erf((x - a) / (sqrt(2) * b)) + 0.5)', 'independent', 'x', 'dependent', 'y' ); % Error function | a = v0 | b = r
+% ft = fittype( '(0.5*erf((x - a) / (sqrt(2) * b)) + 0.5)', 'independent', 'x', 'dependent', 'y' ); % Error function | a = v0 | b = r
 % ft = fittype( '2.^-(a.^-(x-b))', 'independent', 'x', 'dependent', 'y' );                          % Double exponential sigmoid
-% ft = fittype( 'a*exp(-b*exp(-d*(x-c)))', 'independent', 'x', 'dependent', 'y' );                  % Gompertz sigmoid
+ft = fittype( 'a*exp(-b*exp(-d*(x-c)))', 'independent', 'x', 'dependent', 'y' );                  % Gompertz sigmoid
 % ft = fittype( 'c/(1+exp(-a*(x-b)))+d', 'independent', 'x', 'dependent','y' );                     % sigmoid
 
 opts = fitoptions(ft);
-opts.StartPoint = [20 0];
-opts.Lower = [21 1];     
-% opts.Upper = [40 10];    
-opts.Upper = [21 1];    
+opts.StartPoint = [1 1 1 0]; %[21 1];
+opts.Lower = [1 1 1 -100]; %[23 5];     
+opts.Upper = [70 100 100 100]; %[23 5];    
 fitresult_Py = fit(membrane_potentials', pyramidal_rates', ft, opts) % With options
-% fitresult_Py = fit(membrane_potentials', pyramidal_rates', ft) % No options
+% fitresult_Py = fit(membrane_potentials', pyramidal_rates', ft); % No options
 
 
 figure(fig);
@@ -85,7 +87,7 @@ hold
 plot(fitresult_Py);
 xlabel('Membrane potential (mV)');
 ylabel('Pyramidal firing rate (spikes/s)');
-ylim([0 1]);
+% ylim([0 1]);
 yyaxis left
 ylim([0 params.e0]);
 
