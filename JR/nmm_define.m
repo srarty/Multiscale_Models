@@ -23,8 +23,8 @@ dt          = params.dt;
 e_0         = params.e0;
 r           = params.r;	% varsigma
 v0          = params.v0; % Threshold
-decay_e     = params.decay_e; % inverse time constants (excitatory)
-decay_i     = params.decay_i; % (inhibitory)
+decay_e     = params.decay_e; % inverse time constants 
+decay_i     = params.decay_i; % 
 alpha_ei    = params.alpha_ei; % synaptic gains (excitatory)
 alpha_ie    = params.alpha_ie; % (inhibitory)
 u           = params.u;	% mean input firing rate.
@@ -78,17 +78,20 @@ B(z_idx, alpha_idx) = diag(ones(size(z_idx)));
 % C =     [0,	0,	0,	0,	0,	0,	0; ... 
 %          0,	0,	1,	0,	0,	0,	0; ... % phi(x3)
 %          0,	0,	0,	0,	0,	0,	0; ...
-%          1,	0,	0,	0,	1,	0,	0; ... % phi(x5-x1)
+%          1,	0,	0,	0,	1,	0,	0; ... % phi(x5+x1) % x1 is negative thanks to alpha_i
 %          0,	0,	0,	0,	0,	0,	0; ...
 %          0,	0,	0,	0,	0,	0,	0; ...
 %          0,	0,	0,	0,	0,  0,  0];
 %
 C = zeros(xlen);
+% Basic connections
 C(2,3) = 1; % phi(x3)
 C(4,1) = 1; % x1
 C(4,u_idx) = 1; % x5
-% C(4,u_idx) = 1; % input -> inhibitory % Only uncomment this to test external excitatory inputs to the inhibitory population
-% C(4,3) = 1; % inhibitory -> inhibitory (recurrent inhibition)
+% Extras
+% C(2,u_idx) = 1; % input -> inhibitory % Only uncomment this to test external excitatory inputs to the inhibitory population
+% C(4,3) = 1; % inhibitory -> inhibitory (recurrent inhibition) Need to add the synapses
+% C(2,1) = 1; % exc -> exc
 C = C./scale;
 
 alpha_i = alpha_ie * c2 * 2 * e_0 * dt * decay_i; % lumped constant (inhibitory input to pyramidal cells)
