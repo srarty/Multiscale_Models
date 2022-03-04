@@ -30,7 +30,7 @@ REMOVE_DC       = 0;            % int{1,2} Remove DC offset from observed EEG (1
 SMOOTH          = 0;            % Moving average on EEG to filter fast changes (numeric, window size)
 ADD_NOISE       = true;         % Add noise to the forward model's states
 ADD_OBSERVATION_NOISE = true;	% Add noise to the forward model's states
-C_CONSTANT      = 100*0.2; % 135;          % Connectivity constant in nmm_define. It is 'J' or Average number of synapses between populations. (Default = 135)
+C_CONSTANT      = 100; % 135;          % Connectivity constant in nmm_define. It is 'J' or Average number of synapses between populations. (Default = 135)
 
 KF_TYPE         = 'extended';   % String: 'unscented', 'extended' (default)
 ANALYTIC_TYPE   = 'pip';        % Algorithm to run: 'pip' or 'analytic'. Only makes a difference if the filter (KF_TYPE) is 'extended' or 'none'
@@ -67,7 +67,7 @@ rng(0);
 %% Initialization
 % params = set_parameters('alpha', mu);     % Set params.u from the input argument 'mu' of set_params
 % params = set_parameters('alpha');         % Chose params.u from a constant value in set_params
-params = set_parameters('brunel', 20);    % params.u = 19.3, minimum oscillatory behaviour
+params = set_parameters('allen', 1500);    % params.u = 19.3, minimum oscillatory behaviour
 
 N = 1000;%9800; % 148262; % LFP size: 10000 (can change) % Seizure 1 size: 148262; % number of samples
 if (TRUNCATE && REAL_DATA), N = TRUNCATE; end % If TRUNCATE ~=0, only take N = TRUNCATE samples of the recording or simulation
@@ -189,7 +189,7 @@ delete(wbhandle);
 % Observation function (H = [1 0 0 0 1 0 0]) <- state x1 and parameter u
 % are in the observation matrix.
 H = zeros(1, NAugmented);
-H(1) = 1;        
+H(1) = -1;        
 H(NStates + 1) = 1;
 H = H.*1; % Scale the observation matrix if needed
 % Scale
@@ -238,7 +238,7 @@ if ~ESTIMATE
     figure
     axs = nan(NAugmented - NStates,1); % Axes handles to link subplots x-axis
     axs(1) = subplot(NAugmented - NStates, 1, 1);
-    plot(t(1:min(length(t),size(x,2))),x(NStates + 1,1:min(length(t),size(x,2)))');
+    plot(1000*t(1:min(length(t),size(x,2))),x(NStates + 1,1:min(length(t),size(x,2)))');
     ylabel('External input');
     for i = 2:NAugmented - NStates
         axs(i) = subplot(NAugmented - NStates, 1, i);
@@ -252,7 +252,7 @@ if ~ESTIMATE
     figure
     ax1 = subplot(2,1,1);
 %     yyaxis left
-    plot(t, f_e); % Input firing rate into pyramidal cells
+    plot(1000*t, f_e); % Input firing rate into pyramidal cells
     title('Sigmoid function output');
     ylabel('f_e: (Pyramidal rate?)');
 %     yyaxis right

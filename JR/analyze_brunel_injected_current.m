@@ -6,7 +6,7 @@
 clear
 
 %% NMM sigmoid
-params = set_parameters('brunel');       % Chose params.u from a constant value in set_params
+params = set_parameters('allen');       % Chose params.u from a constant value in set_params
 x = 0:0.1:50;
 nonlinearity = nan(size(x));
 for i = 1:numel(x)
@@ -30,7 +30,8 @@ ylabel('Spike rate');
 % folder = 'C:\Users\artemios\Documents\GitHub2\mycroeeg\simulations\CUBN\recurrent_connections\inhibitory_input\';
 % folder = 'C:\Users\artemios\Documents\GitHub2\mycroeeg\simulations\CUBN\recurrent_inhibition\';
 % folder = 'C:\Users\artemios\Documents\GitHub2\mycroeeg\simulations\CUBN\recurrent_excitation\';
-folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\nonlinearity\';
+% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\nonlinearity\';
+folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\nonlinearity background activity (external input for baseline)\';
 
 d = dir([folder '*.mat']);
 no_files = numel(d);
@@ -51,15 +52,15 @@ for ii = 1:no_files
 end
 
 % % Append zeros in the beginning for a better fit
-membrane_potentials = [0 0 membrane_potentials 40 50];
-pyramidal_rates = [0 0 pyramidal_rates 70 70];
+% membrane_potentials = [0 0 membrane_potentials 40 50];
+% pyramidal_rates = [0 0 pyramidal_rates 70 70];
 
 % When there's no spike, R_py is NaN. Fix it:
 pyramidal_rates(isnan(pyramidal_rates)) = 0;
 
 
-warning('remove next line, it''s dodgy');
-pyramidal_rates(1:19) = 0;
+% warning('remove next line, it''s dodgy');
+% pyramidal_rates(1:19) = 0;
 %%
 fig = figure;
 yyaxis left
@@ -68,17 +69,17 @@ xlabel('Membrane potential (mV)');
 ylabel('Pyramidal firing rate');
 
 %% Fit
-% ft = fittype( '(0.5*erf((x - a) / (sqrt(2) * b)) + 0.5)', 'independent', 'x', 'dependent', 'y' ); % Error function | a = v0 | b = r
+ft = fittype( '(0.5*erf((x - a) / (sqrt(2) * b)) + 0.5)', 'independent', 'x', 'dependent', 'y' ); % Error function | a = v0 | b = r
 % ft = fittype( '2.^-(a.^-(x-b))', 'independent', 'x', 'dependent', 'y' );                          % Double exponential sigmoid
-ft = fittype( 'a*exp(-b*exp(-d*(x-c)))', 'independent', 'x', 'dependent', 'y' );                  % Gompertz sigmoid
+% ft = fittype( 'a*exp(-b*exp(-d*(x-c)))', 'independent', 'x', 'dependent', 'y' );                  % Gompertz sigmoid
 % ft = fittype( 'c/(1+exp(-a*(x-b)))+d', 'independent', 'x', 'dependent','y' );                     % sigmoid
 
 opts = fitoptions(ft);
-opts.StartPoint = [1 1 1 0]; %[21 1];
-opts.Lower = [1 1 1 -100]; %[23 5];     
-opts.Upper = [70 100 100 100]; %[23 5];    
+opts.StartPoint = [5 1]; % [1 1 1 0]; %[21 1];
+opts.Lower =  [15 11]; % [1 1 1 -100]; %[23 5];     
+opts.Upper = [20 20]; % [70 100 100 100]; %[23 5];    
 fitresult_Py = fit(membrane_potentials', pyramidal_rates', ft, opts) % With options
-% fitresult_Py = fit(membrane_potentials', pyramidal_rates', ft); % No options
+% fitresult_Py = fit(membrane_potentials', pyramidal_rates', ft) % No options
 
 
 figure(fig);
@@ -89,7 +90,7 @@ xlabel('Membrane potential (mV)');
 ylabel('Pyramidal firing rate (spikes/s)');
 % ylim([0 1]);
 yyaxis left
-ylim([0 params.e0]);
+% ylim([0 params.e0]);
 
 % %% Plot firing rates of both populations
 % figure

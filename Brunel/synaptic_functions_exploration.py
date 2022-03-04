@@ -20,11 +20,12 @@ from lif_model import set_params
 
 #%% options  --------------------------------------------------------------
 
-neuron_type     = 'pyramidal'   # pyramidal, inhibitory or spiny
+source          = 'allen'       # brunel or allen
 synaptic_type   = 'GABA'        # AMPA or GABA
-external        = False          # When AMPA, synapsis can be external or recurrent (local)
+neuron_type     = 'pyramidal'  # pyramidal, inhibitory or spiny
+external        = False         # When AMPA, synapsis can be external or recurrent (local)
 input_spike_rate = 1            # spikes/ms/cell 
-simulation_time = 1 * second
+simulation_time = 0.3 * second
 
 
 
@@ -40,7 +41,7 @@ V_leak = -70. * mV      # Resting membrane potential
 V_thr = -50 * mV        # Threshold
 V_reset = -59 * mV # -59 * mV      # Reset voltage. Equal to V_leak-> To use Burkitt's, 2006 Eq. (12)
 
-params = set_params(neuron_type)
+params = set_params(neuron_type, source)
 
 # membrane capacitance
 C_m = params["C"]
@@ -102,6 +103,7 @@ eqs = '''
     
     dv1 / dt = (-v1 - (I_AMPA1/g_m)) / tau_m : volt (unless refractory)
     dv5 / dt = (-v5 - (I_AMPA5/g_m)) / tau_m : volt (unless refractory)
+    dv6 / dt = (-v6 - (I_AMPA6/g_m)) / tau_m : volt (unless refractory)
         
     I_tot = I_AMPA1 + I_AMPA5: amp
     
@@ -110,6 +112,9 @@ eqs = '''
     
     I_AMPA5 = j * s_AMPA5 : amp
     s_AMPA5 : 1
+    
+    I_AMPA6 = (j * alpha_weight) * s_AMPA6 : amp
+    s_AMPA6 : 1
 '''
 
 eqs_pre_ampa1 = '''
@@ -136,6 +141,16 @@ eqs_pre_ampa5 = '''
 x5 += alpha_weight
 ''' 
 
+eqs_ampa6 ='''
+s_AMPA6_post = s_AMPA6_syn : 1 (summed)
+ds_AMPA6_syn / dt = - s_AMPA6_syn / (tau_s) + k * x6 : 1 (clock-driven)
+dx6 / dt = - x6 / (tau_s) : 1 (clock-driven)
+'''
+
+eqs_pre_ampa6 = '''
+x6 += 1
+''' 
+
 Pyramidal = NeuronGroup(N_P, eqs, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
 Pyramidal.v = V_leak
 
@@ -155,7 +170,12 @@ if external:
 AMPA5_synapses = Synapses(Input, Pyramidal, model=eqs_ampa5, on_pre=eqs_pre_ampa5, method='rk4')#, dt=10*usecond)
 AMPA5_synapses.connect(p = 1)
 
-Py_monitor = StateMonitor(Pyramidal, ['v1', 'v5', 's_AMPA1', 's_AMPA5'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
+AMPA6_synapses = Synapses(Input, Pyramidal, model=eqs_ampa6, on_pre=eqs_pre_ampa6, method='rk4')#, dt=10*usecond)
+AMPA6_synapses.connect(p = 1)
+
+
+
+Py_monitor = StateMonitor(Pyramidal, ['v1', 'v5', 'v6', 's_AMPA1', 's_AMPA5', 's_AMPA6'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
 
 #%% Run
 net = Network(collect())
@@ -167,6 +187,7 @@ f, axs = plt.subplots(2, 1, sharex=True, figsize=(10, 6.25)) # New figure with t
 axs[0].set_title('Neuron type: {} | Synapses: {} | j: {} pA'.format(neuron_type, synaptic_type, j/pA))
 axs[0].set_ylabel('PSP (mV)')
 axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v5) * 1e3), lw=1, label='alpha')
+axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v6) * 1e3), lw=1, label='alpha',linestyle='dashed')
 if external:
     axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v1) * 1e3), lw=1, label='single exp')
 axs[0].legend()
@@ -174,6 +195,7 @@ axs[0].legend()
 axs[1].set_xlabel('Time (ms)')
 axs[1].set_ylabel('PSC (pA)')
 axs[1].plot(T * 1e3, np.transpose(Py_monitor.s_AMPA5)*j/pA, lw=1)
+axs[1].plot(T * 1e3, np.transpose(Py_monitor.s_AMPA6)*(j*alpha_weight)/pA, lw=1)
 if external:
     axs[1].plot(T * 1e3, (np.transpose(Py_monitor.s_AMPA1)*j/pA), lw=1)
 
