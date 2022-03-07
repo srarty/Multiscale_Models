@@ -12,13 +12,14 @@ import numpy as np
 from brian2 import *
 from scipy import signal
 import matplotlib.pyplot as plt
-prefs.codegen.target = 'numpy'  # use the Python fallback instead of C compilation
+prefs.codegen.target = 'cython' #'numpy'  # use the Python fallback instead of C compilation
 devices.device.shape = []       # This and the following line remove an annoying warning when brian2 is imported and loaded into RAM
 devices.device.size = []
 
 #%% load data -----------------------------------------------------------------
+# folder = "C://Users/artemios/Documents/Multiscale_Models_Data/"
 folder = "C://Users/artemios/Documents/Multiscale_Models_Data/Spartan/"
-file = "lfp_0.mat"
+file = "lfp_13.mat"
 
 data = scipy.io.loadmat(folder + file)
 
