@@ -28,11 +28,11 @@ switch mode
         params.decay_i = 106.1121;   % Inhibitory synapse (GABA) into pyramidal cells (1/tau_i)
         
         params.u = mu; %11;%220;%15;%11;        % mean input mem potential
-        params.alpha_ei = 1011; % Excitatory gain into interneuron (Py -> Interneuron)
-        params.alpha_ie = -128.8; % Inhibitory gain into pyramidal (Interneuron -> Py)
+        params.alpha_ei = 1.488; %1011; % Excitatory gain into interneuron (Py -> Interneuron)
+        params.alpha_ie = -0.479; %-128.8; % Inhibitory gain into pyramidal (Interneuron -> Py)
 
         params.dt = 0.001;     % sampling time step         
-        params.scale = 1;% 1e-3; % Scale to fix mismatch in state amplitudes. Not to be confused with the scael in analytic_kalman_filter_2
+        params.scale = 1e3;% 1e-3; % Scale to fix mismatch in state amplitudes. Not to be confused with the scael in analytic_kalman_filter_2
         
     case 'brunel'
         params.e0 = 30; % max firing rate

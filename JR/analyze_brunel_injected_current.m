@@ -7,7 +7,7 @@ clear
 
 %% NMM sigmoid
 params = set_parameters('allen');       % Chose params.u from a constant value in set_params
-x = 0:0.1:50;
+x = -20:0.1:50;
 nonlinearity = nan(size(x));
 for i = 1:numel(x)
     nonlinearity(i) = params.e0 * non_linear_sigmoid(x(i), params.r, params.v0);

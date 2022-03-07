@@ -67,7 +67,7 @@ rng(0);
 %% Initialization
 % params = set_parameters('alpha', mu);     % Set params.u from the input argument 'mu' of set_params
 % params = set_parameters('alpha');         % Chose params.u from a constant value in set_params
-params = set_parameters('allen', 1500);    % params.u = 19.3, minimum oscillatory behaviour
+params = set_parameters('allen', 1.5); 
 
 N = 1000;%9800; % 148262; % LFP size: 10000 (can change) % Seizure 1 size: 148262; % number of samples
 if (TRUNCATE && REAL_DATA), N = TRUNCATE; end % If TRUNCATE ~=0, only take N = TRUNCATE samples of the recording or simulation
