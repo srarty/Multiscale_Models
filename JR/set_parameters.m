@@ -15,13 +15,13 @@ end
 switch mode
     case 'allen'
         params.e0 = 30; % max firing rate
-        params.r = 11;%1;   % Sigmoid slope
-        params.v0 = 15;%21; % Firing Threshold
+        params.r = 8; %11;%1;   % Sigmoid slope
+        params.v0 = 15; %15;%21; % Firing Threshold
         
-        params.gompertz.a = 70;
-        params.gompertz.b = 14;
-        params.gompertz.c = 14.49;
-        params.gompertz.d = 0.3292;
+        params.gompertz.a = 1; % 70;
+        params.gompertz.b = 3; % 14;
+        params.gompertz.c = 1; % 14.49;
+        params.gompertz.d = 0.15; % 0.3292;
         
         % inverse time constants
         params.decay_e = 268.4564;   % Excitatory synapse (AMPA) into inhibitory interneurons 1/tau_e
@@ -32,14 +32,14 @@ switch mode
         params.alpha_ie = -0.479; %-128.8; % Inhibitory gain into pyramidal (Interneuron -> Py)
 
         params.dt = 0.001;     % sampling time step         
-        params.scale = 1e3;% 1e-3; % Scale to fix mismatch in state amplitudes. Not to be confused with the scael in analytic_kalman_filter_2
+        params.scale = 1;%1e2;% 1e-3; % Scale to fix mismatch in state amplitudes. Not to be confused with the scael in analytic_kalman_filter_2
         
     case 'brunel'
         params.e0 = 30; % max firing rate
         params.r = 1;%1;   % Sigmoid slope
         params.v0 = 21;%21; % Firing Threshold
         
-        params.gompertz.a = 70;
+        params.gompertz.a = 30;
         params.gompertz.b = 14;
         params.gompertz.c = 14.49;
         params.gompertz.d = 0.3292;

@@ -4,7 +4,7 @@
 %
 % Note: Plot the non-linearity with the following code:
 %{
-        params = set_parameters('brunel');       % Chose params.u from a constant value in set_params
+        params = set_parameters('allen');       % Chose params.u from a constant value in set_params
         nonlinearity = [];
         count = 0;
         x = -20:0.1:80;
@@ -13,16 +13,16 @@
             nonlinearity(count) = gompertz(i, params);
         end
         figure
-        plot(x, nonlinearity, 'LineWidth', 2);
+        plot(x, nonlinearity * params.e0, 'LineWidth', 2);
         box off
         grid on
         ylabel('Output firing rate');
         xlabel('Input membrane potential');
         hold;
-        maximum = max(nonlinearity);
-        idx = nonlinearity()
+        maximum = max(nonlinearity * params.e0);
+        idx = nonlinearity();
         plot([min(x) max(x)],[0.5 0.5]*maximum,'--k');
-        plot([params.v0 params.v0], [0 1]*params.e0,'--k');
+        plot([10.7673 10.7673], [0 1]*params.e0,'--k');
 %}
 % Artemio - February 2022
 

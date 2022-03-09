@@ -16,7 +16,7 @@
 %
 % Note: Plot the non-linearity with the following code:
 %{
-        params = set_parameters('brunel');       % Chose params.u from a constant value in set_params
+        params = set_parameters('allen');       % Chose params.u from a constant value in set_params
         nonlinearity = [];
         count = 0;
         x = -20:0.1:80;

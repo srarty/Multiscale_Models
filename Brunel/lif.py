@@ -42,9 +42,9 @@ from lif_model import set_params
 # plt.close('all')
     
 # Options:
-RECURRENT_PYRAMIDAL = True     # Self excitation 
-RECURRENT_INHIBITORY = True     # Self inhibition
-INHIBIT_INPUT = True            # Excitatory cortical input to inhibitory population
+RECURRENT_PYRAMIDAL = False     # Self excitation 
+RECURRENT_INHIBITORY = False     # Self inhibition
+INHIBIT_INPUT = False            # Excitatory cortical input to inhibitory population
 ACTIVE_INTERNEURONS = True      # Inhibitory population
 ACTIVE_SPINY = False            # Spiny Stellate population
 PARAMS_SOURCE = 'allen'        # 'brunel' or 'allen'
@@ -58,7 +58,7 @@ input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramida
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 input_current_E = 0     # Excitatory interneurons (Spiny Stellate)         
 
-input_spike_rate = 3 # spikes/ms/cell (driving input)
+input_spike_rate = 5 # spikes/ms/cell (driving input)
 input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
 
 spiny_constant = 30 # temporal variable to  explore Spiny excitability
@@ -82,12 +82,12 @@ params_ex = set_params('spiny', PARAMS_SOURCE)
 
 
 # Probability of connection
-p_IP = params_py.get('p_IP')  * 500/N #0.2 #* 100/N # Inhibitory to Pyramidal
-p_PI = params_py.get('p_PI')  * 500/N #0.2 #* 100/N # Pyramidal to Inhibitory
-p_PE = params_py.get('p_PE')  * 500/N  #0.2 #* 100/N # Pyramidal to Excitatory
-p_EP = params_py.get('p_EP')  * 500/N #0.2 #* 100/N # Excitatory to Pyramidal
-p_PP = params_py.get('p_PP')  * 500/N  #0.2 #* 100/N # recurrent excitation (pyramidal) # Generally less than PI, IP connectivity (Bryson et al., 2021)
-p_II = params_py.get('p_II') * 500/N  #0.2 #* 100/N # recurrent inhibition
+p_IP = params_py.get('p_IP')  * sqrt(1000/N) #0.2 #* 100/N # Inhibitory to Pyramidal
+p_PI = params_py.get('p_PI')  * sqrt(1000/N) #0.2 #* 100/N # Pyramidal to Inhibitory
+p_PE = params_py.get('p_PE')  * sqrt(1000/N)  #0.2 #* 100/N # Pyramidal to Excitatory
+p_EP = params_py.get('p_EP')  * sqrt(1000/N) #0.2 #* 100/N # Excitatory to Pyramidal
+p_PP = params_py.get('p_PP')  * sqrt(1000/N)  #0.2 #* 100/N # recurrent excitation (pyramidal) # Generally less than PI, IP connectivity (Bryson et al., 2021)
+p_II = params_py.get('p_II') * sqrt(1000/N)  #0.2 #* 100/N # recurrent inhibition
 
 # voltage
 V_leak = -70. * mV      # Resting membrane potential
@@ -163,37 +163,37 @@ num_inputs = 800                    # Both thalamo-cortical and cortico-cortical
 
 # Synaptic efficacies
 # AMPA (excitatory)
-j_AMPA_rec_P = params_py.get('j_AMPA') * 500/N
-j_AMPA_rec_E = params_ex.get('j_AMPA') * 500/N
-j_AMPA_rec_I = params_in.get('j_AMPA') * 500/N
+j_AMPA_rec_P = params_py.get('j_AMPA') * sqrt(1000/N)
+j_AMPA_rec_E = params_ex.get('j_AMPA') * sqrt(1000/N)
+j_AMPA_rec_I = params_in.get('j_AMPA') * sqrt(1000/N)
     
 j_AMPA_cor_P = params_py.get('j_AMPA_ext')
 j_AMPA_cor_I = params_in.get('j_AMPA_ext')
 
 # GABAergic (inhibitory)
-j_GABA_P = params_py.get('j_GABA') * 500/N
-j_GABA_I = params_py.get('j_GABA') * 500/N
+j_GABA_P = params_py.get('j_GABA') * sqrt(1000/N)
+j_GABA_I = params_py.get('j_GABA') * sqrt(1000/N)
 
 # Weight constants. Amplitude of the synaptic input
 # Pyramidal 
-increment_AMPA_P =  params_py.get('alpha_weight_AMPA') #* 500/N
-increment_AMPA_ext_P = params_py.get('single_exp') #* 500/N
-increment_GABA_P = params_py.get('alpha_weight_GABA') #* 500/N
+increment_AMPA_P =  params_py.get('alpha_weight_AMPA') #* sqrt(1000/N)
+increment_AMPA_ext_P = params_py.get('single_exp') #* sqrt(1000/N)
+increment_GABA_P = params_py.get('alpha_weight_GABA') #* sqrt(1000/N)
 
 # Inhibitory interneurons
-increment_AMPA_I = params_in.get('alpha_weight_AMPA') #* 500/N
-increment_AMPA_ext_I = params_in.get('single_exp') #* 500/N
-increment_GABA_I = params_in.get('alpha_weight_GABA') #* 500/N
+increment_AMPA_I = params_in.get('alpha_weight_AMPA') #* sqrt(1000/N)
+increment_AMPA_ext_I = params_in.get('single_exp') #* sqrt(1000/N)
+increment_GABA_I = params_in.get('alpha_weight_GABA') #* sqrt(1000/N)
 
 # Excitatory interneurons
-increment_AMPA_E =  params_ex.get('alpha_weight_AMPA') #* 500/N
-increment_AMPA_ext_E = params_ex.get('single_exp') #* 500/N
-increment_GABA_E = params_ex.get('alpha_weight_GABA') #* 500/N
+increment_AMPA_E =  params_ex.get('alpha_weight_AMPA') #* sqrt(1000/N)
+increment_AMPA_ext_E = params_ex.get('single_exp') #* sqrt(1000/N)
+increment_GABA_E = params_ex.get('alpha_weight_GABA') #* sqrt(1000/N)
 
 
 
 # Alpha function's parameter (and double exponential) to fix the units in ds/dt
-k = 1 / ms # 0.62 / ms # Dimmensionless?, check Nicola and Campbell 2013
+k = 1 / ms # Dimmensionless?, check Nicola and Campbell 2013
 
 
 # Injected current
@@ -459,11 +459,11 @@ if PLOT:
     f, axs = plt.subplots(4, 1, sharex=True, figsize=(10, 6.25)) # New figure with two subplots
     
     # colors
-    c_inter = 'C6'  # pink
-    c_py = 'C9'     # light blue
-    c_ex = 'C0'    # blue
-    c_Cor = 'C1'    # orange
-    c_gray = '#e0e0e0' # grey
+    c_inter = 'C6'      # pink
+    c_py    = 'C9'      # light blue
+    c_ex    = 'C0'      # blue
+    c_Cor   = 'C1'      # orange
+    c_gray  = '#e0e0e0' # grey
     
     # raster
     axs[0].set_title('Raster ({} neurons/pop) N = {}, u = {} spikes/ms'.format(N_activity_plot, N, input_spike_rate))
@@ -623,28 +623,37 @@ if SAVE:
                     'input_spike_rate': input_spike_rate,
                     'input_spike_rate_thalamic': input_spike_rate_thalamic,
                     'input_current': input_current}   
+
+    # 'sp_P_i': sp_P.i,
+    # 'sp_P_t': sp_P.t,
+    # 'sp_T_i': sp_I.i,
+    # 'sp_T_t': sp_I.t,
         
     # Save as lfp_last
     scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/lfp_last.mat',
                      mdict = save_dictionary)
     
+    # Save at the end:
     i = 0
     while os.path.exists('C://Users/artemios/Documents/Multiscale_Models_Data/lfp_%s.mat' % i):
         i += 1
     
+    save_str = format('lfp_%s.mat' %(i))
     scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/lfp_%s.mat' % (i),
                      mdict = save_dictionary)
     
+    print(colored('Results of simulation saved as: ' + save_str, 'green'))
     
-    i = 0
-    while os.path.exists('C://Users/artemios/Documents/Multiscale_Models_Data/nonlinearity/lfp_inputCurrent_%s_%s.mat' % (floor(input_current),i)):
-        i += 1
+    # Save results of input current injection. Run in a loop to calculate nonlinearity:
+    #
+    # i = 0
+    # while os.path.exists('C://Users/artemios/Documents/Multiscale_Models_Data/nonlinearity/lfp_inputCurrent_%s_%s.mat' % (floor(input_current),i)):
+    #     i += 1
     
-    scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/nonlinearity/lfp_inputCurrent_%s_%s.mat' % (floor(input_current),i),
-                      mdict=save_dictionary)
+    # scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/nonlinearity/lfp_inputCurrent_%s_%s.mat' % (floor(input_current),i),
+    #                   mdict=save_dictionary)
 
-    # scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/lfp_%s.mat' % i,
-    #                   mdict = save_dictionary)
+
     
     # # Save at the end to keep all recordings
     # if RECURRENT_PYRAMIDAL:

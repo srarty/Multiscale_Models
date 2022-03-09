@@ -17,9 +17,9 @@ devices.device.shape = []       # This and the following line remove an annoying
 devices.device.size = []
 
 #%% load data -----------------------------------------------------------------
-# folder = "C://Users/artemios/Documents/Multiscale_Models_Data/"
-folder = "C://Users/artemios/Documents/Multiscale_Models_Data/Spartan/"
-file = "lfp_13.mat"
+folder = "C://Users/artemios/Documents/Multiscale_Models_Data/"
+# folder = "C://Users/artemios/Documents/Multiscale_Models_Data/Spartan/"
+file = "lfp_1.mat"
 
 data = scipy.io.loadmat(folder + file)
 
