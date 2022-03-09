@@ -30,7 +30,7 @@ REMOVE_DC       = 0;            % int{1,2} Remove DC offset from observed EEG (1
 SMOOTH          = 0;            % Moving average on EEG to filter fast changes (numeric, window size)
 ADD_NOISE       = true;         % Add noise to the forward model's states
 ADD_OBSERVATION_NOISE = true;	% Add noise to the forward model's states
-C_CONSTANT      = 100; % 135;          % Connectivity constant in nmm_define. It is 'J' or Average number of synapses between populations. (Default = 135)
+C_CONSTANT      = 1000; % 135;          % Connectivity constant in nmm_define. It is 'J' or Average number of synapses between populations. (Default = 135)
 
 KF_TYPE         = 'extended';   % String: 'unscented', 'extended' (default)
 ANALYTIC_TYPE   = 'pip';        % Algorithm to run: 'pip' or 'analytic'. Only makes a difference if the filter (KF_TYPE) is 'extended' or 'none'
@@ -67,7 +67,7 @@ rng(0);
 %% Initialization
 % params = set_parameters('alpha', mu);     % Set params.u from the input argument 'mu' of set_params
 % params = set_parameters('alpha');         % Chose params.u from a constant value in set_params
-params = set_parameters('allen', 1.5); 
+params = set_parameters('allen', 5); 
 
 N = 1000;%9800; % 148262; % LFP size: 10000 (can change) % Seizure 1 size: 148262; % number of samples
 if (TRUNCATE && REAL_DATA), N = TRUNCATE; end % If TRUNCATE ~=0, only take N = TRUNCATE samples of the recording or simulation
@@ -101,7 +101,7 @@ t = 0:dt:(N-1)*dt;
 % Initialise trajectory state
 x0 = zeros(NAugmented,1); % initial state
 % x0(1:NStates) = mvnrnd(x0(1:NStates),10^1*eye(NStates)); % Random inital state
-x0 = params.v0*ones(size(x0));% x0([2 4]) = 0;
+% x0 = params.v0*ones(size(x0));% x0([2 4]) = 0;
 x0(NStates+1:end) = [params.u; params.alpha_ie; params.alpha_ei];
 
 % Initialize covariance matrix
@@ -157,7 +157,8 @@ warning('Initialization of Q differs for Real data vs Simulated data');
 if REAL_DATA
     Q = 1e-2*eye(NAugmented);
 else
-    Q = 10^-1.*diag((0.4*std(x,[],2)*nmm.params.scale*sqrt(dt)).^2); % The alpha drift increases with a large covariance noise (Q)
+%     Q = 10^-1.*diag((0.4*std(x,[],2)*nmm.params.scale*sqrt(dt)).^2); % The alpha drift increases with a large covariance noise (Q)
+    Q = 10^-1.*diag((0.4*std(x,[],2)*sqrt(dt)).^2); % The alpha drift increases with a large covariance noise (Q)
 end
 % Q(NStates+1 : end, NStates+1 : end) =  10e-4*eye(NAugmented - NStates); % 10e-1*ones(NAugmented - NStates);
 
@@ -252,18 +253,20 @@ if ~ESTIMATE
     figure
     ax1 = subplot(2,1,1);
 %     yyaxis left
-    plot(1000*t, f_e); % Input firing rate into pyramidal cells
+    plot(1000*t, f_e * params.e0); % Input firing rate into pyramidal cells
     title('Sigmoid function output');
-    ylabel('f_e: (Pyramidal rate?)');
+    ylabel('f_e: (Pyramidal rate)');
+    ylim([0 params.e0]);
 %     yyaxis right
 %     plot(t, f_e * params.e0);
     
     ax2 = subplot(2,1,2);
 %     yyaxis left
-    plot(1000*t, f_i);
-    ylabel('f_i: Inhibitory rate?');
+    plot(1000*t, f_i * params.e0);
+    ylabel('f_i: Inhibitory rate');
     linkaxes([ax1 ax2],'x');
     xlabel('Time (ms)');
+    ylim([0 params.e0]);
 %     yyaxis right
 %     plot(t, f_i * params.e0);
     

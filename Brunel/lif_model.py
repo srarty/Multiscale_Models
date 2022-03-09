@@ -54,7 +54,8 @@ def set_params(type='pyramidal', source='brunel'):
             single_exponential_weight = 8.2
             delayed_exp_weight_AMPA = 6.0995 # Inverse 1.52/6.0995 = 0.24920075416017706
             delayed_exp_weight_GABA = 6.0995 # TODO
-        else:
+            
+        else: # if 'allen'
             g_leak = 25 * nS # Leak conductance
             C = 0.5 * nF # Membrane capacitance
     

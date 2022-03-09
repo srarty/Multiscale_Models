@@ -46,8 +46,8 @@ for ii = 1:no_files
     load(data_file);
     
     membrane_potentials(ii) = 1000*Vm;
+    pyramidal_rates(ii) = mean(R_py);
 %     membrane_potentials(ii) = 1000*Vm_interneurons;
-    pyramidal_rates(ii) = mean(R_py); %R_py/params.e0;
 %     pyramidal_rates(ii) = mean(R_in); %/params.e0;
 end
 
@@ -69,15 +69,22 @@ xlabel('Membrane potential (mV)');
 ylabel('Pyramidal firing rate');
 
 %% Fit
-ft = fittype( '(0.5*erf((x - a) / (sqrt(2) * b)) + 0.5)', 'independent', 'x', 'dependent', 'y' ); % Error function | a = v0 | b = r
+% ft = fittype( '(0.5*erf((x - a) / (sqrt(2) * b)) + 0.5)', 'independent', 'x', 'dependent', 'y' ); % Error function | a = v0 | b = r
 % ft = fittype( '2.^-(a.^-(x-b))', 'independent', 'x', 'dependent', 'y' );                          % Double exponential sigmoid
-% ft = fittype( 'a*exp(-b*exp(-d*(x-c)))', 'independent', 'x', 'dependent', 'y' );                  % Gompertz sigmoid
+ft = fittype( 'a*exp(-b*exp(-d*(x-c)))', 'independent', 'x', 'dependent', 'y' );                  % Gompertz sigmoid
 % ft = fittype( 'c/(1+exp(-a*(x-b)))+d', 'independent', 'x', 'dependent','y' );                     % sigmoid
 
 opts = fitoptions(ft);
-opts.StartPoint = [5 1]; % [1 1 1 0]; %[21 1];
-opts.Lower =  [15 11]; % [1 1 1 -100]; %[23 5];     
-opts.Upper = [20 20]; % [70 100 100 100]; %[23 5];    
+% Gompertz (Py)
+opts.StartPoint =  [1 1 1 0];
+opts.Lower =   [1 3 1 0.15];
+opts.Upper =  [1 100 100 0.15];
+
+% Error (In)
+% opts.StartPoint =  [10 5];
+% opts.Lower =   [15 8];
+% opts.Upper =  [15 8];
+
 fitresult_Py = fit(membrane_potentials', pyramidal_rates', ft, opts) % With options
 % fitresult_Py = fit(membrane_potentials', pyramidal_rates', ft) % No options
 
@@ -86,10 +93,12 @@ figure(fig);
 yyaxis right
 hold
 plot(fitresult_Py);
+ylim([0 1])
 xlabel('Membrane potential (mV)');
 ylabel('Pyramidal firing rate (spikes/s)');
-% ylim([0 1]);
 yyaxis left
+% ylim([0 1]);
+% ylim([0 250]);
 % ylim([0 params.e0]);
 
 % %% Plot firing rates of both populations

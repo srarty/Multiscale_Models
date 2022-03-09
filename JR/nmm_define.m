@@ -28,7 +28,7 @@ decay_i     = params.decay_i; %
 alpha_ei    = params.alpha_ei; % synaptic gains (excitatory)
 alpha_ie    = params.alpha_ie; % (inhibitory)
 u           = params.u;	% mean input firing rate.
-scale       = params.scale; % Scale to fix mismatch in state amplitudes. Not to be confused with the scael in analytic_kalman_filter_2
+scale       = params.scale; % Scale to fix mismatch in state amplitudes. Not to be confused with the scale in analytic_kalman_filter_2
 
 c_constant = C_CONSTANT; %135;%675; % This should reflect Brunel's 'N' variable
 % c1 = 0.25*c_constant;%1*c_constant;	% number of synapses
@@ -37,8 +37,8 @@ c_constant = C_CONSTANT; %135;%675; % This should reflect Brunel's 'N' variable
 % c2 = 1*c_constant; % (matches brunel?)
 % c1 = 1*c_constant;
 % c2 = 0.8*c_constant;
-c1 = 4 * c_constant; % Excitatory synapses into inhibitory population
-c2 = 1 * c_constant; % Inhibitory synapses into pyramidal population
+c1 = 4 * c_constant * 0.395; % Excitatory synapses into inhibitory population
+c2 = 1 * c_constant * 0.411; % Inhibitory synapses into pyramidal population
 
 % Number of augmented states
 xlen = length(x0);
