@@ -1,11 +1,8 @@
 %% Simulate 4 state NMM and EKF estimates. Calculate the CRB
 % Can be modified to more states by changing NStates. And the model
 % functions, e.g. model_NM = 4 states, model_NM_6thOrder = 6 states
-
-% TODO: Firing rates in the background activity should be set to, aroun 1
-% Hz? Check the actual value, but we know that the background activity is
-% some value. For exzample, when we are away from seizures, we can
-% cosntrain the firing rate to keep a value.
+%
+% Artemio - March 2022
 
 close all 
 clear
@@ -16,21 +13,21 @@ NInputs = 1; % Number of external inputs (u)
 NParams = 2; % Number of synaptic strength parameters (alpha_ie, alpha_ei, etc...)
 NAugmented = NStates + NInputs + NParams; % Total size of augmented state vector
 
-ESTIMATE        = false;         % Run the forward model and estimate (ESTIMATE = true), or just forward (ESTIMATE = false)
+ESTIMATE        = false;        % Run the forward model and estimate (ESTIMATE = true), or just forward (ESTIMATE = false)
 PCRB            = 0;            % Compute the PCRB (false = 0, or true > 0) The number here defines the iterations for CRB
 MSE             = 0;            % Compute the MSE (false = 0, or true > 0) The number here defines the iterations for MSE
-REAL_DATA       = false;         % True to load Seizure activity from neurovista recordings, false to generate data with the forward model
-LFP_SIMULATION  = true;        % True if data is ground truth data from the Brunel model (REAL_DATA must be 'true')
+REAL_DATA       = false;        % True to load Seizure activity from neurovista recordings, false to generate data with the forward model
+LFP_SIMULATION  = true;         % True if data is ground truth data from the Brunel model (REAL_DATA must be 'true')
 LFP_TYPE        = 'voltage';    % Source of LFP, it can be 'current' (abstract sum of currents) or 'voltage' (linear combination of Vm_Py and Cortical Input)
-TRUNCATE        = 0; %-50000;       % If ~=0, the real data from recordings is truncated from sample 1 to 'TRUNCATE'. If negative, it keeps the last 'TRUNCATE' samples.
-SCALE_DATA      = 0; % 6/50;         % Scale Raw data to match dynamic range of the membrane potentials in our model. Multiplies 'y' by the value of SCALE_DATA, try SCALE_DATA = 0.12
+TRUNCATE        = 0; %-50000;   % If ~=0, the real data from recordings is truncated from sample 1 to 'TRUNCATE'. If negative, it keeps the last 'TRUNCATE' samples.
+SCALE_DATA      = 0; % 6/50;    % Scale Raw data to match dynamic range of the membrane potentials in our model. Multiplies 'y' by the value of SCALE_DATA, try SCALE_DATA = 0.12
 INTERPOLATE     = 0;            % Upsample Raw data by interpolating <value> number of samples between each two samples. Doesn't interpolate if INTERPOLATE == {0,1}.
 
 REMOVE_DC       = 0;            % int{1,2} Remove DC offset from observed EEG (1) or observed and simulated (2).
 SMOOTH          = 0;            % Moving average on EEG to filter fast changes (numeric, window size)
 ADD_NOISE       = true;         % Add noise to the forward model's states
 ADD_OBSERVATION_NOISE = true;	% Add noise to the forward model's states
-C_CONSTANT      = 1000; % 135;          % Connectivity constant in nmm_define. It is 'J' or Average number of synapses between populations. (Default = 135)
+C_CONSTANT      = 1000;         % Connectivity constant in nmm_define. It is 'J' or Average number of synapses between populations. (J = 135 in JR)
 
 KF_TYPE         = 'extended';   % String: 'unscented', 'extended' (default)
 ANALYTIC_TYPE   = 'pip';        % Algorithm to run: 'pip' or 'analytic'. Only makes a difference if the filter (KF_TYPE) is 'extended' or 'none'
@@ -67,7 +64,7 @@ rng(0);
 %% Initialization
 % params = set_parameters('alpha', mu);     % Set params.u from the input argument 'mu' of set_params
 % params = set_parameters('alpha');         % Chose params.u from a constant value in set_params
-params = set_parameters('allen', 5); 
+params = set_parameters('allen', 0); 
 
 N = 1000;%9800; % 148262; % LFP size: 10000 (can change) % Seizure 1 size: 148262; % number of samples
 if (TRUNCATE && REAL_DATA), N = TRUNCATE; end % If TRUNCATE ~=0, only take N = TRUNCATE samples of the recording or simulation

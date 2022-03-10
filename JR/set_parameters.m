@@ -30,6 +30,9 @@ switch mode
         params.u = mu; %11;%220;%15;%11;        % mean input mem potential
         params.alpha_ei = 1.488; %1011; % Excitatory gain into interneuron (Py -> Interneuron)
         params.alpha_ie = -0.479; %-128.8; % Inhibitory gain into pyramidal (Interneuron -> Py)
+        
+        params.P_pyTOin = 0.395; % Probability of connection between Py -> Interneuron
+        params.P_inTOpy = 0.411; % Probability of connection between Py -> Interneuron
 
         params.dt = 0.001;     % sampling time step         
         params.scale = 1;%1e2;% 1e-3; % Scale to fix mismatch in state amplitudes. Not to be confused with the scael in analytic_kalman_filter_2

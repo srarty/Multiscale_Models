@@ -13,16 +13,17 @@
             nonlinearity(count) = gompertz(i, params);
         end
         figure
-        plot(x, nonlinearity * params.e0, 'LineWidth', 2);
+        plot(x, nonlinearity * params.e0, 'LineWidth', 2, 'color', [0.0745 0.6235 1]);
         box off
         grid on
-        ylabel('Output firing rate');
-        xlabel('Input membrane potential');
+        ylabel('Output firing rate (spikes/s)');
+        xlabel('Input membrane potential (mV)');
         hold;
         maximum = max(nonlinearity * params.e0);
         idx = nonlinearity();
         plot([min(x) max(x)],[0.5 0.5]*maximum,'--k');
         plot([10.7673 10.7673], [0 1]*params.e0,'--k');
+        title('Pyramidal population');
 %}
 % Artemio - February 2022
 
