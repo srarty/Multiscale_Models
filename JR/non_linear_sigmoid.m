@@ -25,14 +25,15 @@
             nonlinearity(count) = non_linear_sigmoid(i, params.r, params.v0);
         end
         figure
-        plot(x, params.e0*nonlinearity, 'LineWidth', 2);
+        plot(x, params.e0*nonlinearity, 'LineWidth', 2, 'color', [1 0.4118 0.1608]);
         box off
         grid on
-        ylabel('Output firing rate');
-        xlabel('Input membrane potential');
+        ylabel('Output firing rate (spikes/s)');
+        xlabel('Input membrane potential (mV)');
         hold;
         plot([min(x) max(x)],[0.5 0.5]*params.e0,'--k');
         plot([params.v0 params.v0], [0 1]*params.e0,'--k');
+        title('Inhibitory population');
 %}
 %
 % Artemio - 2021
