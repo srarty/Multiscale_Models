@@ -51,13 +51,6 @@ A =     [1,                  dt*scale,      0,              0,          0,  0,  
          0,                     0,          0,              0,          1,  0,  0; ...
          0,                     0,          0,              0,          0,  1,  0; ...
          0,                     0,          0,              0,          0,  0,  1];
-% A =     [1,                  dt*scale,      0,              0,          0,  0,  0; ...
-%   -50^2*dt/scale,            1-2*50*dt,     0,              0,          0,  0,  0; ...
-%          0,                     0,          1,            dt*scale,     0,  0,  0; ...
-%          0,                     0   -100^2*dt/scale,	1-2*100*dt,     0,  0,  0; ...
-%          0,                     0,          0,              0,          1,  0,  0; ...
-%          0,                     0,          0,              0,          0,  1,  0; ...
-%          0,                     0,          0,              0,          0,  0,  1];
      
 % B Matrix (Augmented parameters)                                                                
 %      
@@ -102,7 +95,7 @@ delump(2) = 1/(c1 * 2 * e_0 * dt * decay_e);
 
 % SCALE 1 - this is to avoid large differences between states upsetting the filter 
 % (magnitude of the membrane potentials and their derivatives)
-input = scale*u;
+input = scale*u(1);
 % SCALE 2 - this converts a constant input to its effect on the pyramidal
 % membrane potential by taking the steady state limit of the synaptic kernel
 % (assumption that the input varies much slower than the state variables).
@@ -110,7 +103,7 @@ input = scale*u;
 %       ~~~~~   ~~~~~~~~~~~~~~   ~~~~~~~~~
 %       input   synaptic gain    integral of kernel
 
-x0(5) = input;
+x0(5) = input(1);
 x0(6) = alpha_i; % Inhibitory synapses, input to pyramidal cells
 x0(7) = alpha_e; % Excitatory synapses, input to inhibitory interneurons
 
@@ -123,5 +116,6 @@ nmm.P0 = P0;
 nmm.delump = delump;
 nmm.params = params;
 nmm.options = struct;
+nmm.iteration = 1;
 
 end % end function - nmm_define

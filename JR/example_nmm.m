@@ -25,8 +25,8 @@ INTERPOLATE     = 0;            % Upsample Raw data by interpolating <value> num
 
 REMOVE_DC       = 0;            % int{1,2} Remove DC offset from observed EEG (1) or observed and simulated (2).
 SMOOTH          = 0;            % Moving average on EEG to filter fast changes (numeric, window size)
-ADD_NOISE       = true;         % Add noise to the forward model's states
-ADD_OBSERVATION_NOISE = true;	% Add noise to the forward model's states
+ADD_NOISE       = false;         % Add noise to the forward model's states
+ADD_OBSERVATION_NOISE = false;	% Add noise to the forward model's states
 C_CONSTANT      = 1000;         % Connectivity constant in nmm_define. It is 'J' or Average number of synapses between populations. (J = 135 in JR)
 
 KF_TYPE         = 'extended';   % String: 'unscented', 'extended' (default)
@@ -62,11 +62,15 @@ end
 rng(0);
 
 %% Initialization
-% params = set_parameters('alpha', mu);     % Set params.u from the input argument 'mu' of set_params
-% params = set_parameters('alpha');         % Chose params.u from a constant value in set_params
-params = set_parameters('allen', 0); 
+N = 1000;                                   % Seizure 1 size: 148262; % number of samples
+no_inputs = 1000; % For mu to be in spikes/milisecond/cell
+% input_vector = [0*ones(1,1000) 5*ones(1,1000) 10*ones(1,1000)];
+mu = 1;
+isi = exprnd(1/mu,[no_inputs,N]);
+input_vector = 1./mean(isi,1);
+params = set_parameters('allen', mu);     % Set params.u from the input argument 'mu' of set_params
+% params = set_parameters('allen', input_vector); 
 
-N = 1000;%9800; % 148262; % LFP size: 10000 (can change) % Seizure 1 size: 148262; % number of samples
 if (TRUNCATE && REAL_DATA), N = TRUNCATE; end % If TRUNCATE ~=0, only take N = TRUNCATE samples of the recording or simulation
 dT = params.dt;         % sampling time step (global)
 dt = 1*dT;            	% integration time step
@@ -97,9 +101,11 @@ t = 0:dt:(N-1)*dt;
 
 % Initialise trajectory state
 x0 = zeros(NAugmented,1); % initial state
+% x0(1:4) = [-6.17832482750127;-1.76266332436602e-29;2.27066738381194;0];
+% x0(1:4) = [-4.689924;0;1.2073693;0];
 % x0(1:NStates) = mvnrnd(x0(1:NStates),10^1*eye(NStates)); % Random inital state
 % x0 = params.v0*ones(size(x0));% x0([2 4]) = 0;
-x0(NStates+1:end) = [params.u; params.alpha_ie; params.alpha_ei];
+x0(NStates+1:end) = [params.u(1); params.alpha_ie; params.alpha_ei];
 
 % Initialize covariance matrix
 P0 = 1e2*eye(NAugmented);
@@ -125,13 +131,13 @@ nmm.options.ANALYTIC_TYPE   = ANALYTIC_TYPE;
 
 
 % Initialize states
-x0 = nmm.x0;
+x0 = nmm.x0; % Retrieve initial conditions from the defined model
 x = zeros(NAugmented,N);
 x(:,1) = x0;
 
 % Transition model
-f = @(x)nmm_run(nmm, x, [], 'transition');
-F = @(x)nmm_run(nmm, x, [], 'jacobian');
+f = @(x, iteration)nmm_run(nmm, x, [], 'transition', iteration);
+F = @(x, iteration)nmm_run(nmm, x, [], 'jacobian', iteration);
 % Analytic
 if strcmp('unscented', KF_TYPE)
     f_ = @(x,P)nmm_run(nmm, x, P,  'transition');
@@ -144,7 +150,7 @@ F_ = @(x,P)nmm_run(nmm, x, P,  'jacobian'); % F_ - transition matrix function (a
 %% Generate trajectory
 % Euler integration
 for n=1:N-1
-    x(:,n+1) = f(x(:,n)); % Zero covariance
+    x(:,n+1) = f(x(:,n), n); % Zero covariance
     if FIX_ALPHA, x(NStates+2:end,n+1) = x0(NStates+2:end); end % Fix the parameters (u and alpha)
 end
 
@@ -168,7 +174,7 @@ wbhandle = waitbar(0, 'Generating trajectory...'); % Loading bar
 % Euler-Maruyama integration
 for n=1:N-1
     try
-        [x(:,n+1), ~, f_e(n+1), f_i(n+1)] = f(x(:,n)); % Propagate mean
+        [x(:,n+1), ~, f_e(n+1), f_i(n+1)] = f(x(:,n), n); % Propagate mean
 
         if (FIX_ALPHA), x(NStates+2:end,n+1) = x0(NStates+2:end); end % Fixing the parameters, alternative, try this (next line): 
 %         if (FIX_ALPHA), x(NStates+1+~FIX_U:end,n+1)= estimation.x(NStates+1+~FIX_U:end, min(n+1,size(estimation.x, 2))); end % Fixing the parameters to the result of a previous recording.
@@ -252,7 +258,7 @@ if ~ESTIMATE
 %     yyaxis left
     plot(1000*t, f_e * params.e0); % Input firing rate into pyramidal cells
     title('Sigmoid function output');
-    ylabel('f_e: (Pyramidal rate)');
+    ylabel('f_e: Pyramidal rate');
     ylim([0 params.e0]);
 %     yyaxis right
 %     plot(t, f_e * params.e0);
