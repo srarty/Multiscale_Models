@@ -3,8 +3,8 @@
 %
 % Artemio - February 2022
 
-load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_ipsp.mat'); psp = ipsp; % Onhibitory (GABA) on pyramidal
-% load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_epsp.mat'); psp = epsp; % Excitatory (AMPA) on inhibitory interneurons
+% load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_ipsp.mat'); psp = ipsp; % Inhibitory (GABA) on pyramidal
+load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_epsp.mat'); psp = epsp; % Excitatory (AMPA) on inhibitory interneurons
 T = linspace(0,0.25,length(psp));
 
 
@@ -24,8 +24,8 @@ plot(T,psp)
 legend({'fit' 'brunel'})
 
 %%
-alpha = fitresult.b;
-tau =  fitresult.a;
+alpha = fitresult.b; % 277; %
+tau = fitresult.a; % 0.01452; %
 
 fun = @(t) alpha * t * exp(-t/tau);
 output = zeros(size(T));
