@@ -62,14 +62,14 @@ end
 rng(0);
 
 %% Initialization
-N = 1000;                                   % Seizure 1 size: 148262; % number of samples
+N = 5000;                                   % Seizure 1 size: 148262; % number of samples
 no_inputs = 1000; % For mu to be in spikes/milisecond/cell
 % input_vector = [0*ones(1,1000) 5*ones(1,1000) 10*ones(1,1000)];
 mu = 1;
 isi = exprnd(1/mu,[no_inputs,N]);
 input_vector = 1./mean(isi,1);
-params = set_parameters('allen', mu);     % Set params.u from the input argument 'mu' of set_params
-% params = set_parameters('allen', input_vector); 
+% params = set_parameters('allen', mu);     % Set params.u from the input argument 'mu' of set_params
+params = set_parameters('allen', input_vector); 
 
 if (TRUNCATE && REAL_DATA), N = TRUNCATE; end % If TRUNCATE ~=0, only take N = TRUNCATE samples of the recording or simulation
 dT = params.dt;         % sampling time step (global)

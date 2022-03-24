@@ -18,10 +18,20 @@ devices.device.size = []
 
 from lif_model import set_params
 
+## Save commands:
+# # Pyramidal:
+# save = {'ipsp': Py_monitor.v5*1e3}
+# scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/pyramidal_ipsp.mat', mdict=save)
+#
+# # Interneurons:
+# save = {'epsp': Py_monitor.v5*1e3}
+# scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/inhibitory_epsp.mat', mdict=save)
+
+
 #%% options  --------------------------------------------------------------
 
 source          = 'allen'       # brunel or allen
-synaptic_type   = 'GABA'        # AMPA or GABA
+synaptic_type   = 'AMPA'        # AMPA or GABA
 neuron_type     = 'inhibitory'  # pyramidal, inhibitory or spiny
 external        = False         # When AMPA, synapsis can be external or recurrent (local)
 input_spike_rate = 1            # spikes/ms/cell 
