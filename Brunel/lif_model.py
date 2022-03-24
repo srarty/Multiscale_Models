@@ -78,7 +78,7 @@ def set_params(type='pyramidal', source='brunel'):
             # unitary increment of the single exponential.
             single_exp_weight = 1 # TODO
             alpha_simple_weight_AMPA = 1
-            alpha_simple_weight_GABA = 1 
+            alpha_simple_weight_GABA = 1
             alpha_simple_weight_AMPA_ext = 12.5 # TODO
             single_exponential_weight = 8.2 # TODO
             delayed_exp_weight_AMPA = 6.0995 # TODO

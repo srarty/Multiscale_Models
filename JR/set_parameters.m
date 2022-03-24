@@ -24,9 +24,9 @@ switch mode
         params.gompertz.d = 0.15; % 0.3292;
         
         % inverse time constants
-        params.decay_e = 268.4564;   % Excitatory synapse (AMPA) into inhibitory interneurons 1/tau_e
-        params.decay_i = 106.1121;   % Inhibitory synapse (GABA) into pyramidal cells (1/tau_i)
-        
+        params.decay_e = 270.2703;%268.4564;%90   % Excitatory synapse (AMPA) into inhibitory interneurons 1/tau_e
+        params.decay_i = 106.3830;%106.1121;   % Inhibitory synapse (GABA) into pyramidal cells (1/tau_i)
+                
         params.u = mu; %11;%220;%15;%11;        % mean input mem potential
         params.alpha_ei = 1.488; %1011; % Excitatory gain into interneuron (Py -> Interneuron)
         params.alpha_ie = -0.479; %-128.8; % Inhibitory gain into pyramidal (Interneuron -> Py)
@@ -50,11 +50,17 @@ switch mode
         % inverse time constants
         params.decay_e = 223.7074;   % Excitatory synapse (AMPA) into inhibitory interneurons 1/tau_e
         params.decay_i = 88.4151;   % Inhibitory synapse (GABA) into pyramidal cells (1/tau_i)
+        params.tau_e = 1/params.decay_e;
+        params.tau_i = 1/params.decay_i;
         
         params.u = mu; %11;%220;%15;%11;        % mean input mem potential
         params.alpha_ei = 171.2; % Excitatory gain into interneuron (Py -> Interneuron)
         params.alpha_ie = -238.6; % Inhibitory gain into pyramidal (Interneuron -> Py)
 
+        params.P_pyTOin = 0.2; % Probability of connection between Py -> Interneuron
+        params.P_inTOpy = 0.2; % Probability of connection between Py -> Interneuron
+
+        
         params.dt = 0.001;     % sampling time step         
         params.scale =  1;%1e-3; % Scale to fix mismatch in state amplitudes. Not to be confused with the scael in analytic_kalman_filter_2
         

@@ -11,7 +11,7 @@
 %
 % The University of Melbourne | Artemio - March 2021
 %
-function varargout = nmm_run(nmm, x, P, mode)
+function varargout = nmm_run(nmm, x, P, mode, iteration)
 % Model
 A       = nmm.A;
 B       = nmm.B;
@@ -43,7 +43,8 @@ decay_e     = nmm.params.decay_e;   % inverse time constants (excitatory)
 decay_i     = nmm.params.decay_i;   % (inhibitory)
 alpha_ei    = nmm.params.alpha_ei;  % synaptic gains (excitatory)
 alpha_ie    = nmm.params.alpha_ie;  % (inhibitory)
-u           = nmm.params.u;         % mean input firing rate.
+u           = nmm.params.u(min([iteration, length(nmm.params.u)]));         % mean input firing rate.
+x(5) = u;
 
 % Implement exponential decay on alpha - params
 if ALPHA_DECAY
@@ -300,9 +301,6 @@ end % End switch
 % Optional outputs
 varargout{3} = phi_c(4);%f_e firing rate of Pyramidal neurons. This is the output of the nonlinearity, i.e. phi(Cx)
 varargout{4} = phi_c(2);%f_i firing rate of Inhibitory interneurons. This is the output of the nonlinearity
-
-% Increase the counter of iterations if everything went well.
-% nmm.t = nmm.t + 1; 
 
 end % End function
 
