@@ -39,7 +39,7 @@ devices.device.size = []
 from lif_model import set_params
 
 # def brunel(corriente=0):
-plt.close('all')
+# plt.close('all')
     
 # Options:
 RECURRENT_PYRAMIDAL = False     # Self excitation 
@@ -58,7 +58,7 @@ input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramida
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 input_current_E = 0     # Excitatory interneurons (Spiny Stellate)         
 
-input_spike_rate = [5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
+input_spike_rate = [0] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
 input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
 
 spiny_constant = 30 # temporal variable to  explore Spiny excitability
@@ -258,13 +258,20 @@ eqs_I = '''
 '''
 
 # Neuron groups
-Py_Pop = NeuronGroup(N_P, eqs_P, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp_P, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
+Py_Pop = NeuronGroup(N_P, eqs_P, threshold='v > V_thr', reset='''v = V_reset
+                                                                v_pe = V_reset-V_leak
+                                                                v_pi = V_reset-V_leak
+                                                                ''', refractory=tau_rp_P, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
 Py_Pop.v = V_leak
 
-Ex_Pop = NeuronGroup(N_E, eqs_E, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp_E, method='rk4', dt=dt_, name='SpinyPop') # Excitatory interneuron population
+Ex_Pop = NeuronGroup(N_E, eqs_E, threshold='v > V_thr', reset='''v = V_reset
+                                                                v_ep = V_reset-V_leak
+                                                                ''', refractory=tau_rp_E, method='rk4', dt=dt_, name='SpinyPop') # Excitatory interneuron population
 Ex_Pop.v = V_leak
 
-In_Pop = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp_I, method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
+In_Pop = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='''v = V_reset
+                                                                v_ip = V_reset-V_leak
+                                                                ''', refractory=tau_rp_I, method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
 In_Pop.v = V_leak
 
 # Pop_Cor = PoissonGroup(num_inputs, rates = (input_spike_rate*1000/num_inputs)*Hz, dt=dt_) # poisson input

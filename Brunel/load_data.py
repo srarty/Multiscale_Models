@@ -19,7 +19,7 @@ devices.device.size = []
 #%% load data -----------------------------------------------------------------
 # folder = "C://Users/artemios/Documents/Multiscale_Models_Data/"
 folder = "C://Users/artemios/Documents/Multiscale_Models_Data/Spartan/"
-file = "lfp_28.mat"
+file = "lfp_35.mat"
 
 data = scipy.io.loadmat(folder + file)
 
