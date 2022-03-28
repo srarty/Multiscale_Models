@@ -117,17 +117,17 @@ def set_params(type='pyramidal', source='brunel'):
             C = 0.2 * nF # Membrane capacitance
     
             tau_rp = 1 * ms # Absolute refractory period
-            tau_m = 10 * ms # Membrane time constant
+            tau_m = C/g_leak #10 * ms # Membrane time constant
     
             tau_GABA_r = 0.25 * ms
             tau_GABA_d = 5 * ms
-            tau_AMPA_r = 3 * ms  # <- bifurcation # 0.2 * ms
-            tau_AMPA_d = 15 * ms # <- bifurcation # 1 * ms
+            tau_AMPA_r = 0.2 * ms #3 * ms  # <- bifurcation # 0.2 * ms
+            tau_AMPA_d = 1 * ms #15 * ms # <- bifurcation # 1 * ms
             tau_l = 1 * ms # Latency
     
             # Synaptic efficacies
             j_GABA  = 35.1 * pA 
-            j_AMPA  = -12.55 * pA # <- bifurcation # -896 * pA
+            j_AMPA  = -896 * pA# -12.55 * pA # <- bifurcation # -896 * pA
             j_AMPA_ext = -19 * pA
             
             # Delta function weight (increment with each input spike)

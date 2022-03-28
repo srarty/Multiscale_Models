@@ -32,7 +32,7 @@ function do_plot(model, varargin)
                 ystr = 'V_{ip}';
             case 'lfp'
                 x_ = y; % NMM
-                ystr = 'LFP';
+                ystr = 'V_m (Py)';
             otherwise
                 error('Wrong options (signal)');
         end
@@ -44,7 +44,7 @@ function do_plot(model, varargin)
 
     elseif strcmp('lif', model)
     %     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_6.mat';
-        data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_28.mat';
+        data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_35.mat';
         load(data_file);
         dt = 1e-4;
         T = length(LFP_V) * dt;
@@ -61,7 +61,7 @@ function do_plot(model, varargin)
                 ystr = 'V_{ip}';
             case 'lfp'
                 x_ = LFP_V; % LIF
-                ystr = 'LFP';
+                ystr = 'V_m (Py)';
             otherwise
                 error('Wrong options (signal)');
         end
@@ -93,7 +93,7 @@ function do_plot(model, varargin)
     P1 = P2(:,1:n/2+1);
     P1(:,2:end-1)=2*P1(:,2:end-1);
 
-    f = figure(1); 
+    f = figure(100); 
     f.Position([3 4]) = [1230 420];
     if strcmp('lif', model), subplot(1,2,2); else, subplot(1,2,1); end
     plot(0:(Fs/n):(Fs/2-Fs/n), P1(1:n/2));
@@ -104,7 +104,7 @@ function do_plot(model, varargin)
     xlim([0 500]);
 
     %% Spectrogram
-    f = figure(2);
+    f = figure(101);
     f.Position([3 4]) = [1230 420];
     if strcmp('lif', model), subplot(1,2,2); else, subplot(1,2,1); end
     spectrogram(x_, w, so, freqbins, Fs, 'yaxis','power');

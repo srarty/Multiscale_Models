@@ -49,7 +49,7 @@ N_P = 1
 # voltage
 V_leak = -70. * mV      # Resting membrane potential
 V_thr = -50 * mV        # Threshold
-V_reset = -59 * mV # -59 * mV      # Reset voltage. Equal to V_leak-> To use Burkitt's, 2006 Eq. (12)
+V_reset = -70 * mV # -59 * mV      # Reset voltage. Equal to V_leak-> To use Burkitt's, 2006 Eq. (12)
 
 params = set_params(neuron_type, source)
 
@@ -115,7 +115,7 @@ eqs = '''
     dv5 / dt = (-v5 - (I_AMPA5/g_m)) / tau_m : volt (unless refractory)
     dv6 / dt = (-v6 - (I_AMPA6/g_m)) / tau_m : volt (unless refractory)
         
-    I_tot = I_AMPA1 + I_AMPA5: amp
+    I_tot = I_AMPA6 + I_AMPA5: amp
     
     I_AMPA1 = j * s_AMPA1 : amp
     ds_AMPA1 / dt = -s_AMPA1 / (tau_d + tau_r) : 1
@@ -161,7 +161,11 @@ eqs_pre_ampa6 = '''
 x6 += 1
 ''' 
 
-Pyramidal = NeuronGroup(N_P, eqs, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
+Pyramidal = NeuronGroup(N_P, eqs, threshold='v > V_thr', reset='''v = V_reset
+                                                                v1 = V_reset-V_leak
+                                                                v5 = V_reset-V_leak
+                                                                v6 = V_reset-V_leak
+                                                                ''',refractory=tau_rp, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
 Pyramidal.v = V_leak
 
 # Input1 = PoissonInput(Pyramidal, 's_AMPA1', num_inputs, input_spike_rate * Hz, single_exp_weight)
@@ -185,7 +189,7 @@ AMPA6_synapses.connect(p = 1)
 
 
 
-Py_monitor = StateMonitor(Pyramidal, ['v1', 'v5', 'v6', 's_AMPA1', 's_AMPA5', 's_AMPA6'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
+Py_monitor = StateMonitor(Pyramidal, ['v', 'v5', 'v6', 'I_AMPA5', 'I_AMPA6', 'I_tot'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
 
 #%% Run
 net = Network(collect())
@@ -197,15 +201,18 @@ f, axs = plt.subplots(2, 1, sharex=True, figsize=(10, 6.25)) # New figure with t
 axs[0].set_title('Neuron type: {} | Synapses: {} | j: {} pA'.format(neuron_type, synaptic_type, j/pA))
 axs[0].set_ylabel('PSP (mV)')
 axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v5) * 1e3), lw=1, label='alpha')
-axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v6) * 1e3), lw=1, label='alpha',linestyle='dashed')
+axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v6) * 1e3), lw=1, label='alpha', linestyle='dashed')
+axs[0].plot(T * 1e3, ((np.transpose(Py_monitor.v) - V_leak) * 1e3), lw=1, label='Vm', linestyle='solid')
+axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v6 + Py_monitor.v5) * 1e3), lw=1, label='Sum', linestyle='dashed')
 if external:
     axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v1) * 1e3), lw=1, label='single exp')
 axs[0].legend()
     
 axs[1].set_xlabel('Time (ms)')
 axs[1].set_ylabel('PSC (pA)')
-axs[1].plot(T * 1e3, np.transpose(Py_monitor.s_AMPA5)*j/pA, lw=1)
-axs[1].plot(T * 1e3, np.transpose(Py_monitor.s_AMPA6)*(j*alpha_weight)/pA, lw=1)
+axs[1].plot(T * 1e3, np.transpose(Py_monitor.I_AMPA5), lw=1)
+axs[1].plot(T * 1e3, np.transpose(Py_monitor.I_AMPA6), lw=1, linestyle='dashed')
+axs[1].plot(T * 1e3, np.transpose(Py_monitor.I_tot), lw=1)
 if external:
     axs[1].plot(T * 1e3, (np.transpose(Py_monitor.s_AMPA1)*j/pA), lw=1)
 
