@@ -113,6 +113,8 @@ tau_m_E = params_ex.get('tau_m')
 # Pyramidal
 tau_d_AMPA_P = params_py.get('tau_AMPA_d') # Decay time constant (From Brunel and Wang 2001)
 tau_r_AMPA_P = params_py.get('tau_AMPA_r')   # Rising time constant (< 1 ms), set to 0.05 isntead of 0.4 to match the ratio from GABA
+tau_d_AMPA_P_ext = params_py.get('tau_AMPA_d_ext') # Decay time constant (From Brunel and Wang 2001)
+tau_r_AMPA_P_ext = params_py.get('tau_AMPA_r_ext')   # Rising time constant (< 1 ms), set to 0.05 isntead of 0.4 to match the ratio from GABA
 tau_d_GABA_P = params_py.get('tau_GABA_d') # From Brunel and Wang 2001
 tau_r_GABA_P = params_py.get('tau_GABA_r')
 tau_s_AMPA_P = 0.5 * (tau_d_AMPA_P + tau_r_AMPA_P) + 0.05*ms      # "Lumped" time constant for alpha function. 
@@ -120,6 +122,8 @@ tau_s_GABA_P = 0.5 * (tau_d_GABA_P + tau_r_GABA_P) + 0.05*ms      # "Lumped" tim
 #Inhibitory Interneurons
 tau_d_AMPA_I = params_in.get('tau_AMPA_d')  
 tau_r_AMPA_I = params_in.get('tau_AMPA_r')
+tau_d_AMPA_I_ext = params_in.get('tau_AMPA_d_ext')  
+tau_r_AMPA_I_ext = params_in.get('tau_AMPA_r_ext')
 tau_d_GABA_I = params_in.get('tau_GABA_d')
 tau_r_GABA_I = params_in.get('tau_GABA_r')
 tau_s_AMPA_I = 0.5 * (tau_d_AMPA_I + tau_r_AMPA_I) + 0.05*ms      # "Lumped" time constant for alpha function. 
@@ -168,7 +172,9 @@ j_AMPA_rec_E = params_ex.get('j_AMPA') * np.sqrt(1000/N)
 j_AMPA_rec_I = params_in.get('j_AMPA') * np.sqrt(1000/N)
     
 j_AMPA_cor_P = params_py.get('j_AMPA_ext')
-j_AMPA_cor_I = params_in.get('j_AMPA_ext')
+j_AMPA_cor_I = params_in.get('j_AMPA_ext')  # This value is used for both cor 
+                                            # and tha, doesn't matter at the moment because
+                                            # the inhibitory pop doesn't receive cortical input
 
 # GABAergic (inhibitory)
 j_GABA_P = params_py.get('j_GABA') * np.sqrt(1000/N)
@@ -245,10 +251,13 @@ eqs_I = '''
 
     dv_ip /dt = (-v_ip -(I_AMPA_rec / g_m_I)) / tau_m_P : volt (unless refractory)
     
-    I_tot = I_AMPA_cor + I_AMPA_rec + I_GABA_rec + I_injected_I : amp
+    I_tot = I_AMPA_cor + I_AMPA_tha + I_AMPA_rec + I_GABA_rec + I_injected_I : amp
     
     I_AMPA_cor = j_AMPA_cor_I * s_AMPA_cor : amp
     ds_AMPA_cor / dt = - s_AMPA_cor / (tau_d_AMPA_I + tau_r_AMPA_I) : 1
+    
+    I_AMPA_tha = j_AMPA_cor_I * s_AMPA_tha : amp
+    ds_AMPA_tha / dt = - s_AMPA_tha / (tau_d_AMPA_I_ext + tau_r_AMPA_I_ext) : 1
     
     I_GABA_rec = j_GABA_I * s_GABA : amp
     s_GABA : 1
@@ -390,7 +399,7 @@ C_Cor_I.active = INHIBIT_INPUT # Innactive cortico-cortical -> interneuron
 
 # Poisson input (Thalamic, baseline spike rate)
 C_Tha_P = PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_P)
-C_Tha_I = PoissonInput(In_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_I)
+C_Tha_I = PoissonInput(In_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_I)
 
 
 

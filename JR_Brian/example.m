@@ -1,4 +1,4 @@
-close all
+% close all
 
 addpath ../JR/ % Load nonlinearity
 
