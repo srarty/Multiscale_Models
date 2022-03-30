@@ -11,7 +11,8 @@
 %
 % The University of Melbourne | Artemio - March 2021
 %
-function varargout = nmm_run(nmm, x, P, mode, iteration)
+function varargout = nmm_run(nmm, x, P, mode, varargin)
+if nargin > 4, iteration = varargin{1}; else iteration = 1; end 
 % Model
 A       = nmm.A;
 B       = nmm.B;

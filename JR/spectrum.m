@@ -13,7 +13,7 @@ function do_plot(model, varargin)
         y = varargin{2};
     end
 
-    signal = 'lfp'; % vpi, vip, lfp
+    signal = 'vip'; % vpi, vip, lfp
     % model = 'nmm'; % lif or nmm
 
     if strcmp('nmm', model)
@@ -25,13 +25,15 @@ function do_plot(model, varargin)
 
         switch signal
             case 'vpi'
-                x_ = x(1,:); % State 1 % NMM
+                x_ = x(:,1); % State 1 % NMM; % change dimm if model forward came from diff eqs instead of the nmm_toolbox
+                x_ = x_';
                 ystr = 'V_{pi}';
             case 'vip'
-                x_ = x(3,:); % State 3 % NMM
+                x_ = x(:,3); % State 3 % NMM
+                x_ = x_';
                 ystr = 'V_{ip}';
             case 'lfp'
-                x_ = y; % NMM
+                x_ = y'; % NMM
                 ystr = 'V_m (Py)';
             otherwise
                 error('Wrong options (signal)');
@@ -39,12 +41,12 @@ function do_plot(model, varargin)
 
         w = 128; % Window size
         so = 120; % Samples overlap
-        freqbins = 5 * 128; %Evaluate the spectrum at (128/2)+1=65 frequencies and (length(x)−120)/(128−120)=235 time bins.    
-        freqrange = [0 200]; % xlim values
+        freqbins = 10 * 128; %Evaluate the spectrum at (128/2)+1=65 frequencies and (length(x)−120)/(128−120)=235 time bins.    
+        freqrange = [0 100]; % xlim values
 
     elseif strcmp('lif', model)
-    %     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_6.mat';
-        data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_35.mat';
+        data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_7.mat';
+%         data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_40.mat';
         load(data_file);
         dt = 1e-4;
         T = length(LFP_V) * dt;
@@ -69,8 +71,8 @@ function do_plot(model, varargin)
 
         w = 1280; % Window size
         so = 1200; % Samples overlap
-        freqbins = 5 * 1280;
-        freqrange = [0 0.2]; % xlim values
+        freqbins = 10 * 1280;
+        freqrange = [0 0.1]; % xlim values
 
     else
         error('Wrong options (model)');
