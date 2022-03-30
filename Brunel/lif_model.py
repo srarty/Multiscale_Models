@@ -37,6 +37,8 @@ def set_params(type='pyramidal', source='brunel'):
             tau_GABA_d = 5 * ms
             tau_AMPA_r = 0.4 * ms
             tau_AMPA_d = 2 * ms
+            tau_AMPA_r_ext = 0.4 * ms
+            tau_AMPA_d_ext = 2 * ms
             tau_l = 1 * ms # Latency
     
             # Synaptic efficacies
@@ -66,6 +68,8 @@ def set_params(type='pyramidal', source='brunel'):
             tau_GABA_d = 5 * ms
             tau_AMPA_r = 0.4 * ms
             tau_AMPA_d = 2 * ms
+            tau_AMPA_r_ext = 0.4 * ms
+            tau_AMPA_d_ext = 2 * ms
             tau_l = 1 * ms # Latency
     
             # Synaptic efficacies
@@ -96,6 +100,8 @@ def set_params(type='pyramidal', source='brunel'):
             tau_GABA_d = 5 * ms
             tau_AMPA_r = 0.2 * ms
             tau_AMPA_d = 1 * ms
+            tau_AMPA_r_ext = 0.2 * ms
+            tau_AMPA_d_ext = 1 * ms
             tau_l = 1 * ms # Latency
     
             # Synaptic efficacies
@@ -123,6 +129,8 @@ def set_params(type='pyramidal', source='brunel'):
             tau_GABA_d = 5 * ms
             tau_AMPA_r = 0.2*ms # 3 * ms  # <- bifurcation # 0.2 * ms
             tau_AMPA_d = 1*ms # 15 * ms # <- bifurcation # 1 * ms
+            tau_AMPA_r_ext = 0.2*ms 
+            tau_AMPA_d_ext = 1*ms 
             tau_l = 1 * ms # Latency
     
             # Synaptic efficacies
@@ -151,6 +159,8 @@ def set_params(type='pyramidal', source='brunel'):
         tau_GABA_d = 5 * ms
         tau_AMPA_r = 0.4 * ms
         tau_AMPA_d = 2 * ms
+        tau_AMPA_r_ext = 0.4 * ms
+        tau_AMPA_d_ext = 2 * ms
         tau_l = 1 * ms # Latency
 
         # Synaptic efficacies
@@ -196,6 +206,8 @@ def set_params(type='pyramidal', source='brunel'):
         "tau_GABA_d":   tau_GABA_d,
         "tau_AMPA_r":   tau_AMPA_r,
         "tau_AMPA_d":   tau_AMPA_d,
+        "tau_AMPA_r_ext":   tau_AMPA_r_ext,
+        "tau_AMPA_d_ext":   tau_AMPA_d_ext,
         "tau_l":        tau_l,
         "j_GABA":       j_GABA,
         "j_AMPA":       j_AMPA,

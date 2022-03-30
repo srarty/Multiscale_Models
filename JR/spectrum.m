@@ -3,17 +3,29 @@
 % Artemio - March 2022
 
 function spectrum(x, y)
-    do_plot('nmm', x, y);
-    do_plot('lif');
+    signal = 'lfp'; % vpi, vip, lfp
+    do_plot('nmm', signal, x, y);
+    [v_pi, v_ip] = do_plot('lif', signal);
+%     plot_lif_results(v_pi, v_ip); % Won't run if lif results haven't been loaded
 end
 
-function do_plot(model, varargin)
-    if nargin > 1
+function plot_lif_results(v_pi, v_ip)
+    x1 = mean(v_pi,1);
+    x1_ = [0 mean(diff(v_pi,[],2))];
+    figure; plot(x1*1e3,x1_*1e6)
+    
+    x3 = mean(v_ip,1);
+    x3_ = [0 mean(diff(v_ip,[],2))];
+    figure; plot(x3*1e3,x3_*1e6)
+end
+
+function varargout = do_plot(model, signal, varargin)
+    if nargin > 2
         x = varargin{1};
         y = varargin{2};
     end
 
-    signal = 'vip'; % vpi, vip, lfp
+    % signal = 'vip'; % vpi, vip, lfp
     % model = 'nmm'; % lif or nmm
 
     if strcmp('nmm', model)
@@ -45,8 +57,8 @@ function do_plot(model, varargin)
         freqrange = [0 100]; % xlim values
 
     elseif strcmp('lif', model)
-        data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_7.mat';
-%         data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_40.mat';
+%         data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_8.mat';
+        data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_41.mat';
         load(data_file);
         dt = 1e-4;
         T = length(LFP_V) * dt;
@@ -73,7 +85,8 @@ function do_plot(model, varargin)
         so = 1200; % Samples overlap
         freqbins = 10 * 1280;
         freqrange = [0 0.1]; % xlim values
-
+        
+        varargout = {v_pi, v_ip};
     else
         error('Wrong options (model)');
     end
