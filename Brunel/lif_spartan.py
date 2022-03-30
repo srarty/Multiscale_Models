@@ -57,13 +57,13 @@ input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramida
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 input_current_E = 0     # Excitatory interneurons (Spiny Stellate)         
 
-input_spike_rate = [0] # [0, 5, 10] # spikes/ms/cell (driving input)
+input_spike_rate = [6] # [0, 5, 10] # spikes/ms/cell (driving input)
 input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
 
 spiny_constant = 30 # temporal variable to  explore Spiny excitability
 
 #%% parameters  --------------------------------------------------------------
-simulation_time = 5 * second
+simulation_time = 3 * second
 dt_ = 100 * usecond
 T = linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector for plots (in seconds)
 # T_u = linspace(0, simulation_time, round(simulation_time/u_dt)) # Time vector for u for plots (in seconds)

@@ -13,15 +13,15 @@ NInputs = 1; % Number of external inputs (u)
 NParams = 2; % Number of synaptic strength parameters (alpha_ie, alpha_ei, etc...)
 NAugmented = NStates + NInputs + NParams; % Total size of augmented state vector
 
-ESTIMATE        = false;        % Run the forward model and estimate (ESTIMATE = true), or just forward (ESTIMATE = false)
+ESTIMATE        = true;        % Run the forward model and estimate (ESTIMATE = true), or just forward (ESTIMATE = false)
 PCRB            = 0;            % Compute the PCRB (false = 0, or true > 0) The number here defines the iterations for CRB
 MSE             = 0;            % Compute the MSE (false = 0, or true > 0) The number here defines the iterations for MSE
-REAL_DATA       = false;        % True to load Seizure activity from neurovista recordings, false to generate data with the forward model
-LFP_SIMULATION  = true;         % True if data is ground truth data from the Brunel model (REAL_DATA must be 'true')
+REAL_DATA       = true;         % True to load Seizure activity from neurovista recordings, false to generate data with the forward model
+LFP_SIMULATION  = false;         % True if data is ground truth data from the Brunel model (REAL_DATA must be 'true')
 LFP_TYPE        = 'voltage';    % Source of LFP, it can be 'current' (abstract sum of currents) or 'voltage' (linear combination of Vm_Py and Cortical Input)
-TRUNCATE        = 0; %-50000;   % If ~=0, the real data from recordings is truncated from sample 1 to 'TRUNCATE'. If negative, it keeps the last 'TRUNCATE' samples.
+TRUNCATE        = 50000; %-50000;   % If ~=0, the real data from recordings is truncated from sample 1 to 'TRUNCATE'. If negative, it keeps the last 'TRUNCATE' samples.
 SCALE_DATA      = 0; % 6/50;    % Scale Raw data to match dynamic range of the membrane potentials in our model. Multiplies 'y' by the value of SCALE_DATA, try SCALE_DATA = 0.12
-INTERPOLATE     = 0;            % Upsample Raw data by interpolating <value> number of samples between each two samples. Doesn't interpolate if INTERPOLATE == {0,1}.
+INTERPOLATE     = 3;            % Upsample Raw data by interpolating <value> number of samples between each two samples. Doesn't interpolate if INTERPOLATE == {0,1}.
 
 REMOVE_DC       = 0;            % int{1,2} Remove DC offset from observed EEG (1) or observed and simulated (2).
 SMOOTH          = 0;            % Moving average on EEG to filter fast changes (numeric, window size)
@@ -29,7 +29,7 @@ ADD_NOISE       = false;         % Add noise to the forward model's states
 ADD_OBSERVATION_NOISE = false;	% Add noise to the forward model's states
 C_CONSTANT      = 1000;         % Connectivity constant in nmm_define. It is 'J' or Average number of synapses between populations. (J = 135 in JR)
 
-KF_TYPE         = 'extended';   % String: 'unscented', 'extended' (default)
+KF_TYPE         = 'unscented';   % String: 'unscented', 'extended' (default)
 ANALYTIC_TYPE   = 'pip';        % Algorithm to run: 'pip' or 'analytic'. Only makes a difference if the filter (KF_TYPE) is 'extended' or 'none'
 
 ALPHA_KF_LBOUND  = false;       % Zero lower bound (threshold) on alpha in the Kalman Filter (boolean)
@@ -62,13 +62,13 @@ end
 rng(0);
 
 %% Initialization
-N = 1000;                                   % Seizure 1 size: 148262; % number of samples
+N = 5000;                                   % Seizure 1 size: 148262; % number of samples
 no_inputs = 1000; % For mu to be in spikes/milisecond/cell
 % input_vector = [0*ones(1,1000) 5*ones(1,1000) 10*ones(1,1000)];
-mu = 2;
+mu = 5;
+% params = set_parameters('allen', mu);     % Set params.u from the input argument 'mu' of set_params
 isi = exprnd(1/mu,[no_inputs,N]);
 input_vector = 1./mean(isi,1);
-% params = set_parameters('allen', mu);     % Set params.u from the input argument 'mu' of set_params
 params = set_parameters('allen', input_vector); 
 
 if (TRUNCATE && REAL_DATA), N = TRUNCATE; end % If TRUNCATE ~=0, only take N = TRUNCATE samples of the recording or simulation
@@ -101,7 +101,7 @@ t = 0:dt:(N-1)*dt;
 
 % Initialise trajectory state
 x0 = zeros(NAugmented,1); % initial state
-% x0(1:4) = [-6.17832482750127;-1.76266332436602e-29;2.27066738381194;0];
+x0(1:4) = [-6.12262935299021;6.687378936415e-07;2.23477674859388;7.43251346380122e-07];
 % x0(1:4) = [-4.689924;0;1.2073693;0];
 % x0(1:NStates) = mvnrnd(x0(1:NStates),10^1*eye(NStates)); % Random inital state
 % x0 = params.v0*ones(size(x0));% x0([2 4]) = 0;

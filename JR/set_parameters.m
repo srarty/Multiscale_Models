@@ -24,12 +24,14 @@ switch mode
         params.gompertz.d = 0.15; % 0.3292;
         
         % inverse time constants
-        params.decay_e = 270.2703; % bifurcation = 76.3359; %270.2703;%268.4672;   % Excitatory synapse (AMPA) into inhibitory interneurons 1/tau_e
+        params.decay_e = 270.2703; % bifurcation(u=1) = 76.3601; %270.2703;%268.4672;   % Excitatory synapse (AMPA) into inhibitory interneurons 1/tau_e
         params.decay_i = 106.3830;%106.1121;   % Inhibitory synapse (GABA) into pyramidal cells (1/tau_i)
                 
         params.u = mu; %11;%220;%15;%11;        % mean input mem potential
-        params.alpha_ei = 1.488; %1011; % Excitatory gain into interneuron (Py -> Interneuron)
+        
+        ratio = -3.106472;
         params.alpha_ie = -0.479; %-128.8; % Inhibitory gain into pyramidal (Interneuron -> Py)
+        params.alpha_ei = ratio * params.alpha_ie;% 1.488; %1011 <- fit result; % Excitatory gain into interneuron (Py -> Interneuron)
         
         params.P_pyTOin = 0.395; % Probability of connection between Py -> Interneuron
         params.P_inTOpy = 0.411; % Probability of connection between Py -> Interneuron
