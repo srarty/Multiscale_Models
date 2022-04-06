@@ -2,9 +2,9 @@
 %
 % Artemio - March 2022
 
-function spectrum(x, y)
+function spectrum(x, y, t)
     signal = 'lfp'; % vpi, vip, lfp
-    do_plot('nmm', signal, x, y);
+    do_plot('nmm', signal, x, y, t);
     [v_pi, v_ip, t] = do_plot('lif', signal);
     plot_lif_results(v_pi, v_ip, t); % Won't run if lif results haven't been loaded
 end
@@ -13,15 +13,16 @@ function varargout = do_plot(model, signal, varargin)
     if nargin > 2
         x = varargin{1};
         y = varargin{2};
+        t = varargin{3};
     end
 
     % signal = 'vip'; % vpi, vip, lfp
     % model = 'nmm'; % lif or nmm
 
     if strcmp('nmm', model)
-        dt = 1e-3;
-        T = length(x);
-        t = linspace(0,T,T/dt);
+        T = t(end);
+        dt = T/length(x);
+        t = linspace(0,T,length(x));
 
         titlestr = 'NMM';
 
@@ -47,7 +48,7 @@ function varargout = do_plot(model, signal, varargin)
         w = 128; % Window size
         so = 120; % Samples overlap
         freqbins = 10 * 128; %Evaluate the spectrum at (128/2)+1=65 frequencies and (length(x)−120)/(128−120)=235 time bins.    
-        freqrange = [0 100]; % xlim values
+        freqrange = [0 0.1]; % xlim values
 
     elseif strcmp('lif', model)
         data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_22.mat';

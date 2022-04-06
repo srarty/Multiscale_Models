@@ -304,32 +304,32 @@ s_GABA += increment_GABA_I
    
 # Synapses
 # P to P
-C_P_P = Synapses(Py_Pop, Py_Pop, model=eqs_glut_P, on_pre=eqs_pre_glut_P, method='rk4', dt=dt_, delay=delay, name='synapses_pp')
+C_P_P = Synapses(Py_Pop, Py_Pop, on_pre=eqs_pre_glut_P, method='rk4', dt=dt_, delay=delay, name='synapses_pp')
 C_P_P.connect('i != j', p = p_PP)
 C_P_P.active = RECURRENT_PYRAMIDAL    # Testing no recursive connections to match NMM
 
 # P to E
-C_P_E = Synapses(Py_Pop, Ex_Pop, model=eqs_glut_E, on_pre=eqs_pre_glut_E, method='rk4', dt=dt_, delay=delay, name='synapses_pe')
+C_P_E = Synapses(Py_Pop, Ex_Pop, on_pre=eqs_pre_glut_E, method='rk4', dt=dt_, delay=delay, name='synapses_pe')
 C_P_E.connect(p = p_PE)
 C_P_E.active = ACTIVE_SPINY   
     
 # P to I
-C_P_I = Synapses(Py_Pop, In_Pop, model=eqs_glut_I , on_pre=eqs_pre_glut_I, method='rk4', dt=dt_, delay=delay, name='synapses_pi')
+C_P_I = Synapses(Py_Pop, In_Pop, on_pre=eqs_pre_glut_I, method='rk4', dt=dt_, delay=delay, name='synapses_pi')
 C_P_I.connect(p = p_PI)     
 C_P_I.active = ACTIVE_INTERNEURONS
 
 # I to I
-C_I_I = Synapses(In_Pop, In_Pop, model=eqs_gaba_I, on_pre=eqs_pre_gaba_I, method='rk4', dt=dt_, delay=delay, name='synapses_ii')
+C_I_I = Synapses(In_Pop, In_Pop, on_pre=eqs_pre_gaba_I, method='rk4', dt=dt_, delay=delay, name='synapses_ii')
 C_I_I.connect('i != j', p = p_II)
 C_I_I.active = RECURRENT_INHIBITORY    # Testing no recursive connections to match NMM
 
 # I to P
-C_I_P = Synapses(In_Pop, Py_Pop, model=eqs_gaba_P, on_pre=eqs_pre_gaba_P, method='rk4', dt=dt_, delay=delay, name='synapses_ip')
+C_I_P = Synapses(In_Pop, Py_Pop, on_pre=eqs_pre_gaba_P, method='rk4', dt=dt_, delay=delay, name='synapses_ip')
 C_I_P.connect(p = p_IP)    
 C_I_P.active = ACTIVE_INTERNEURONS
 
 # E to P
-C_E_P = Synapses(Ex_Pop, Py_Pop, model=eqs_glut_spi_P, on_pre=eqs_pre_glut_spi_P, method='rk4', dt=dt_, delay=delay, name='synapses_ep')
+C_E_P = Synapses(Ex_Pop, Py_Pop, on_pre=eqs_pre_glut_spi_P, method='rk4', dt=dt_, delay=delay, name='synapses_ep')
 C_E_P.connect(p = p_EP)    
 C_E_P.active = ACTIVE_SPINY
 
