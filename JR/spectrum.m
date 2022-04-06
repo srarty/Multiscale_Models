@@ -50,7 +50,7 @@ function varargout = do_plot(model, signal, varargin)
         freqrange = [0 100]; % xlim values
 
     elseif strcmp('lif', model)
-        data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_21.mat';
+        data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_22.mat';
 %         data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_43.mat';
         load(data_file);
         dt = 1e-4;
@@ -109,7 +109,7 @@ function varargout = do_plot(model, signal, varargin)
     xlabel('Frequency (Hz)');
     ylabel(['Power [', ystr, ']']);
 
-    xlim([0 500]);
+    xlim([0 100]);
 
     %% Spectrogram
     f = figure(101);

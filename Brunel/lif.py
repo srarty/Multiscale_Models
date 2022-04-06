@@ -24,7 +24,6 @@ References:
     
     [5] CAVALLARI, Stefano et al (2014)
 """
-
 import os
 import scipy.io
 import numpy as np
@@ -36,7 +35,7 @@ prefs.codegen.target = 'numpy'  # use the Python fallback instead of C compilati
 devices.device.shape = []       # This and the following line remove an annoying warning when brian2 is imported and loaded into RAM
 devices.device.size = []
 
-from lif_model import set_params
+from lif_model import set_params, get_equations
 
 # def brunel(corriente=0):
 # plt.close('all')
@@ -48,7 +47,7 @@ INHIBIT_INPUT = False            # Excitatory cortical input to inhibitory popul
 ACTIVE_INTERNEURONS = True      # Inhibitory population
 ACTIVE_SPINY = False            # Spiny Stellate population
 PARAMS_SOURCE = 'allen'        # 'brunel' or 'allen'
-SAVE = True                     # Save ground truth data
+SAVE = False                     # Save ground truth data
 PLOT = True                     # Plot results (main Figure)
 PLOT_EXTRA = True              # Plot extra things.
 
@@ -58,7 +57,7 @@ input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramida
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 input_current_E = 0     # Excitatory interneurons (Spiny Stellate)         
 
-input_spike_rate = [5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
+input_spike_rate = [10] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
 input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
 
 spiny_constant = 30 # temporal variable to  explore Spiny excitability
@@ -79,7 +78,6 @@ N_I = int(N)    # interneurons
 params_py = set_params('pyramidal', PARAMS_SOURCE)
 params_in = set_params('inhibitory', PARAMS_SOURCE)
 params_ex = set_params('spiny', PARAMS_SOURCE)
-
 
 # Probability of connection
 p_IP = params_py.get('p_IP')  * np.sqrt(1000/N) #0.2 #* 100/N # Inhibitory to Pyramidal
@@ -213,58 +211,11 @@ I_injected_E = -input_current_E * pA # Input current to Pyramidal population. Se
 
 #%% modeling  ----------------------------------------------------------------
 # model equations
-eqs_P = '''
-    dv / dt = (-v + V_leak - (I_tot/g_m_P)) / tau_m_P : volt (unless refractory)
-    
-    dv_pe /dt = (-v_pe - ((I_AMPA_spi + I_AMPA_cor) / g_m_P)) / tau_m_P : volt (unless refractory)
-    dv_pi /dt = (-v_pi - ( I_GABA_rec               / g_m_P)) / tau_m_P : volt (unless refractory)
+eqs_P = get_equations('pyramidal')
 
-    I_tot = I_AMPA_cor + I_AMPA_rec + I_AMPA_spi + I_GABA_rec + I_injected : amp
-    
-    I_AMPA_cor = j_AMPA_cor_P * s_AMPA_cor : amp
-    ds_AMPA_cor / dt = -s_AMPA_cor / (tau_d_AMPA_P + tau_r_AMPA_P) : 1    
-    
-    I_GABA_rec = j_GABA_P * s_GABA : amp
-    s_GABA : 1
-    
-    I_AMPA_rec = j_AMPA_rec_P * s_AMPA : amp
-    s_AMPA : 1    
-    
-    I_AMPA_spi = j_AMPA_rec_P * s_AMPA_spi : amp
-    s_AMPA_spi : 1
-'''
-    
+eqs_I = get_equations('inhibitory')
 
-eqs_E = '''
-    dv / dt = (-v + V_leak - (I_tot/g_m_E)) / tau_m_E : volt (unless refractory)
-    
-    dv_ep /dt = (-v_ep -(I_AMPA_rec / g_m_E)) / tau_m_P : volt (unless refractory)
-    
-    I_tot = I_AMPA_rec + I_injected_E : amp        
-    
-    I_AMPA_rec = j_AMPA_rec_E * s_AMPA : amp
-    s_AMPA : 1
-'''
-
-eqs_I = '''
-    dv / dt = (-v + V_leak - (I_tot/g_m_I)) / tau_m_I : volt (unless refractory)
-
-    dv_ip /dt = (-v_ip -(I_AMPA_rec / g_m_I)) / tau_m_P : volt (unless refractory)
-    
-    I_tot = I_AMPA_cor + I_AMPA_tha + I_AMPA_rec + I_GABA_rec + I_injected_I : amp
-    
-    I_AMPA_cor = j_AMPA_cor_I * s_AMPA_cor : amp
-    ds_AMPA_cor / dt = - s_AMPA_cor / (tau_d_AMPA_I + tau_r_AMPA_I) : 1
-    
-    I_AMPA_tha = j_AMPA_cor_I * s_AMPA_tha : amp
-    ds_AMPA_tha / dt = - s_AMPA_tha / (tau_d_AMPA_I_ext + tau_r_AMPA_I_ext) : 1
-    
-    I_GABA_rec = j_GABA_I * s_GABA : amp
-    s_GABA : 1
-    
-    I_AMPA_rec = j_AMPA_rec_I * s_AMPA : amp
-    s_AMPA : 1
-'''
+eqs_E = get_equations('spiny')
 
 # Neuron groups
 Py_Pop = NeuronGroup(N_P, eqs_P, threshold='v > V_thr', reset='''v = V_reset
@@ -291,96 +242,95 @@ In_Pop.v = V_leak
 
 #%% synaptic equations -------------------------------------------------------
 # Pyramidal (autoexcitatory)
-eqs_glut_P = '''
-s_AMPA_post = s_AMPA_syn : 1 (summed)
-ds_AMPA_syn / dt = - s_AMPA_syn / tau_s_AMPA_P + k * x : 1 (clock-driven)
-dx / dt = - x / tau_s_AMPA_P : 1 (clock-driven)
-'''
+# eqs_glut_P = '''
+# s_AMPA_post = s_AMPA_syn : 1 (summed)
+# ds_AMPA_syn / dt = - s_AMPA_syn / tau_s_AMPA_P + k * x : 1 (clock-driven)
+# dx / dt = - x / tau_s_AMPA_P : 1 (clock-driven)
+# '''
 eqs_pre_glut_P = '''
-x += increment_AMPA_P
+s_AMPA += increment_AMPA_P
 '''
 
 # Pyramidal (from spiny)
-eqs_glut_spi_P = '''
-s_AMPA_spi_post = s_AMPA_spi_syn : 1 (summed)
-ds_AMPA_spi_syn / dt = - s_AMPA_spi_syn / tau_s_AMPA_P + k * x : 1 (clock-driven)
-dx / dt = - x / tau_s_AMPA_P : 1 (clock-driven)
-'''
+# eqs_glut_spi_P = '''
+# s_AMPA_spi_post = s_AMPA_spi_syn : 1 (summed)
+# ds_AMPA_spi_syn / dt = - s_AMPA_spi_syn / tau_s_AMPA_P + k * x : 1 (clock-driven)
+# dx / dt = - x / tau_s_AMPA_P : 1 (clock-driven)
+# '''
 eqs_pre_glut_spi_P = '''
-x += increment_AMPA_P
+s_AMPA_spi += increment_AMPA_P
 '''
 
 
 # Pyramidal (gabaergic, inhibitory to pyramidal)
-eqs_gaba_P = '''
-s_GABA_post = s_GABA_syn : 1 (summed)
-ds_GABA_syn / dt = - s_GABA_syn / tau_s_GABA_P + k * x : 1 (clock-driven)
-dx / dt = - x / tau_s_GABA_P : 1 (clock-driven)
-'''
+# eqs_gaba_P = '''
+# s_GABA_post = s_GABA_syn : 1 (summed)
+# ds_GABA_syn / dt = - s_GABA_syn / tau_s_GABA_P + k * x : 1 (clock-driven)
+# dx / dt = - x / tau_s_GABA_P : 1 (clock-driven)
+# '''
 eqs_pre_gaba_P = '''
-x += increment_GABA_P
+s_GABA += increment_GABA_P
 '''
 
 # Excitatory (glutamate, pyramidal to spiny)
-eqs_glut_E = '''
-s_AMPA_post = s_AMPA_syn : 1 (summed)
-ds_AMPA_syn / dt = - s_AMPA_syn / tau_s_AMPA_E + k * x : 1 (clock-driven)
-dx / dt = - x / tau_s_AMPA_E : 1 (clock-driven)
-'''
+# eqs_glut_E = '''
+# s_AMPA_post = s_AMPA_syn : 1 (summed)
+# ds_AMPA_syn / dt = - s_AMPA_syn / tau_s_AMPA_E + k * x : 1 (clock-driven)
+# dx / dt = - x / tau_s_AMPA_E : 1 (clock-driven)
+# '''
 eqs_pre_glut_E = '''
-x += increment_AMPA_E
+s_AMPA += increment_AMPA_E
 '''
 
 # Interneurons (glutamate, pyramidal to inhibitory)
-eqs_glut_I = '''
-s_AMPA_post = s_AMPA_syn : 1 (summed)
-ds_AMPA_syn / dt = - s_AMPA_syn / tau_s_AMPA_I + k * x : 1 (clock-driven)
-dx / dt = - x / tau_s_AMPA_I : 1 (clock-driven)
-'''
+# eqs_glut_I = '''
+# s_AMPA_post = s_AMPA_syn : 1 (summed)
+# ds_AMPA_syn / dt = - s_AMPA_syn / tau_s_AMPA_I + k * x : 1 (clock-driven)
+# dx / dt = - x / tau_s_AMPA_I : 1 (clock-driven)
+# '''
 eqs_pre_glut_I = '''
-x += increment_AMPA_I
+s_AMPA += increment_AMPA_I
 '''
 
 # Interneurons (autoinhibiton)
-eqs_gaba_I = '''
-s_GABA_post = s_GABA_syn : 1 (summed)
-ds_GABA_syn / dt = - s_GABA_syn / tau_s_GABA_I + k * x : 1 (clock-driven)
-dx / dt = - x / tau_s_GABA_I : 1 (clock-driven)
-'''
+# eqs_gaba_I = '''
+# s_GABA_post = s_GABA_syn : 1 (summed)
+# ds_GABA_syn / dt = - s_GABA_syn / tau_s_GABA_I + k * x : 1 (clock-driven)
+# dx / dt = - x / tau_s_GABA_I : 1 (clock-driven)
+# '''
 eqs_pre_gaba_I = '''
-x += increment_GABA_I
+s_GABA += increment_GABA_I
 '''
-
 
    
 # Synapses
 # P to P
-C_P_P = Synapses(Py_Pop, Py_Pop, model=eqs_glut_P, on_pre=eqs_pre_glut_P, method='rk4', dt=dt_, delay=delay, name='synapses_pp')
+C_P_P = Synapses(Py_Pop, Py_Pop, on_pre=eqs_pre_glut_P, method='rk4', dt=dt_, delay=delay, name='synapses_pp')
 C_P_P.connect('i != j', p = p_PP)
 C_P_P.active = RECURRENT_PYRAMIDAL    # Testing no recursive connections to match NMM
 
 # P to E
-C_P_E = Synapses(Py_Pop, Ex_Pop, model=eqs_glut_E, on_pre=eqs_pre_glut_E, method='rk4', dt=dt_, delay=delay, name='synapses_pe')
+C_P_E = Synapses(Py_Pop, Ex_Pop, on_pre=eqs_pre_glut_E, method='rk4', dt=dt_, delay=delay, name='synapses_pe')
 C_P_E.connect(p = p_PE)
 C_P_E.active = ACTIVE_SPINY   
     
 # P to I
-C_P_I = Synapses(Py_Pop, In_Pop, model=eqs_glut_I , on_pre=eqs_pre_glut_I, method='rk4', dt=dt_, delay=delay, name='synapses_pi')
+C_P_I = Synapses(Py_Pop, In_Pop, on_pre=eqs_pre_glut_I, method='rk4', dt=dt_, delay=delay, name='synapses_pi')
 C_P_I.connect(p = p_PI)     
 C_P_I.active = ACTIVE_INTERNEURONS
 
 # I to I
-C_I_I = Synapses(In_Pop, In_Pop, model=eqs_gaba_I, on_pre=eqs_pre_gaba_I, method='rk4', dt=dt_, delay=delay, name='synapses_ii')
+C_I_I = Synapses(In_Pop, In_Pop, on_pre=eqs_pre_gaba_I, method='rk4', dt=dt_, delay=delay, name='synapses_ii')
 C_I_I.connect('i != j', p = p_II)
 C_I_I.active = RECURRENT_INHIBITORY    # Testing no recursive connections to match NMM
 
 # I to P
-C_I_P = Synapses(In_Pop, Py_Pop, model=eqs_gaba_P, on_pre=eqs_pre_gaba_P, method='rk4', dt=dt_, delay=delay, name='synapses_ip')
+C_I_P = Synapses(In_Pop, Py_Pop, on_pre=eqs_pre_gaba_P, method='rk4', dt=dt_, delay=delay, name='synapses_ip')
 C_I_P.connect(p = p_IP)    
 C_I_P.active = ACTIVE_INTERNEURONS
 
 # E to P
-C_E_P = Synapses(Ex_Pop, Py_Pop, model=eqs_glut_spi_P, on_pre=eqs_pre_glut_spi_P, method='rk4', dt=dt_, delay=delay, name='synapses_ep')
+C_E_P = Synapses(Ex_Pop, Py_Pop, on_pre=eqs_pre_glut_spi_P, method='rk4', dt=dt_, delay=delay, name='synapses_ep')
 C_E_P.connect(p = p_EP)    
 C_E_P.active = ACTIVE_SPINY
 
@@ -400,8 +350,6 @@ C_Cor_I.active = INHIBIT_INPUT # Innactive cortico-cortical -> interneuron
 # Poisson input (Thalamic, baseline spike rate)
 C_Tha_P = PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_P)
 C_Tha_I = PoissonInput(In_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_I)
-
-
 
 # Poisson population
 # C_Cor_P = Synapses(Pop_Cor, Py_Pop, model=eqs_cor_P, on_pre=eqs_pre_cor_P, method='rk4', dt=dt_, delay=delay, name='synapses_pext')
@@ -605,7 +553,14 @@ if PLOT_EXTRA:
         axs[2].plot(T*1000, np.transpose(Ex_monitor.v[0:5])*1e3, lw=0.5, c=c_ex)
     
     f3.tight_layout()
-    plt.show()
+    
+    f4, axs = plt.subplots(1, 1, figsize=(6,6))
+    axs.plot(np.transpose(v_pi) * 1000, np.transpose(v_ip) * 1000)
+    axs.set_xlabel('x1 = V_pi')
+    axs.set_ylabel('x3 = V_ip')
+    
+    plt.show()    
+    
     
 #%% Find Coefficient of Variation of ISI
 isi_P = np.zeros(N_activity_plot)

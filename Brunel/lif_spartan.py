@@ -36,7 +36,7 @@ prefs.codegen.target = 'cython'  # use the Python fallback instead of C compilat
 devices.device.shape = []       # This and the following line remove an annoying warning when brian2 is imported and loaded into RAM
 devices.device.size = []
 
-from lif_model import set_params
+from lif_model import set_params, get_equations
 
 # def brunel(corriente=0):
     
@@ -210,138 +210,96 @@ I_injected_E = -input_current_E * pA # Input current to Pyramidal population. Se
 
 #%% modeling  ----------------------------------------------------------------
 # model equations
-eqs_P = '''
-    dv / dt = (-v + V_leak - (I_tot/g_m_P)) / tau_m_P : volt (unless refractory)
-    
-    dv_pe /dt = (-v_pe - ((I_AMPA_spi + I_AMPA_cor) / g_m_P)) / tau_m_P : volt (unless refractory)
-    dv_pi /dt = (-v_pi - ( I_GABA_rec               / g_m_P)) / tau_m_P : volt (unless refractory)
+eqs_P = get_equations('pyramidal')
 
-    I_tot = I_AMPA_cor + I_AMPA_rec + I_AMPA_spi + I_GABA_rec + I_injected : amp
-    
-    I_AMPA_cor = j_AMPA_cor_P * s_AMPA_cor : amp
-    ds_AMPA_cor / dt = -s_AMPA_cor / (tau_d_AMPA_P + tau_r_AMPA_P) : 1    
-    
-    I_GABA_rec = j_GABA_P * s_GABA : amp
-    s_GABA : 1
-    
-    I_AMPA_rec = j_AMPA_rec_P * s_AMPA : amp
-    s_AMPA : 1    
-    
-    I_AMPA_spi = j_AMPA_rec_P * s_AMPA_spi : amp
-    s_AMPA_spi : 1
-'''
-    
+eqs_I = get_equations('inhibitory')
 
-eqs_E = '''
-    dv / dt = (-v + V_leak - (I_tot/g_m_E)) / tau_m_E : volt (unless refractory)
-    
-    dv_ep /dt = (-v_ep -(I_AMPA_rec / g_m_E)) / tau_m_P : volt (unless refractory)
-    
-    I_tot = I_AMPA_rec + I_injected_E : amp        
-    
-    I_AMPA_rec = j_AMPA_rec_E * s_AMPA : amp
-    s_AMPA : 1
-'''
-
-eqs_I = '''
-    dv / dt = (-v + V_leak - (I_tot/g_m_I)) / tau_m_I : volt (unless refractory)
-
-    dv_ip /dt = (-v_ip -(I_AMPA_rec / g_m_I)) / tau_m_P : volt (unless refractory)
-    
-   I_tot = I_AMPA_cor + I_AMPA_tha + I_AMPA_rec + I_GABA_rec + I_injected_I : amp
-    
-    I_AMPA_cor = j_AMPA_cor_I * s_AMPA_cor : amp
-    ds_AMPA_cor / dt = - s_AMPA_cor / (tau_d_AMPA_I + tau_r_AMPA_I) : 1
-    
-    I_AMPA_tha = j_AMPA_cor_I * s_AMPA_tha : amp
-    ds_AMPA_tha / dt = - s_AMPA_tha / (tau_d_AMPA_I_ext + tau_r_AMPA_I_ext) : 1
-    
-  
-    I_GABA_rec = j_GABA_I * s_GABA : amp
-    s_GABA : 1
-    
-    I_AMPA_rec = j_AMPA_rec_I * s_AMPA : amp
-    s_AMPA : 1
-'''
+eqs_E = get_equations('spiny')
 
 # Neuron groups
-Py_Pop = NeuronGroup(N_P, eqs_P, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp_P, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
+Py_Pop = NeuronGroup(N_P, eqs_P, threshold='v > V_thr', reset='''v = V_reset
+                                                                v_pe = V_reset-V_leak
+                                                                v_pi = V_reset-V_leak
+                                                                ''', refractory=tau_rp_P, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
 Py_Pop.v = V_leak
 
-Ex_Pop = NeuronGroup(N_E, eqs_E, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp_E, method='rk4', dt=dt_, name='SpinyPop') # Excitatory interneuron population
+Ex_Pop = NeuronGroup(N_E, eqs_E, threshold='v > V_thr', reset='''v = V_reset
+                                                                v_ep = V_reset-V_leak
+                                                                ''', refractory=tau_rp_E, method='rk4', dt=dt_, name='SpinyPop') # Excitatory interneuron population
 Ex_Pop.v = V_leak
 
-In_Pop = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp_I, method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
+In_Pop = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='''v = V_reset
+                                                                v_ip = V_reset-V_leak
+                                                                ''', refractory=tau_rp_I, method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
 In_Pop.v = V_leak
 
 # Pop_Cor = PoissonGroup(num_inputs, rates = (input_spike_rate*1000/num_inputs)*Hz, dt=dt_) # poisson input
 
 # sigma_sq_noise = 0.16 * volt * volt   # Ornstein-Uhlenbeck process (cortico-cortical) units need to be volt^2 for units in the population's equation to be consistent. Makes sense, because sigma should be in volts, hence sigma^2 in volts^2. Check cavalleri 2014
 # tau_noise = 16 * ms                   # Ornstein-Uhlenbeck 
-# input_cortical = NeuronGroup(num_inputs, 'dv/dt = -v/tau_noise + sqrt(2 * sigma_sq_noise/tau_noise) * xi : volt', threshold = 'v >= 0.5 * volt', reset = 'v = 0 * volt', dt=dt_, method='euler')
+# input_cortical = NeuronGroup(num_inputs, 'dv/dt = -v/tau_noise + np.sqrt(2 * sigma_sq_noise/tau_noise) * xi : volt', threshold = 'v >= 0.5 * volt', reset = 'v = 0 * volt', dt=dt_, method='euler')
 
 #%% synaptic equations -------------------------------------------------------
 # Pyramidal (autoexcitatory)
-eqs_glut_P = '''
-s_AMPA_post = s_AMPA_syn : 1 (summed)
-ds_AMPA_syn / dt = - s_AMPA_syn / tau_s_AMPA_P + k * x : 1 (clock-driven)
-dx / dt = - x / tau_s_AMPA_P : 1 (clock-driven)
-'''
+# eqs_glut_P = '''
+# s_AMPA_post = s_AMPA_syn : 1 (summed)
+# ds_AMPA_syn / dt = - s_AMPA_syn / tau_s_AMPA_P + k * x : 1 (clock-driven)
+# dx / dt = - x / tau_s_AMPA_P : 1 (clock-driven)
+# '''
 eqs_pre_glut_P = '''
-x += increment_AMPA_P
+s_AMPA += increment_AMPA_P
 '''
 
 # Pyramidal (from spiny)
-eqs_glut_spi_P = '''
-s_AMPA_spi_post = s_AMPA_spi_syn : 1 (summed)
-ds_AMPA_spi_syn / dt = - s_AMPA_spi_syn / tau_s_AMPA_P + k * x : 1 (clock-driven)
-dx / dt = - x / tau_s_AMPA_P : 1 (clock-driven)
-'''
+# eqs_glut_spi_P = '''
+# s_AMPA_spi_post = s_AMPA_spi_syn : 1 (summed)
+# ds_AMPA_spi_syn / dt = - s_AMPA_spi_syn / tau_s_AMPA_P + k * x : 1 (clock-driven)
+# dx / dt = - x / tau_s_AMPA_P : 1 (clock-driven)
+# '''
 eqs_pre_glut_spi_P = '''
-x += increment_AMPA_P
+s_AMPA_spi += increment_AMPA_P
 '''
 
 
 # Pyramidal (gabaergic, inhibitory to pyramidal)
-eqs_gaba_P = '''
-s_GABA_post = s_GABA_syn : 1 (summed)
-ds_GABA_syn / dt = - s_GABA_syn / tau_s_GABA_P + k * x : 1 (clock-driven)
-dx / dt = - x / tau_s_GABA_P : 1 (clock-driven)
-'''
+# eqs_gaba_P = '''
+# s_GABA_post = s_GABA_syn : 1 (summed)
+# ds_GABA_syn / dt = - s_GABA_syn / tau_s_GABA_P + k * x : 1 (clock-driven)
+# dx / dt = - x / tau_s_GABA_P : 1 (clock-driven)
+# '''
 eqs_pre_gaba_P = '''
-x += increment_GABA_P
+s_GABA += increment_GABA_P
 '''
 
 # Excitatory (glutamate, pyramidal to spiny)
-eqs_glut_E = '''
-s_AMPA_post = s_AMPA_syn : 1 (summed)
-ds_AMPA_syn / dt = - s_AMPA_syn / tau_s_AMPA_E + k * x : 1 (clock-driven)
-dx / dt = - x / tau_s_AMPA_E : 1 (clock-driven)
-'''
+# eqs_glut_E = '''
+# s_AMPA_post = s_AMPA_syn : 1 (summed)
+# ds_AMPA_syn / dt = - s_AMPA_syn / tau_s_AMPA_E + k * x : 1 (clock-driven)
+# dx / dt = - x / tau_s_AMPA_E : 1 (clock-driven)
+# '''
 eqs_pre_glut_E = '''
-x += increment_AMPA_E
+s_AMPA += increment_AMPA_E
 '''
 
 # Interneurons (glutamate, pyramidal to inhibitory)
-eqs_glut_I = '''
-s_AMPA_post = s_AMPA_syn : 1 (summed)
-ds_AMPA_syn / dt = - s_AMPA_syn / tau_s_AMPA_I + k * x : 1 (clock-driven)
-dx / dt = - x / tau_s_AMPA_I : 1 (clock-driven)
-'''
+# eqs_glut_I = '''
+# s_AMPA_post = s_AMPA_syn : 1 (summed)
+# ds_AMPA_syn / dt = - s_AMPA_syn / tau_s_AMPA_I + k * x : 1 (clock-driven)
+# dx / dt = - x / tau_s_AMPA_I : 1 (clock-driven)
+# '''
 eqs_pre_glut_I = '''
-x += increment_AMPA_I
+s_AMPA += increment_AMPA_I
 '''
 
 # Interneurons (autoinhibiton)
-eqs_gaba_I = '''
-s_GABA_post = s_GABA_syn : 1 (summed)
-ds_GABA_syn / dt = - s_GABA_syn / tau_s_GABA_I + k * x : 1 (clock-driven)
-dx / dt = - x / tau_s_GABA_I : 1 (clock-driven)
-'''
+# eqs_gaba_I = '''
+# s_GABA_post = s_GABA_syn : 1 (summed)
+# ds_GABA_syn / dt = - s_GABA_syn / tau_s_GABA_I + k * x : 1 (clock-driven)
+# dx / dt = - x / tau_s_GABA_I : 1 (clock-driven)
+# '''
 eqs_pre_gaba_I = '''
-x += increment_GABA_I
+s_GABA += increment_GABA_I
 '''
-
 
    
 # Synapses

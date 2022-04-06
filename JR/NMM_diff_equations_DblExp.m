@@ -1,9 +1,9 @@
-close all
+% close all
 
 addpath ../JR/ % Load nonlinearity
 
 N = 3000; % Number of samples: 1 sample = 1 milisecond
-u = 5; % 1.5;
+u = 10; % 1.5;
 
 params = set_parameters('allen', u);
 
@@ -65,10 +65,12 @@ function dx = ode(t,x,params,dt)
     alpha_i = -1.054;
     
     dx = zeros(7,1);
-    dx(1) = x(1) + x(2);                                                  
-    dx(2) = x(2) - 1*x(2)/(tau_r_i) - x(1)/tau_r_i^2 + c2 * 2 * e_0 * alpha_i * (1/(tau_d_i)) * S1(x(3));
-    dx(3) = x(3) + x(4);                                                  
-    dx(4) = x(4) - 1*x(4)/(tau_r_e) - x(3)/tau_r_i^2 + c1 * 2 * e_0 * alpha_e * (1/(tau_d_e)) * S2(x(1));
+    dx(1) = x(1) + x(2);
+%     dx(2) = x(2) - x(2)/(tau_r_i) - x(1)/tau_r_i^2 + c2 * 2 * e_0 * alpha_i * (1/(tau_d_i)) * S1(x(3));                                               
+    dx(2) = x(2) - x(2)/(tau_r_i) - x(1)/tau_r_i^2 + c2 * 2 * e_0 * alpha_i * (1/(tau_d_i)) * S1(x(3));
+    dx(3) = x(3) + x(4);
+%     dx(4) = x(4) - x(4)/(tau_r_e) - x(3)/tau_r_i^2 + c1 * 2 * e_0 * alpha_e * (1/(tau_d_e)) * S2(x(1));
+    dx(4) = x(4) - x(4)/(tau_r_e) - x(3)/tau_r_i^2 + c1 * 2 * e_0 * alpha_e * (1/(tau_d_e)) * S2(x(1));
     dx(5) = x(5);
     dx(6) = x(6);
     dx(7) = x(7);
