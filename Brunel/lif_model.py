@@ -51,7 +51,7 @@ def set_params(type='pyramidal', source='brunel'):
             # unitary increment of the single exponential.
             single_exp_weight = 1 # Inverse: 1/1.52 = 0.6578947368421053
             alpha_simple_weight_AMPA = 12.5
-            alpha_simple_weight_GABA = 2.6
+            alpha_simple_weight_GABA = 1
             alpha_simple_weight_AMPA_ext = 12.5
             single_exponential_weight = 8.2
             delayed_exp_weight_AMPA = 6.0995 # Inverse 1.52/6.0995 = 0.24920075416017706
@@ -73,7 +73,7 @@ def set_params(type='pyramidal', source='brunel'):
             tau_l = 1 * ms # Latency
     
             # Synaptic efficacies
-            j_GABA  = 49.7 * pA 
+            j_GABA  = 74 * pA # 49.7 * pA
             j_AMPA  = -147 * pA
             j_AMPA_ext = -13.75 * pA
             
@@ -127,15 +127,15 @@ def set_params(type='pyramidal', source='brunel'):
     
             tau_GABA_r = 0.25 * ms
             tau_GABA_d = 5 * ms
-            tau_AMPA_r = 0.2*ms # 3 * ms  # <- bifurcation # 0.2 * ms
-            tau_AMPA_d = 1*ms # 15 * ms # <- bifurcation # 1 * ms
+            tau_AMPA_r = 0.2 * ms # 3 * ms  # <- bifurcation # 0.2 * ms
+            tau_AMPA_d = 1 * ms # 15 * ms # <- bifurcation # 1 * ms
             tau_AMPA_r_ext = 0.2*ms 
             tau_AMPA_d_ext = 1*ms 
             tau_l = 1 * ms # Latency
     
             # Synaptic efficacies
             j_GABA  = 35.1 * pA 
-            j_AMPA  = -896*pA # -12.55 * pA # <- bifurcation # -896 * pA
+            j_AMPA  = -330 * pA # <- single exp # -12.55 * pA # <- bifurcation # -896 * pA
             j_AMPA_ext = -19 * pA
             
             # Delta function weight (increment with each input spike)
@@ -144,8 +144,8 @@ def set_params(type='pyramidal', source='brunel'):
             alpha_simple_weight_GABA = 1
             alpha_simple_weight_AMPA_ext = 23
             single_exponential_weight = 8.2
-            delayed_exp_weight_AMPA = 27.96 
-            delayed_exp_weight_GABA = 39
+            delayed_exp_weight_AMPA = 1 
+            delayed_exp_weight_GABA = 1
         
     elif type == 'spiny':
         # TODO
@@ -226,6 +226,62 @@ def set_params(type='pyramidal', source='brunel'):
     
     return params
     
-def set_equations():
-    # TODO
-    return 0
+def get_equations(type = 'pyramidal'):
+    if type == 'pyramidal':
+        eqs = '''
+            dv / dt = (-v + V_leak - (I_tot/g_m_P)) / tau_m_P : volt (unless refractory)
+            
+            dv_pe /dt = (-v_pe - ((I_AMPA_spi + I_AMPA_cor) / g_m_P)) / tau_m_P : volt (unless refractory)
+            dv_pi /dt = (-v_pi - ( I_GABA_rec               / g_m_P)) / tau_m_P : volt (unless refractory)
+        
+            I_tot = I_AMPA_cor + I_AMPA_rec + I_AMPA_spi + I_GABA_rec + I_injected : amp
+            
+            I_AMPA_cor = j_AMPA_cor_P * s_AMPA_cor : amp
+            ds_AMPA_cor / dt = -s_AMPA_cor / (tau_d_AMPA_P + tau_r_AMPA_P) : 1    
+            
+            I_GABA_rec = j_GABA_P * s_GABA : amp
+            ds_GABA / dt = -s_GABA / (tau_d_GABA_P + tau_r_GABA_P) : 1
+            
+            I_AMPA_rec = j_AMPA_rec_P * s_AMPA : amp
+            ds_AMPA / dt = -s_AMPA / (tau_d_AMPA_P + tau_r_AMPA_P): 1    
+            
+            I_AMPA_spi = j_AMPA_rec_P * s_AMPA_spi : amp
+            ds_AMPA_spi / dt = -s_AMPA_spi / (tau_d_AMPA_P + tau_r_AMPA_P) : 1
+        '''
+   
+        
+    elif type == 'inhibitory':
+        eqs = '''
+            dv / dt = (-v + V_leak - (I_tot/g_m_I)) / tau_m_I : volt (unless refractory)
+        
+            dv_ip /dt = (-v_ip -(I_AMPA_rec / g_m_I)) / tau_m_P : volt (unless refractory)
+            
+            I_tot = I_AMPA_cor + I_AMPA_tha + I_AMPA_rec + I_GABA_rec + I_injected_I : amp
+            
+            I_AMPA_cor = j_AMPA_cor_I * s_AMPA_cor : amp
+            ds_AMPA_cor / dt = - s_AMPA_cor / (tau_d_AMPA_I + tau_r_AMPA_I) : 1
+            
+            I_AMPA_tha = j_AMPA_cor_I * s_AMPA_tha : amp
+            ds_AMPA_tha / dt = - s_AMPA_tha / (tau_d_AMPA_I_ext + tau_r_AMPA_I_ext) : 1
+            
+            I_GABA_rec = j_GABA_I * s_GABA : amp
+            ds_GABA / dt = -s_GABA / (tau_d_GABA_I + tau_r_GABA_I) : 1
+            
+            I_AMPA_rec = j_AMPA_rec_I * s_AMPA : amp
+            ds_AMPA / dt = -s_AMPA / (tau_d_AMPA_I + tau_r_AMPA_I): 1
+        '''
+        
+    elif type == 'spiny':
+        eqs = '''
+            dv / dt = (-v + V_leak - (I_tot/g_m_E)) / tau_m_E : volt (unless refractory)
+            
+            dv_ep /dt = (-v_ep -(I_AMPA_rec / g_m_E)) / tau_m_P : volt (unless refractory)
+            
+            I_tot = I_AMPA_rec + I_injected_E : amp        
+            
+            I_AMPA_rec = j_AMPA_rec_E * s_AMPA : amp
+            ds_AMPA / dt = -s_AMPA / (tau_r_AMPA_E + tau_d_AMPA_E) : 1
+        '''
+    else:
+        raise ValueError(format('The option type = %s is not a valid one.' %(type)))
+    return eqs

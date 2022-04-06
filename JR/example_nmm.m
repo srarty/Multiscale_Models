@@ -13,13 +13,13 @@ NInputs = 1; % Number of external inputs (u)
 NParams = 2; % Number of synaptic strength parameters (alpha_ie, alpha_ei, etc...)
 NAugmented = NStates + NInputs + NParams; % Total size of augmented state vector
 
-ESTIMATE        = true;        % Run the forward model and estimate (ESTIMATE = true), or just forward (ESTIMATE = false)
+ESTIMATE        = false;        % Run the forward model and estimate (ESTIMATE = true), or just forward (ESTIMATE = false)
 PCRB            = 0;            % Compute the PCRB (false = 0, or true > 0) The number here defines the iterations for CRB
 MSE             = 0;            % Compute the MSE (false = 0, or true > 0) The number here defines the iterations for MSE
 REAL_DATA       = true;         % True to load Seizure activity from neurovista recordings, false to generate data with the forward model
 LFP_SIMULATION  = false;         % True if data is ground truth data from the Brunel model (REAL_DATA must be 'true')
 LFP_TYPE        = 'voltage';    % Source of LFP, it can be 'current' (abstract sum of currents) or 'voltage' (linear combination of Vm_Py and Cortical Input)
-TRUNCATE        = 50000; %-50000;   % If ~=0, the real data from recordings is truncated from sample 1 to 'TRUNCATE'. If negative, it keeps the last 'TRUNCATE' samples.
+TRUNCATE        = 0; %-50000;   % If ~=0, the real data from recordings is truncated from sample 1 to 'TRUNCATE'. If negative, it keeps the last 'TRUNCATE' samples.
 SCALE_DATA      = 0; % 6/50;    % Scale Raw data to match dynamic range of the membrane potentials in our model. Multiplies 'y' by the value of SCALE_DATA, try SCALE_DATA = 0.12
 INTERPOLATE     = 3;            % Upsample Raw data by interpolating <value> number of samples between each two samples. Doesn't interpolate if INTERPOLATE == {0,1}.
 
@@ -62,13 +62,13 @@ end
 rng(0);
 
 %% Initialization
-N = 5000;                                   % Seizure 1 size: 148262; % number of samples
+N = 3000;                                   % Seizure 1 size: 148262; % number of samples
 no_inputs = 1000; % For mu to be in spikes/milisecond/cell
-% input_vector = [0*ones(1,1000) 5*ones(1,1000) 10*ones(1,1000)];
-mu = 5;
+input_vector = [0*ones(1,1000) 5*ones(1,1000) 10*ones(1,1000)];
+mu = 1;
 % params = set_parameters('allen', mu);     % Set params.u from the input argument 'mu' of set_params
-isi = exprnd(1/mu,[no_inputs,N]);
-input_vector = 1./mean(isi,1);
+% isi = exprnd(1/mu,[no_inputs,N]);
+% input_vector = 1./mean(isi,1);
 params = set_parameters('allen', input_vector); 
 
 if (TRUNCATE && REAL_DATA), N = TRUNCATE; end % If TRUNCATE ~=0, only take N = TRUNCATE samples of the recording or simulation
