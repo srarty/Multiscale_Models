@@ -38,7 +38,7 @@ def brunel(corriente=0):
     input_current_E = 0     # Excitatory interneurons (Spiny Stellate)         
     
     input_spike_rate = 0 # spikes/ms/cell (driving input)
-    input_spike_rate_thalamic = 0 # 1.5 # spikes/ms/cell (spontaneous activity)
+    input_spike_rate_thalamic = 1.5 # spikes/ms/cell (spontaneous activity)
     
     spiny_constant = 30 # temporal variable to  explore Spiny excitability
     
@@ -98,6 +98,8 @@ def brunel(corriente=0):
     #Inhibitory Interneurons
     tau_d_AMPA_I = params_in.get('tau_AMPA_d')  
     tau_r_AMPA_I = params_in.get('tau_AMPA_r')
+    tau_d_AMPA_I_ext = params_in.get('tau_AMPA_d_ext')  
+    tau_r_AMPA_I_ext = params_in.get('tau_AMPA_r_ext')
     tau_d_GABA_I = params_in.get('tau_GABA_d')
     tau_r_GABA_I = params_in.get('tau_GABA_r')
     tau_s_AMPA_I = 0.5 * (tau_d_AMPA_I + tau_r_AMPA_I) + 0.05*ms      # "Lumped" time constant for alpha function. 
@@ -219,21 +221,24 @@ def brunel(corriente=0):
     '''
     
     eqs_I = '''
-        dv / dt = (-v + V_leak - (I_tot/g_m_I)) / tau_m_I : volt (unless refractory)
+    dv / dt = (-v + V_leak - (I_tot/g_m_I)) / tau_m_I : volt (unless refractory)
+
+    dv_ip /dt = (-v_ip -(I_AMPA_rec / g_m_I)) / tau_m_P : volt (unless refractory)
     
-        dv_ip /dt = (-v_ip -(I_AMPA_rec / g_m_I)) / tau_m_P : volt (unless refractory)
-        
-        I_tot = I_AMPA_cor + I_AMPA_rec + I_GABA_rec + I_injected_I : amp
-        
-        I_AMPA_cor = j_AMPA_cor_I * s_AMPA_cor : amp
-        ds_AMPA_cor / dt = - s_AMPA_cor / (tau_d_AMPA_I + tau_r_AMPA_I) : 1
-        
-        I_GABA_rec = j_GABA_I * s_GABA : amp
-        s_GABA : 1
-        
-        I_AMPA_rec = j_AMPA_rec_I * s_AMPA : amp
-        s_AMPA : 1
-    '''
+    I_tot = I_AMPA_cor + I_AMPA_tha + I_AMPA_rec + I_GABA_rec + I_injected_I : amp
+    
+    I_AMPA_cor = j_AMPA_cor_I * s_AMPA_cor : amp
+    ds_AMPA_cor / dt = - s_AMPA_cor / (tau_d_AMPA_I + tau_r_AMPA_I) : 1
+    
+    I_AMPA_tha = j_AMPA_cor_I * s_AMPA_tha : amp
+    ds_AMPA_tha / dt = - s_AMPA_tha / (tau_d_AMPA_I_ext + tau_r_AMPA_I_ext) : 1
+    
+    I_GABA_rec = j_GABA_I * s_GABA : amp
+    s_GABA : 1
+    
+    I_AMPA_rec = j_AMPA_rec_I * s_AMPA : amp
+    s_AMPA : 1
+'''
     
     # Neuron groups
     Py_Pop = NeuronGroup(N_P, eqs_P, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp_P, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
@@ -353,7 +358,7 @@ def brunel(corriente=0):
     C_Cor_I.active = INHIBIT_INPUT # Innactive cortico-cortical -> interneuron
     # Poisson input (Thalamic, baseline spike rate)
     C_Tha_P = PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_P)
-    C_Tha_I = PoissonInput(In_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_I)
+    C_Tha_I = PoissonInput(In_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_I)
     
     # Poisson population
     # C_Cor_P = Synapses(Pop_Cor, Py_Pop, model=eqs_cor_P, on_pre=eqs_pre_cor_P, method='rk4', dt=dt_, delay=delay, name='synapses_pext')
@@ -609,10 +614,10 @@ def brunel(corriente=0):
                          mdict = save_dictionary)
         
         i = 0
-        while os.path.exists('C://Users/artemios/Documents/Multiscale_Models_Data/nonlinearity/lfp_inputCurrent_%s_%s.mat' % (floor(input_current),i)):
+        while os.path.exists('C://Users/artemios/Documents/Multiscale_Models_Data/nonlinearity/tau_e_13ms/lfp_inputCurrent_%s_%s.mat' % (floor(input_current),i)):
             i += 1
         
-        scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/nonlinearity/lfp_inputCurrent_%s_%s.mat' % (floor(input_current),i),
+        scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/nonlinearity/tau_e_13ms/lfp_inputCurrent_%s_%s.mat' % (floor(input_current),i),
                           mdict=save_dictionary)
     
         # scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/lfp_%s.mat' % i,
@@ -663,15 +668,15 @@ def brunel(corriente=0):
 
 
 # Run iteratively. Need to uncomment the def line at the start of the file.
-a = np.arange(500, 501, 0.1)
+# a = np.arange(500, 501, 0.1)
 # b = np.arange(501, 510, 1)
 # c = np.arange(510, 700, 10)
 # d = np.arange(0, 1000, 100)
 # e = np.arange(350, 500, 10)
-f = np.arange(400, 401, 0.1)
-# ranges = np.concatenate((e, a, b, c, d))
-# ranges = np.arange(-200, 610, 10)
-ranges = np.concatenate((a,f))
+# f = np.arange(400, 401, 0.1)
+# ranges = np.concatenate((c,d,e))
+ranges = np.arange(-200, 610, 10)
+# ranges = np.concatenate((a,f))
 # ranges = np.arange(-15, 16, 15)
 for iterations in ranges:
     brunel(corriente = iterations)

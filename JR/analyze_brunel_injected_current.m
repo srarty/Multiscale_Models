@@ -32,6 +32,7 @@ ylabel('Spike rate');
 % folder = 'C:\Users\artemios\Documents\GitHub2\mycroeeg\simulations\CUBN\recurrent_excitation\';
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\nonlinearity\';
 folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\nonlinearity background activity (external input for baseline)\';
+% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\nonlinearity\tau_e_13ms\';
 
 d = dir([folder '*.mat']);
 no_files = numel(d);
@@ -45,10 +46,10 @@ for ii = 1:no_files
     data_file = [folder d(ii).name];    
     load(data_file);
     
-    membrane_potentials(ii) = 1000*Vm;
-    pyramidal_rates(ii) = mean(R_py);
-%     membrane_potentials(ii) = 1000*Vm_interneurons;
-%     pyramidal_rates(ii) = mean(R_in); %/params.e0;
+%     membrane_potentials(ii) = 1000*Vm;
+%     pyramidal_rates(ii) = mean(R_py);
+    membrane_potentials(ii) = 1000*Vm_interneurons;
+    pyramidal_rates(ii) = mean(R_in); %/params.e0;
 end
 
 % % Append zeros in the beginning for a better fit
@@ -69,21 +70,21 @@ xlabel('Membrane potential (mV)');
 ylabel('Pyramidal firing rate');
 
 %% Fit
-% ft = fittype( '(0.5*erf((x - a) / (sqrt(2) * b)) + 0.5)', 'independent', 'x', 'dependent', 'y' ); % Error function | a = v0 | b = r
+ft = fittype( '(0.5*erf((x - a) / (sqrt(2) * b)) + 0.5)', 'independent', 'x', 'dependent', 'y' ); % Error function | a = v0 | b = r
 % ft = fittype( '2.^-(a.^-(x-b))', 'independent', 'x', 'dependent', 'y' );                          % Double exponential sigmoid
-ft = fittype( 'a*exp(-b*exp(-d*(x-c)))', 'independent', 'x', 'dependent', 'y' );                  % Gompertz sigmoid
+% ft = fittype( 'a*exp(-b*exp(-d*(x-c)))', 'independent', 'x', 'dependent', 'y' );                  % Gompertz sigmoid
 % ft = fittype( 'c/(1+exp(-a*(x-b)))+d', 'independent', 'x', 'dependent','y' );                     % sigmoid
 
 opts = fitoptions(ft);
 % Gompertz (Py)
-opts.StartPoint =  [1 1 1 0];
-opts.Lower =   [1 3 1 0.15];
-opts.Upper =  [1 100 100 0.15];
+% opts.StartPoint =  [1 1 1 0];
+% opts.Lower =   [1 3 1 0.15];
+% opts.Upper =  [1 100 100 0.15];
 
 % Error (In)
-% opts.StartPoint =  [10 5];
-% opts.Lower =   [15 8];
-% opts.Upper =  [15 8];
+opts.StartPoint =  [10 5];
+opts.Lower =   [15 8];
+opts.Upper =  [15 8];
 
 fitresult_Py = fit(membrane_potentials', pyramidal_rates', ft, opts) % With options
 % fitresult_Py = fit(membrane_potentials', pyramidal_rates', ft) % No options

@@ -5,18 +5,8 @@
 function spectrum(x, y)
     signal = 'lfp'; % vpi, vip, lfp
     do_plot('nmm', signal, x, y);
-    [v_pi, v_ip] = do_plot('lif', signal);
-%     plot_lif_results(v_pi, v_ip); % Won't run if lif results haven't been loaded
-end
-
-function plot_lif_results(v_pi, v_ip)
-    x1 = mean(v_pi,1);
-    x1_ = [0 mean(diff(v_pi,[],2))];
-    figure; plot(x1*1e3,x1_*1e6)
-    
-    x3 = mean(v_ip,1);
-    x3_ = [0 mean(diff(v_ip,[],2))];
-    figure; plot(x3*1e3,x3_*1e6)
+    [v_pi, v_ip, t] = do_plot('lif', signal);
+    plot_lif_results(v_pi, v_ip, t); % Won't run if lif results haven't been loaded
 end
 
 function varargout = do_plot(model, signal, varargin)
@@ -39,13 +29,16 @@ function varargout = do_plot(model, signal, varargin)
             case 'vpi'
                 x_ = x(:,1); % State 1 % NMM; % change dimm if model forward came from diff eqs instead of the nmm_toolbox
                 x_ = x_';
+%                 x_ = x(1,:);
                 ystr = 'V_{pi}';
             case 'vip'
                 x_ = x(:,3); % State 3 % NMM
                 x_ = x_';
+%                 x_ = x(3,:);
                 ystr = 'V_{ip}';
             case 'lfp'
                 x_ = y'; % NMM
+%                 x_ = y; % NMM
                 ystr = 'V_m (Py)';
             otherwise
                 error('Wrong options (signal)');
@@ -57,8 +50,8 @@ function varargout = do_plot(model, signal, varargin)
         freqrange = [0 100]; % xlim values
 
     elseif strcmp('lif', model)
-%         data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_8.mat';
-        data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_41.mat';
+        data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_21.mat';
+%         data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_43.mat';
         load(data_file);
         dt = 1e-4;
         T = length(LFP_V) * dt;
@@ -86,7 +79,7 @@ function varargout = do_plot(model, signal, varargin)
         freqbins = 10 * 1280;
         freqrange = [0 0.1]; % xlim values
         
-        varargout = {v_pi, v_ip};
+        varargout = {v_pi, v_ip, t};
     else
         error('Wrong options (model)');
     end
@@ -130,4 +123,25 @@ function varargout = do_plot(model, signal, varargin)
 %     ax.YScale = 'log';
     ylim(freqrange);
     
+end
+
+
+function plot_lif_results(v_pi, v_ip, t)
+    x1 = mean(v_pi,1);
+    x1_ = [0 mean(diff(v_pi,[],2))];
+    x3 = mean(v_ip,1);
+    x3_ = [0 mean(diff(v_ip,[],2))];
+    
+    figure; plot(x1*1e3, x3*1e3);
+    xlabel('x1');
+    ylabel('x2');
+
+%     figure; plot(x1*1e3,x1_*1e6)
+%     xlabel('v');
+%     ylabel('z');
+%     
+%     figure; plot3(t * 1e3,x3*1e3,x3_*1e6, 'r')
+%     xlabel('t');
+%     ylabel('v');
+%     zlabel('z');
 end
