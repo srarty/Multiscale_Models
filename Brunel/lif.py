@@ -47,7 +47,7 @@ INHIBIT_INPUT = False            # Excitatory cortical input to inhibitory popul
 ACTIVE_INTERNEURONS = True      # Inhibitory population
 ACTIVE_SPINY = False            # Spiny Stellate population
 PARAMS_SOURCE = 'allen'        # 'brunel' or 'allen'
-SAVE = False                     # Save ground truth data
+SAVE = True                     # Save ground truth data
 PLOT = True                     # Plot results (main Figure)
 PLOT_EXTRA = True              # Plot extra things.
 
@@ -57,13 +57,13 @@ input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramida
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 input_current_E = 0     # Excitatory interneurons (Spiny Stellate)         
 
-input_spike_rate = [10] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
+input_spike_rate = [20] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
 input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
 
 spiny_constant = 30 # temporal variable to  explore Spiny excitability
 
 #%% parameters  --------------------------------------------------------------
-simulation_time = 1 * second
+simulation_time = 3 * second
 dt_ = 100 * usecond
 T = np.linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector for plots (in seconds)
 # T_u = linspace(0, simulation_time, round(simulation_time/u_dt)) # Time vector for u for plots (in seconds)
@@ -389,13 +389,13 @@ net = Network(collect())
 
 # temporal = I_injected_I
 # I_injected_I = 0 * pA
-net.run(simulation_time, report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+# net.run(simulation_time, report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
 
 # I_injected_I = temporal
 # net.run(simulation_time/2, report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
 
-# input1.active = True
-# net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+input1.active = True
+net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
 
 # input1.active = False
 # input2.active = True
@@ -518,17 +518,17 @@ if PLOT_EXTRA:
     axs[1].set_ylabel('EPSP (mV)')
     axs[1].plot(T*1000, np.transpose(v_ip)*1000)
 
-    # axs[0].set_title('LFP (from voltage)')
-    # axs[0].set_xlabel('Time (ms)')
-    # axs[0].set_ylabel('mV')
-    # axs[0].plot(T*1000, np.transpose(lfp_v), label='LFP_V')
-    # axs[0].legend()
+    axs[0].set_title('LFP (from voltage)')
+    axs[0].set_xlabel('Time (ms)')
+    axs[0].set_ylabel('mV')
+    axs[0].plot(T*1000, np.transpose(lfp_v), label='LFP_V')
+    axs[0].legend()
 
-    # axs[1].set_title('LFP (from current)')
-    # axs[1].set_xlabel('Time (ms)')
-    # axs[1].set_ylabel('mV')
-    # axs[1].plot(T*1000, np.transpose(lfp_), label='LFP_I')
-    # axs[1].legend()
+    axs[1].set_title('LFP (from current)')
+    axs[1].set_xlabel('Time (ms)')
+    axs[1].set_ylabel('mV')
+    axs[1].plot(T*1000, np.transpose(lfp_), label='LFP_I')
+    axs[1].legend()
     
     # Third figure. Membrane potential
     if ACTIVE_SPINY:

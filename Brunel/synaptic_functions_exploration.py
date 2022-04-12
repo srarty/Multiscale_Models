@@ -31,9 +31,9 @@ from lif_model import set_params
 #%% options  --------------------------------------------------------------
 
 source          = 'allen'       # brunel or allen
-synaptic_type   = 'GABA'        # AMPA or GABA
+synaptic_type   = 'AMPA'        # AMPA or GABA
 neuron_type     = 'pyramidal'  # pyramidal, inhibitory or spiny
-external        = False         # When AMPA, synapsis can be external or recurrent (local)
+external        = True         # When AMPA, synapsis can be external or recurrent (local)
 input_spike_rate = 1            # spikes/ms/cell 
 simulation_time = 0.3 * second
 
@@ -70,7 +70,7 @@ else:
     tau_d =  params["tau_GABA_d"]      # Decay time constant (From Brunel and Wang 2001)
     tau_r =  params["tau_GABA_r"] # Rising time constant (< 1 ms)
     
-tau_s = 0.5 * (tau_d + tau_r) + 0.05*ms      # "Lumped" time constant for alpha function. 
+tau_s = (tau_d + tau_r)      # "Lumped" time constant for alpha function. 
 tau_l = 0 * ms
 tau_rp =  params["tau_rp"] # refractory period
 
@@ -83,7 +83,7 @@ I_input = -300 * pA
 if synaptic_type == 'AMPA':
     if external:
         j =  params["j_AMPA_ext"]
-        alpha_weight = params["alpha_weight_AMPA_ext"]
+        alpha_weight = params["single_exp"]
     else:
         j =  params["j_AMPA"]        
         alpha_weight = params["alpha_weight_AMPA"]
@@ -192,8 +192,8 @@ axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v1) * 1e3), lw=1, label='v1 (singl
 axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v6) * 1e3), lw=1, label='v6 (alpha)', linestyle='dashed')
 axs[0].plot(T * 1e3, ((np.transpose(Py_monitor.v) - V_leak) * 1e3), lw=1, label='Vm', linestyle='solid')
 axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v1 + Py_monitor.v6) * 1e3), lw=1, label='Sum', linestyle='dashed')
-if external:
-    axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v1) * 1e3), lw=1, label='single exp')
+# if external:
+    # axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v1) * 1e3), lw=1, label='single exp')
 axs[0].legend()
     
 axs[1].set_xlabel('Time (ms)')
@@ -201,8 +201,8 @@ axs[1].set_ylabel('PSC (pA)')
 axs[1].plot(T * 1e3, np.transpose(Py_monitor.I_AMPA1), lw=1)
 axs[1].plot(T * 1e3, np.transpose(Py_monitor.I_AMPA6), lw=1, linestyle='dashed')
 axs[1].plot(T * 1e3, np.transpose(Py_monitor.I_tot), lw=1)
-if external:
-    axs[1].plot(T * 1e3, (np.transpose(Py_monitor.s_AMPA1)*j/pA), lw=1)
+# if external:
+    # axs[1].plot(T * 1e3, (np.transpose(Py_monitor.s_AMPA1)*j/pA), lw=1)
 
 # f.tight_layout()
 
