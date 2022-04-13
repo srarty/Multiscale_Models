@@ -13,8 +13,8 @@
 
 function spectrum(x, y, t)
     close all
-    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_35.mat';
-%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_55.mat';
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_35.mat';
+    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_55.mat';
     signal = 'lfp'; % vpi, vip, lfp
     
     [x_nmm, x_lif, t_nmm, t_lif, v_pi, v_ip] = get_data(signal, x, y, t, data_file);
