@@ -79,7 +79,6 @@ params_py = set_params('pyramidal', PARAMS_SOURCE)
 params_in = set_params('inhibitory', PARAMS_SOURCE)
 params_ex = set_params('spiny', PARAMS_SOURCE)
 
-
 # Probability of connection
 p_IP = params_py.get('p_IP')  * np.sqrt(1000/N) #* 500/N #0.2 #* 100/N # Inhibitory to Pyramidal
 p_PI = params_py.get('p_PI')  * np.sqrt(1000/N) # * 500/N #0.2 #* 100/N # Pyramidal to Inhibitory
@@ -175,7 +174,7 @@ j_AMPA_cor_I = params_in.get('j_AMPA_ext')
 
 # GABAergic (inhibitory)
 j_GABA_P = params_py.get('j_GABA') * np.sqrt(1000/N)
-j_GABA_I = params_py.get('j_GABA') * np.sqrt(1000/N)
+j_GABA_I = params_in.get('j_GABA') * np.sqrt(1000/N)
 
 # Weight constants. Amplitude of the synaptic input
 # Pyramidal 
@@ -339,7 +338,7 @@ C_E_P.active = ACTIVE_SPINY
 input1 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[0] * 1000/num_inputs) * Hz, increment_AMPA_ext_P)
 # input2 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[1] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
 # input3 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[2] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
-input1.active = False
+# input1.active = False
 # input2.active = False
 # input3.active = False
 # Poisson input (Cortico-cortical) input to inhibitory interneurons. Controlled by INHIBIT_INPUT
