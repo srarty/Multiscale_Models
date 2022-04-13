@@ -23,6 +23,7 @@ x0 =[0;
     ];
 
 [t,x,y] = ode45(@(t,x) ode(t,x,params, dt), [min(t) max(t)], x0);
+% [t,x,y] = dde23(@(t,x) ode(t,x,params, dt), [min(t) max(t)], x0);
 for i = 1:size(x,1)
     y(i) = x(i,1) + u;
 end
