@@ -32,8 +32,8 @@ from lif_model import set_params
 
 source          = 'allen'       # brunel or allen
 synaptic_type   = 'AMPA'        # AMPA or GABA
-neuron_type     = 'pyramidal'  # pyramidal, inhibitory or spiny
-external        = True         # When AMPA, synapsis can be external or recurrent (local)
+neuron_type     = 'inhibitory'  # pyramidal, inhibitory or spiny
+external        = False         # When AMPA, synapsis can be external or recurrent (local)
 input_spike_rate = 1            # spikes/ms/cell 
 simulation_time = 0.3 * second
 
@@ -70,8 +70,8 @@ else:
     tau_d =  params["tau_GABA_d"]      # Decay time constant (From Brunel and Wang 2001)
     tau_r =  params["tau_GABA_r"] # Rising time constant (< 1 ms)
     
-tau_s = (tau_d + tau_r)      # "Lumped" time constant for alpha function. 
-tau_l = 0 * ms
+tau_s = 0.5 * (tau_d + tau_r) + 0.05*ms      # "Lumped" time constant for alpha function. 
+tau_l = 0.2 * ms
 tau_rp =  params["tau_rp"] # refractory period
 
 # Cortical input
@@ -121,7 +121,7 @@ eqs = '''
     I_AMPA2 = (j * 5.92) * s_AMPA2 : amp
     s_AMPA2 : 1
     
-    I_AMPA6 = (j * alpha_weight) * s_AMPA6 : amp
+    I_AMPA6 = (-896 * pA) * s_AMPA6 : amp
     s_AMPA6 : 1
 '''
 
@@ -146,7 +146,7 @@ dx6 / dt = - x6 / (tau_s) : 1 (clock-driven)
 '''
 
 eqs_pre_ampa6 = '''
-x6 += alpha_weight
+x6 += 1
 ''' 
 
 Pyramidal = NeuronGroup(N_P, eqs, threshold='v > V_thr', reset='''v = V_reset
@@ -168,7 +168,7 @@ else:
 #     AMPA1_synapses = Synapses(Input, Pyramidal, on_pre=eqs_pre_ampa1, method='rk4', clock=Input.clock)
 #     AMPA1_synapses.connect(p = 1)
 
-AMPA1_synapses = Synapses(Input, Pyramidal, on_pre=eqs_pre_ampa1, method='rk4')#, dt=10*usecond)
+AMPA1_synapses = Synapses(Input, Pyramidal, on_pre=eqs_pre_ampa1, method='rk4', delay=tau_l)#, dt=10*usecond)
 AMPA1_synapses.connect(p = 1)
 
 AMPA2_synapses = Synapses(Input, Pyramidal, model=eqs_ampa2, on_pre=eqs_pre_ampa2, method='rk4')#, dt=10*usecond)

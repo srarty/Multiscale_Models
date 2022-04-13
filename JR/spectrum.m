@@ -12,12 +12,11 @@
 % Artemio - March 2022
 
 function spectrum(x, y, t)
-    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_32.mat';
+    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_34.mat';
 %     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_52.mat';
     signal = 'lfp'; % vpi, vip, lfp
     
     [x_nmm, x_lif, t_nmm, t_lif, v_pi, v_ip] = get_data(signal, x, y, t, data_file);
-    
     
     [x_nmm, x_lif, t_nmm] = normalization(x_nmm, x_lif, t_nmm, t_lif);
 
@@ -25,7 +24,7 @@ function spectrum(x, y, t)
     do_plot('lif', signal, x_lif, t_lif);
     plot_lif_results(v_pi, v_ip, t_lif); % Won't run if lif results haven't been loaded
     
-    do_correlation(x_nmm, x_lif, t, t_lif);
+    do_correlation(x_nmm, x_lif, t_nmm, t_lif);
 end
 
 function [x_nmm, x_lif, t_nmm, t_lif, v_pi, v_ip] = get_data(signal, x, y, t, data_file)
