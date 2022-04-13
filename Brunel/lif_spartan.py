@@ -81,12 +81,12 @@ params_ex = set_params('spiny', PARAMS_SOURCE)
 
 
 # Probability of connection
-p_IP = params_py.get('p_IP')  #* 500/N #0.2 #* 100/N # Inhibitory to Pyramidal
-p_PI = params_py.get('p_PI')  # * 500/N #0.2 #* 100/N # Pyramidal to Inhibitory
-p_PE = params_py.get('p_PE')  #* 500/N  #0.2 #* 100/N # Pyramidal to Excitatory
-p_EP = params_py.get('p_EP')   #* 500/N #0.2 #* 100/N # Excitatory to Pyramidal
-p_PP = params_py.get('p_PP')  #* 500/N  #0.2 #* 100/N # recurrent excitation (pyramidal) # Generally less than PI, IP connectivity (Bryson et al., 2021)
-p_II = params_py.get('p_II') # * 500/N  #0.2 #* 100/N # recurrent inhibition
+p_IP = params_py.get('p_IP')  * np.sqrt(1000/N) #* 500/N #0.2 #* 100/N # Inhibitory to Pyramidal
+p_PI = params_py.get('p_PI')  * np.sqrt(1000/N) # * 500/N #0.2 #* 100/N # Pyramidal to Inhibitory
+p_PE = params_py.get('p_PE')  * np.sqrt(1000/N) #* 500/N  #0.2 #* 100/N # Pyramidal to Excitatory
+p_EP = params_py.get('p_EP')  * np.sqrt(1000/N)  #* 500/N #0.2 #* 100/N # Excitatory to Pyramidal
+p_PP = params_py.get('p_PP')  * np.sqrt(1000/N) #* 500/N  #0.2 #* 100/N # recurrent excitation (pyramidal) # Generally less than PI, IP connectivity (Bryson et al., 2021)
+p_II = params_py.get('p_II')  * np.sqrt(1000/N) # * 500/N  #0.2 #* 100/N # recurrent inhibition
 
 # voltage
 V_leak = -70. * mV      # Resting membrane potential
@@ -166,16 +166,16 @@ num_inputs = 800                    # Both thalamo-cortical and cortico-cortical
 
 # Synaptic efficacies
 # AMPA (excitatory)
-j_AMPA_rec_P = params_py.get('j_AMPA')
-j_AMPA_rec_E = params_ex.get('j_AMPA')
-j_AMPA_rec_I = params_in.get('j_AMPA')
+j_AMPA_rec_P = params_py.get('j_AMPA') * np.sqrt(1000/N)
+j_AMPA_rec_E = params_ex.get('j_AMPA') * np.sqrt(1000/N)
+j_AMPA_rec_I = params_in.get('j_AMPA') * np.sqrt(1000/N)
     
 j_AMPA_cor_P = params_py.get('j_AMPA_ext')
 j_AMPA_cor_I = params_in.get('j_AMPA_ext')
 
 # GABAergic (inhibitory)
-j_GABA_P = params_py.get('j_GABA')
-j_GABA_I = params_py.get('j_GABA')
+j_GABA_P = params_py.get('j_GABA') * np.sqrt(1000/N)
+j_GABA_I = params_py.get('j_GABA') * np.sqrt(1000/N)
 
 # Weight constants. Amplitude of the synaptic input
 # Pyramidal 
