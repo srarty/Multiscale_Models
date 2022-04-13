@@ -138,7 +138,7 @@ tau_rp_E = params_ex.get('tau_rp')
 tau_rp_I = params_in.get('tau_rp')
 
 # Synaptic delay
-delay = 0 * ms # 1 * ms # 0.5 * ms # 0.5 * ms in Brunel and Wang 2001
+delay = 0.2 * ms # 1 * ms # 0.5 * ms # 0.5 * ms in Brunel and Wang 2001
 
 # Cortical input
 num_inputs = 800                    # Both thalamo-cortical and cortico-cortical 
