@@ -1,9 +1,10 @@
-% close all
+% Same as NMM_diff_equations.m but here the synaptic function is a
+% difference of exponentials.
 
-addpath ../JR/ % Load nonlinearity
+close all
 
 N = 3000; % Number of samples: 1 sample = 1 milisecond
-u = 20; % 1.5;
+u = 30; % 1.5;
 
 params = set_parameters('allen', u);
 
@@ -56,20 +57,29 @@ function dx = ode(t,x,params,dt)
     
     tau_r_e = 0.001001;
     tau_d_e = 0.008339;
-    tau_m_e = 0.001;
+    tau_s_e = 1.2e-3;
+    tau_m_e = 0.01;
     
     tau_r_i = 0.004378;
     tau_d_i = 0.01668;
-    tau_m_i = 0.002;
+    tau_s_i = 5.25e-3;
+    tau_m_i = 0.02;
     
-    alpha_e = 2.25;
-    alpha_i = -1.054;
+    alpha_e = 14e-12; % <- increment in python | amplitude of fit -> %2.25;
+    alpha_i = -14e-12; % <- increment in python | amplitude of fit -> %-1.054;
+
+%     j_e = 14e-12;
+%     j_i = -74e-12;
     
     dx = zeros(7,1);
-    dx(1) = x(1) + x(2) - x(1)/tau_r_i;
-    dx(2) = x(2) - x(2)/tau_d_i + c2 * 2 * e_0 * alpha_i * (1/(tau_d_i + tau_r_i)) * S1(x(3));
-    dx(3) = x(3) + x(4) - x(3)/tau_r_e;
-    dx(4) = x(4) - x(4)/tau_d_e + c1 * 2 * e_0 * alpha_e * (1/(tau_d_e + tau_r_e)) * S2(x(1));
+%     dx(1) = x(1) + x(2) - x(1)/tau_r_i;
+%     dx(2) = x(2) - x(2)/tau_d_i + c2 * 2 * e_0 * alpha_i * (1/(tau_d_i + tau_r_i)) * S1(x(3));
+%     dx(3) = x(3) + x(4) - x(3)/tau_r_e;
+%     dx(4) = x(4) - x(4)/tau_d_e + c1 * 2 * e_0 * alpha_e * (1/(tau_d_e + tau_r_e)) * S2(x(1));
+    dx(1) = x(1) - x(2)/tau_m_i - x(1)/tau_m_i;
+    dx(2) = x(2) + - x(2)/tau_s_i + c2 * 2 * e_0 * alpha_i * S1(x(3));
+    dx(3) = x(3) - x(4)/tau_m_e - x(3)/tau_m_e;
+    dx(4) = x(4) + - x(4)/tau_s_e + c1 * 2 * e_0 * alpha_e * S2(x(1));
     dx(5) = x(5);
     dx(6) = x(6);
     dx(7) = x(7);

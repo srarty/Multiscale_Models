@@ -3,8 +3,8 @@
 %
 % Artemio - February 2022
 
-% load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_ipsp.mat'); psp = -ipsp; % Inhibitory (GABA) on pyramidal
-load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_epsp.mat'); psp = epsp; % Excitatory (AMPA) on inhibitory interneurons
+load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_ipsp.mat'); psp = -ipsp; % Inhibitory (GABA) on pyramidal
+% load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_epsp.mat'); psp = epsp; % Excitatory (AMPA) on inhibitory interneurons
 
 % Adjuisting psp to remove the first sample, which is zero in Brian2
 psp(1) = [];
@@ -19,9 +19,9 @@ opts = fitoptions(ft);
 % opts.StartPoint = [0.02 1];
 % opts.Lower = [0.0001 0];     
 % opts.Upper = [0.1 10000];
-opts.StartPoint = [0.02 0.01 1];
-opts.Lower = [0.0001 0.0001 0];     
-opts.Upper = [0.1 0.2 5];    
+opts.StartPoint = [0.02 5.25e-3 1];%[0.02 0.01 1];
+opts.Lower = [0.02 5.25e-3 0]%[0.0001 0.0001 0];     
+opts.Upper = [0.02 5.25e-3 5]%[0.1 0.2 5];    
 fitresult = fit(T', psp', ft, opts) % With options
 % fitresult = fit(T', psp', ft) % No options
 

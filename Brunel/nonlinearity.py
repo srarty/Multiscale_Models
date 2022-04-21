@@ -55,12 +55,12 @@ def brunel(corriente=0):
     N_I = 1#int(N)    # interneurons
     
     # Probability of connection
-    p_IP =  0.411  * 500/N #0.2 #* 100/N # Inhibitory to Pyramidal
-    p_PI =  0.395   * 500/N #0.2 #* 100/N # Pyramidal to Inhibitory
-    p_PE =  0.2  * 500/N  #0.2 #* 100/N # Pyramidal to Excitatory
-    p_EP =  0.2   * 500/N #0.2 #* 100/N # Excitatory to Pyramidal
-    p_PP =  0.16  * 500/N  #0.2 #* 100/N # recurrent excitation (pyramidal) # Generally less than PI, IP connectivity (Bryson et al., 2021)
-    p_II =  0.451  * 500/N  #0.2 #* 100/N # recurrent inhibition
+    p_IP =  0.411  # * 1000/N #0.2 #* 100/N # Inhibitory to Pyramidal
+    p_PI =  0.395  #  * 500/N #0.2 #* 100/N # Pyramidal to Inhibitory
+    p_PE =  0.2 #  * 500/N  #0.2 #* 100/N # Pyramidal to Excitatory
+    p_EP =  0.2 #  * 500/N #0.2 #* 100/N # Excitatory to Pyramidal
+    p_PP =  0.16 #  * 500/N  #0.2 #* 100/N # recurrent excitation (pyramidal) # Generally less than PI, IP connectivity (Bryson et al., 2021)
+    p_II =  0.451 #  * 500/N  #0.2 #* 100/N # recurrent inhibition
     
     # voltage
     V_leak = -70. * mV      # Resting membrane potential

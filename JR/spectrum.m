@@ -12,10 +12,10 @@
 % Artemio - March 2022
 
 function spectrum(x, y, t)
-    close all
-%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_35.mat';
-    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_55.mat';
-    signal = 'lfp'; % vpi, vip, lfp
+%     close all
+    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_39.mat';
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_58.mat';
+    signal = 'vip'; % vpi, vip, lfp
     
     [x_nmm, x_lif, t_nmm, t_lif, v_pi, v_ip] = get_data(signal, x, y, t, data_file);
     
@@ -33,7 +33,7 @@ function [x_nmm, x_lif, t_nmm, t_lif, v_pi, v_ip] = get_data(signal, x, y, t, da
     t_nmm = t;
     switch signal
         case 'vpi'
-            x_nmm = x(:,1); % State 1 % NMM; % change dimm if model forward came from diff eqs instead of the nmm_toolbox
+            x_nmm = x(:,1); % State 1 % NMM; % change dimm if forward model came from diff eqs instead of the nmm_toolbox
             x_nmm = x_nmm';
 %             x_ = x(1,:);
         case 'vip'
@@ -168,8 +168,8 @@ end
 
 function do_correlation(x_nmm, x_lif, t_nmm, t_lif)    
     [correlation, lags] = xcorr(x_nmm, x_lif);
-    auto_nmm = autocorr(x_nmm);
-    auto_lif = autocorr(x_lif);
+    auto_nmm = autocorr(x_nmm, 'NumLags', 1000);
+    auto_lif = autocorr(x_lif, 'NumLags', 1000);
     
     figure;
     plot(lags, correlation);
@@ -177,4 +177,5 @@ function do_correlation(x_nmm, x_lif, t_nmm, t_lif)
     figure;
     bar(auto_nmm); hold
     bar(auto_lif);
+    legend({'NMM', 'LIF'});
 end
