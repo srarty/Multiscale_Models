@@ -237,16 +237,16 @@ def get_equations(type = 'pyramidal'):
             I_tot = I_AMPA_cor + I_AMPA_rec + I_AMPA_spi + I_GABA_rec + I_injected : amp
             
             I_AMPA_cor = j_AMPA_cor_P * s_AMPA_cor : amp
-            ds_AMPA_cor / dt = -s_AMPA_cor / (tau_d_AMPA_P + tau_r_AMPA_P) : 1    
+            ds_AMPA_cor / dt = -s_AMPA_cor / tau_s_AMPA_P : 1    
             
             I_GABA_rec = j_GABA_P * s_GABA : amp
-            ds_GABA / dt = -s_GABA / (tau_d_GABA_P + tau_r_GABA_P) : 1
+            ds_GABA / dt = -s_GABA / tau_s_GABA_P : 1
             
             I_AMPA_rec = j_AMPA_rec_P * s_AMPA : amp
-            ds_AMPA / dt = -s_AMPA / (tau_d_AMPA_P + tau_r_AMPA_P): 1    
+            ds_AMPA / dt = -s_AMPA / tau_s_AMPA_P: 1    
             
             I_AMPA_spi = j_AMPA_rec_P * s_AMPA_spi : amp
-            ds_AMPA_spi / dt = -s_AMPA_spi / (tau_d_AMPA_P + tau_r_AMPA_P) : 1
+            ds_AMPA_spi / dt = -s_AMPA_spi / tau_s_AMPA_P : 1
         '''
    
         
@@ -259,16 +259,16 @@ def get_equations(type = 'pyramidal'):
             I_tot = I_AMPA_cor + I_AMPA_tha + I_AMPA_rec + I_GABA_rec + I_injected_I : amp
             
             I_AMPA_cor = j_AMPA_cor_I * s_AMPA_cor : amp
-            ds_AMPA_cor / dt = - s_AMPA_cor / (tau_d_AMPA_I + tau_r_AMPA_I) : 1
+            ds_AMPA_cor / dt = - s_AMPA_cor / tau_s_AMPA_I : 1
             
             I_AMPA_tha = j_AMPA_cor_I * s_AMPA_tha : amp
-            ds_AMPA_tha / dt = - s_AMPA_tha / (tau_d_AMPA_I_ext + tau_r_AMPA_I_ext) : 1
+            ds_AMPA_tha / dt = - s_AMPA_tha / tau_s_AMPA_I_ext : 1
             
             I_GABA_rec = j_GABA_I * s_GABA : amp
-            ds_GABA / dt = -s_GABA / (tau_d_GABA_I + tau_r_GABA_I) : 1
+            ds_GABA / dt = -s_GABA / tau_s_GABA_I : 1
             
             I_AMPA_rec = j_AMPA_rec_I * s_AMPA : amp
-            ds_AMPA / dt = -s_AMPA / (tau_d_AMPA_I + tau_r_AMPA_I): 1
+            ds_AMPA / dt = -s_AMPA / tau_s_AMPA_I : 1
         '''
         
     elif type == 'spiny':
@@ -280,7 +280,7 @@ def get_equations(type = 'pyramidal'):
             I_tot = I_AMPA_rec + I_injected_E : amp        
             
             I_AMPA_rec = j_AMPA_rec_E * s_AMPA : amp
-            ds_AMPA / dt = -s_AMPA / (tau_r_AMPA_E + tau_d_AMPA_E) : 1
+            ds_AMPA / dt = -s_AMPA / tau_s_AMPA_E : 1
         '''
     else:
         raise ValueError(format('The option type = %s is not a valid one.' %(type)))
