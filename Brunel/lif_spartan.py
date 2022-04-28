@@ -57,7 +57,7 @@ input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramida
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 input_current_E = 0     # Excitatory interneurons (Spiny Stellate)         
 
-input_spike_rate = [6] # [0, 5, 10] # spikes/ms/cell (driving input)
+input_spike_rate = [20] # [0, 5, 10] # spikes/ms/cell (driving input)
 input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
 
 spiny_constant = 30 # temporal variable to  explore Spiny excitability
@@ -79,14 +79,13 @@ params_py = set_params('pyramidal', PARAMS_SOURCE)
 params_in = set_params('inhibitory', PARAMS_SOURCE)
 params_ex = set_params('spiny', PARAMS_SOURCE)
 
-
 # Probability of connection
-p_IP = params_py.get('p_IP')  #* 500/N #0.2 #* 100/N # Inhibitory to Pyramidal
-p_PI = params_py.get('p_PI')  # * 500/N #0.2 #* 100/N # Pyramidal to Inhibitory
-p_PE = params_py.get('p_PE')  #* 500/N  #0.2 #* 100/N # Pyramidal to Excitatory
-p_EP = params_py.get('p_EP')   #* 500/N #0.2 #* 100/N # Excitatory to Pyramidal
-p_PP = params_py.get('p_PP')  #* 500/N  #0.2 #* 100/N # recurrent excitation (pyramidal) # Generally less than PI, IP connectivity (Bryson et al., 2021)
-p_II = params_py.get('p_II') # * 500/N  #0.2 #* 100/N # recurrent inhibition
+p_IP = params_py.get('p_IP') # * np.sqrt(1000/N) #* 500/N #0.2 #* 100/N # Inhibitory to Pyramidal
+p_PI = params_py.get('p_PI') # * np.sqrt(1000/N) # * 500/N #0.2 #* 100/N # Pyramidal to Inhibitory
+p_PE = params_py.get('p_PE') # * np.sqrt(1000/N) #* 500/N  #0.2 #* 100/N # Pyramidal to Excitatory
+p_EP = params_py.get('p_EP') # * np.sqrt(1000/N)  #* 500/N #0.2 #* 100/N # Excitatory to Pyramidal
+p_PP = params_py.get('p_PP') # * np.sqrt(1000/N) #* 500/N  #0.2 #* 100/N # recurrent excitation (pyramidal) # Generally less than PI, IP connectivity (Bryson et al., 2021)
+p_II = params_py.get('p_II') # * np.sqrt(1000/N) # * 500/N  #0.2 #* 100/N # recurrent inhibition
 
 # voltage
 V_leak = -70. * mV      # Resting membrane potential
@@ -114,23 +113,25 @@ tau_d_AMPA_P = params_py.get('tau_AMPA_d') # Decay time constant (From Brunel an
 tau_r_AMPA_P = params_py.get('tau_AMPA_r')   # Rising time constant (< 1 ms), set to 0.05 isntead of 0.4 to match the ratio from GABA
 tau_d_AMPA_P_ext = params_py.get('tau_AMPA_d_ext') # Decay time constant (From Brunel and Wang 2001)
 tau_r_AMPA_P_ext = params_py.get('tau_AMPA_r_ext')   # Rising time constant (< 1 ms), set to 0.05 isntead of 0.4 to match the ratio from GABA
+tau_s_AMPA_P_ext = tau_d_AMPA_P_ext + tau_r_AMPA_P_ext      # "Lumped" time constant for alpha function. 
 tau_d_GABA_P = params_py.get('tau_GABA_d') # From Brunel and Wang 2001
 tau_r_GABA_P = params_py.get('tau_GABA_r')
-tau_s_AMPA_P = 0.5 * (tau_d_AMPA_P + tau_r_AMPA_P) + 0.05*ms      # "Lumped" time constant for alpha function. 
-tau_s_GABA_P = 0.5 * (tau_d_GABA_P + tau_r_GABA_P) + 0.05*ms      # "Lumped" time constant for alpha function. 
+tau_s_AMPA_P = tau_d_AMPA_P + tau_r_AMPA_P      # "Lumped" time constant for alpha function. 
+tau_s_GABA_P = tau_d_GABA_P + tau_r_GABA_P      # "Lumped" time constant for alpha function. 
 #Inhibitory Interneurons
 tau_d_AMPA_I = params_in.get('tau_AMPA_d')  
 tau_r_AMPA_I = params_in.get('tau_AMPA_r')
 tau_d_AMPA_I_ext = params_in.get('tau_AMPA_d_ext')  
 tau_r_AMPA_I_ext = params_in.get('tau_AMPA_r_ext')
+tau_s_AMPA_I_ext = tau_d_AMPA_I_ext + tau_r_AMPA_I_ext      # "Lumped" time constant for alpha function. 
 tau_d_GABA_I = params_in.get('tau_GABA_d')
 tau_r_GABA_I = params_in.get('tau_GABA_r')
-tau_s_AMPA_I = 0.5 * (tau_d_AMPA_I + tau_r_AMPA_I) + 0.05*ms      # "Lumped" time constant for alpha function. 
-tau_s_GABA_I = 0.5 * (tau_d_GABA_I + tau_r_GABA_I) + 0.05*ms      # "Lumped" time constant for alpha function. 
+tau_s_AMPA_I = tau_d_AMPA_I + tau_r_AMPA_I      # "Lumped" time constant for alpha function. 
+tau_s_GABA_I = tau_d_GABA_I + tau_r_GABA_I      # "Lumped" time constant for alpha function. 
 # Spiny Stellate
 tau_d_AMPA_E = params_ex.get('tau_AMPA_d')  # TODO
 tau_r_AMPA_E = params_ex.get('tau_AMPA_r')  
-tau_s_AMPA_E = 0.5 * (tau_d_AMPA_E + tau_r_AMPA_E) + 0.05*ms      # "Lumped" time constant for alpha function. 
+tau_s_AMPA_E = tau_d_AMPA_E + tau_r_AMPA_E      # "Lumped" time constant for alpha function. 
 
 # refractory period
 tau_rp_P = params_py.get('tau_rp')
@@ -138,7 +139,7 @@ tau_rp_E = params_ex.get('tau_rp')
 tau_rp_I = params_in.get('tau_rp')
 
 # Synaptic delay
-delay = 0 * ms # 1 * ms # 0.5 * ms # 0.5 * ms in Brunel and Wang 2001
+delay = 0.2 * ms # 1 * ms # 0.5 * ms # 0.5 * ms in Brunel and Wang 2001
 
 # Cortical input
 num_inputs = 800                    # Both thalamo-cortical and cortico-cortical 
@@ -166,16 +167,16 @@ num_inputs = 800                    # Both thalamo-cortical and cortico-cortical
 
 # Synaptic efficacies
 # AMPA (excitatory)
-j_AMPA_rec_P = params_py.get('j_AMPA')
-j_AMPA_rec_E = params_ex.get('j_AMPA')
-j_AMPA_rec_I = params_in.get('j_AMPA')
+j_AMPA_rec_P = params_py.get('j_AMPA') * 1000/N # * np.sqrt(1000/N)
+j_AMPA_rec_E = params_ex.get('j_AMPA') * 1000/N # * np.sqrt(1000/N)
+j_AMPA_rec_I = params_in.get('j_AMPA') * 1000/N # * np.sqrt(1000/N)
     
 j_AMPA_cor_P = params_py.get('j_AMPA_ext')
 j_AMPA_cor_I = params_in.get('j_AMPA_ext')
 
 # GABAergic (inhibitory)
-j_GABA_P = params_py.get('j_GABA')
-j_GABA_I = params_py.get('j_GABA')
+j_GABA_P = params_py.get('j_GABA') * 1000/N # * np.sqrt(1000/N)
+j_GABA_I = params_in.get('j_GABA') * 1000/N # * np.sqrt(1000/N)
 
 # Weight constants. Amplitude of the synaptic input
 # Pyramidal 
@@ -339,7 +340,7 @@ C_E_P.active = ACTIVE_SPINY
 input1 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[0] * 1000/num_inputs) * Hz, increment_AMPA_ext_P)
 # input2 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[1] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
 # input3 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[2] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
-input1.active = False
+# input1.active = False
 # input2.active = False
 # input3.active = False
 # Poisson input (Cortico-cortical) input to inhibitory interneurons. Controlled by INHIBIT_INPUT

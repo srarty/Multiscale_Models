@@ -1,9 +1,10 @@
-% close all
+% Same as NMM_diff_equations.m but here the synaptic function is a
+% difference of exponentials.
 
-addpath ../JR/ % Load nonlinearity
+close all
 
 N = 3000; % Number of samples: 1 sample = 1 milisecond
-u = 10; % 1.5;
+u = 10000000000; % 1.5;
 
 params = set_parameters('allen', u);
 
@@ -23,6 +24,7 @@ x0 =[0;
     ];
 
 [t,x,y] = ode45(@(t,x) ode(t,x,params, dt), [min(t) max(t)], x0);
+% [t,x,y] = dde23(@(t,x) ode(t,x,params, dt), [min(t) max(t)], x0);
 for i = 1:size(x,1)
     y(i) = x(i,1) + u;
 end
@@ -53,28 +55,41 @@ function dx = ode(t,x,params,dt)
     lump_i = c2 * 2 * e_0 * params.decay_i; %2.6167e6;
     lump_e = c1 * 2 * e_0 * params.decay_e; %2.5450e7;
     
-    tau_r_e = 0.001001;
-    tau_d_e = 0.008339;
-    tau_m_e = 0.001;
+    tau_s_e = 0.001001;
+    tau_m_e = 0.008339;
     
-    tau_r_i = 0.004378;
-    tau_d_i = 0.01668;
-    tau_m_i = 0.002;
+    tau_s_i = 0.004378;
+    tau_m_i = 0.01668;
     
     alpha_e = 2.25;
     alpha_i = -1.054;
+
+    j_e = 14e-12;
+    j_i = -74e-12;
     
     dx = zeros(7,1);
-    dx(1) = x(1) + x(2);
-%     dx(2) = x(2) - x(2)/(tau_r_i) - x(1)/tau_r_i^2 + c2 * 2 * e_0 * alpha_i * (1/(tau_d_i)) * S1(x(3));                                               
-    dx(2) = x(2) - x(2)/(tau_r_i) - x(1)/tau_r_i^2 + c2 * 2 * e_0 * alpha_i * (1/(tau_d_i)) * S1(x(3));
-    dx(3) = x(3) + x(4);
-%     dx(4) = x(4) - x(4)/(tau_r_e) - x(3)/tau_r_i^2 + c1 * 2 * e_0 * alpha_e * (1/(tau_d_e)) * S2(x(1));
-    dx(4) = x(4) - x(4)/(tau_r_e) - x(3)/tau_r_i^2 + c1 * 2 * e_0 * alpha_e * (1/(tau_d_e)) * S2(x(1));
+%     dx(1) = x(1) + x(2) - x(1)/tau_m_i;
+%     dx(2) = x(2) - x(2)/tau_s_i + c2 * 2 * e_0 * alpha_i * (1/(tau_m_i + tau_s_i)) * S1(x(3));
+%     dx(3) = x(3) + x(4) - x(3)/tau_m_e;
+%     dx(4) = x(4) - x(4)/tau_s_e + c1 * 2 * e_0 * alpha_e * (1/(tau_m_e + tau_s_e)) * S2(x(1));
+
+%     dx(1) = x(1) - x(1)/tau_m_i - x(2)/tau_m_i;
+%     dx(2) = x(2) - x(2)/tau_s_i + c2 * e_0 * alpha_i * (tau_m_i/(tau_m_i - tau_s_i)) * S1(x(3));
+%     dx(3) = x(3) - x(3)/tau_m_e - x(4)/tau_m_e;
+%     dx(4) = x(4) - x(4)/tau_s_e + c1 * e_0 * alpha_e * (tau_m_e/(tau_m_e - tau_s_e)) * S2(x(1));
+
+    dx(1) = x(1) + (-x(1) -x(2)/25e-9)/tau_m_i; % see if dt is needed
+    dx(2) = x(2) - j_i * x(2) / tau_s_i + c2 * e_0 * alpha_i * S1(x(3));
+    dx(3) = x(3) + (-x(3) -x(4)/20e-9)/tau_m_e;
+    dx(4) = x(4) - j_e * x(4) / tau_s_e + c1 * e_0 * alpha_e * S2(x(1));
+    
     dx(5) = x(5);
     dx(6) = x(6);
     dx(7) = x(7);
 end
+
+%     dx(2) = x(2) - x(2)/(tau_d_i) - x(1)/tau_r_i^2 + c2 * 2 * e_0 * alpha_i * (1/(tau_d_i)) * S1(x(3));       
+%     dx(4) = x(4) - x(4)/(tau_d_e) - x(3)/tau_r_e^2 + c1 * 2 * e_0 * alpha_e * (1/(tau_d_e)) * S2(x(1));
 
 function do_plot(y,t, Vm)    
     figure

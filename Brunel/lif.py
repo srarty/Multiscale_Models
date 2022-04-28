@@ -47,7 +47,7 @@ INHIBIT_INPUT = False            # Excitatory cortical input to inhibitory popul
 ACTIVE_INTERNEURONS = True      # Inhibitory population
 ACTIVE_SPINY = False            # Spiny Stellate population
 PARAMS_SOURCE = 'allen'        # 'brunel' or 'allen'
-SAVE = False                     # Save ground truth data
+SAVE = True                     # Save ground truth data
 PLOT = True                     # Plot results (main Figure)
 PLOT_EXTRA = True              # Plot extra things.
 
@@ -57,13 +57,13 @@ input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramida
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 input_current_E = 0     # Excitatory interneurons (Spiny Stellate)         
 
-input_spike_rate = [10] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
+input_spike_rate = [40] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
 input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
 
 spiny_constant = 30 # temporal variable to  explore Spiny excitability
 
 #%% parameters  --------------------------------------------------------------
-simulation_time = 1 * second
+simulation_time = 3 * second
 dt_ = 100 * usecond
 T = np.linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector for plots (in seconds)
 # T_u = linspace(0, simulation_time, round(simulation_time/u_dt)) # Time vector for u for plots (in seconds)
@@ -80,12 +80,12 @@ params_in = set_params('inhibitory', PARAMS_SOURCE)
 params_ex = set_params('spiny', PARAMS_SOURCE)
 
 # Probability of connection
-p_IP = params_py.get('p_IP')  * np.sqrt(1000/N) #0.2 #* 100/N # Inhibitory to Pyramidal
-p_PI = params_py.get('p_PI')  * np.sqrt(1000/N) #0.2 #* 100/N # Pyramidal to Inhibitory
-p_PE = params_py.get('p_PE')  * np.sqrt(1000/N)  #0.2 #* 100/N # Pyramidal to Excitatory
-p_EP = params_py.get('p_EP')  * np.sqrt(1000/N) #0.2 #* 100/N # Excitatory to Pyramidal
-p_PP = params_py.get('p_PP')  * np.sqrt(1000/N)  #0.2 #* 100/N # recurrent excitation (pyramidal) # Generally less than PI, IP connectivity (Bryson et al., 2021)
-p_II = params_py.get('p_II') * np.sqrt(1000/N)  #0.2 #* 100/N # recurrent inhibition
+p_IP = params_py.get('p_IP') # * np.sqrt(1000/N) #0.2 #* 100/N # Inhibitory to Pyramidal
+p_PI = params_py.get('p_PI') # * np.sqrt(1000/N) #0.2 #* 100/N # Pyramidal to Inhibitory
+p_PE = params_py.get('p_PE') # * np.sqrt(1000/N)  #0.2 #* 100/N # Pyramidal to Excitatory
+p_EP = params_py.get('p_EP') # * np.sqrt(1000/N) #0.2 #* 100/N # Excitatory to Pyramidal
+p_PP = params_py.get('p_PP') # * np.sqrt(1000/N)  #0.2 #* 100/N # recurrent excitation (pyramidal) # Generally less than PI, IP connectivity (Bryson et al., 2021)
+p_II = params_py.get('p_II') # * np.sqrt(1000/N)  #0.2 #* 100/N # recurrent inhibition
 
 # voltage
 V_leak = -70. * mV      # Resting membrane potential
@@ -113,23 +113,25 @@ tau_d_AMPA_P = params_py.get('tau_AMPA_d') # Decay time constant (From Brunel an
 tau_r_AMPA_P = params_py.get('tau_AMPA_r')   # Rising time constant (< 1 ms), set to 0.05 isntead of 0.4 to match the ratio from GABA
 tau_d_AMPA_P_ext = params_py.get('tau_AMPA_d_ext') # Decay time constant (From Brunel and Wang 2001)
 tau_r_AMPA_P_ext = params_py.get('tau_AMPA_r_ext')   # Rising time constant (< 1 ms), set to 0.05 isntead of 0.4 to match the ratio from GABA
+tau_s_AMPA_P_ext = tau_d_AMPA_P_ext + tau_r_AMPA_P_ext
 tau_d_GABA_P = params_py.get('tau_GABA_d') # From Brunel and Wang 2001
 tau_r_GABA_P = params_py.get('tau_GABA_r')
-tau_s_AMPA_P = 0.5 * (tau_d_AMPA_P + tau_r_AMPA_P) + 0.05*ms      # "Lumped" time constant for alpha function. 
-tau_s_GABA_P = 0.5 * (tau_d_GABA_P + tau_r_GABA_P) + 0.05*ms      # "Lumped" time constant for alpha function. 
+tau_s_AMPA_P = (tau_d_AMPA_P + tau_r_AMPA_P)      # "Lumped" time constant for alpha function. 
+tau_s_GABA_P = (tau_d_GABA_P + tau_r_GABA_P)      # "Lumped" time constant for alpha function. 
 #Inhibitory Interneurons
 tau_d_AMPA_I = params_in.get('tau_AMPA_d')  
 tau_r_AMPA_I = params_in.get('tau_AMPA_r')
 tau_d_AMPA_I_ext = params_in.get('tau_AMPA_d_ext')  
 tau_r_AMPA_I_ext = params_in.get('tau_AMPA_r_ext')
+tau_s_AMPA_I_ext = tau_d_AMPA_I_ext + tau_r_AMPA_I_ext
 tau_d_GABA_I = params_in.get('tau_GABA_d')
 tau_r_GABA_I = params_in.get('tau_GABA_r')
-tau_s_AMPA_I = 0.5 * (tau_d_AMPA_I + tau_r_AMPA_I) + 0.05*ms      # "Lumped" time constant for alpha function. 
-tau_s_GABA_I = 0.5 * (tau_d_GABA_I + tau_r_GABA_I) + 0.05*ms      # "Lumped" time constant for alpha function. 
+tau_s_AMPA_I = (tau_d_AMPA_I + tau_r_AMPA_I)      # "Lumped" time constant for alpha function. 
+tau_s_GABA_I = (tau_d_GABA_I + tau_r_GABA_I)      # "Lumped" time constant for alpha function. 
 # Spiny Stellate
 tau_d_AMPA_E = params_ex.get('tau_AMPA_d')  # TODO
 tau_r_AMPA_E = params_ex.get('tau_AMPA_r')  
-tau_s_AMPA_E = 0.5 * (tau_d_AMPA_E + tau_r_AMPA_E) + 0.05*ms      # "Lumped" time constant for alpha function. 
+tau_s_AMPA_E = (tau_d_AMPA_E + tau_r_AMPA_E)  # "Lumped" time constant for alpha function. 
 
 # refractory period
 tau_rp_P = params_py.get('tau_rp')
@@ -137,7 +139,7 @@ tau_rp_E = params_ex.get('tau_rp')
 tau_rp_I = params_in.get('tau_rp')
 
 # Synaptic delay
-delay = 0 * ms # 1 * ms # 0.5 * ms # 0.5 * ms in Brunel and Wang 2001
+delay = 0.2 * ms # 1 * ms # 0.5 * ms # 0.5 * ms in Brunel and Wang 2001
 
 # Cortical input
 num_inputs = 800                    # Both thalamo-cortical and cortico-cortical 
@@ -165,9 +167,9 @@ num_inputs = 800                    # Both thalamo-cortical and cortico-cortical
 
 # Synaptic efficacies
 # AMPA (excitatory)
-j_AMPA_rec_P = params_py.get('j_AMPA') * np.sqrt(1000/N)
-j_AMPA_rec_E = params_ex.get('j_AMPA') * np.sqrt(1000/N)
-j_AMPA_rec_I = params_in.get('j_AMPA') * np.sqrt(1000/N)
+j_AMPA_rec_P = params_py.get('j_AMPA') * 1000/N # * np.sqrt(1000/N)
+j_AMPA_rec_E = params_ex.get('j_AMPA') * 1000/N # * np.sqrt(1000/N)
+j_AMPA_rec_I = params_in.get('j_AMPA') * 1000/N # * np.sqrt(1000/N)
     
 j_AMPA_cor_P = params_py.get('j_AMPA_ext')
 j_AMPA_cor_I = params_in.get('j_AMPA_ext')  # This value is used for both cor 
@@ -175,8 +177,8 @@ j_AMPA_cor_I = params_in.get('j_AMPA_ext')  # This value is used for both cor
                                             # the inhibitory pop doesn't receive cortical input
 
 # GABAergic (inhibitory)
-j_GABA_P = params_py.get('j_GABA') * np.sqrt(1000/N)
-j_GABA_I = params_in.get('j_GABA') * np.sqrt(1000/N)
+j_GABA_P = params_py.get('j_GABA') * 1000/N # * np.sqrt(1000/N)
+j_GABA_I = params_in.get('j_GABA') * 1000/N # * np.sqrt(1000/N)
 
 # Weight constants. Amplitude of the synaptic input
 # Pyramidal 
@@ -389,13 +391,13 @@ net = Network(collect())
 
 # temporal = I_injected_I
 # I_injected_I = 0 * pA
-net.run(simulation_time, report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+# net.run(simulation_time, report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
 
 # I_injected_I = temporal
 # net.run(simulation_time/2, report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
 
-# input1.active = True
-# net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+input1.active = True
+net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
 
 # input1.active = False
 # input2.active = True
@@ -518,17 +520,17 @@ if PLOT_EXTRA:
     axs[1].set_ylabel('EPSP (mV)')
     axs[1].plot(T*1000, np.transpose(v_ip)*1000)
 
-    # axs[0].set_title('LFP (from voltage)')
-    # axs[0].set_xlabel('Time (ms)')
-    # axs[0].set_ylabel('mV')
-    # axs[0].plot(T*1000, np.transpose(lfp_v), label='LFP_V')
-    # axs[0].legend()
+    axs[0].set_title('LFP (from voltage)')
+    axs[0].set_xlabel('Time (ms)')
+    axs[0].set_ylabel('mV')
+    axs[0].plot(T*1000, np.transpose(lfp_v), label='LFP_V')
+    axs[0].legend()
 
-    # axs[1].set_title('LFP (from current)')
-    # axs[1].set_xlabel('Time (ms)')
-    # axs[1].set_ylabel('mV')
-    # axs[1].plot(T*1000, np.transpose(lfp_), label='LFP_I')
-    # axs[1].legend()
+    axs[1].set_title('LFP (from current)')
+    axs[1].set_xlabel('Time (ms)')
+    axs[1].set_ylabel('mV')
+    axs[1].plot(T*1000, np.transpose(lfp_), label='LFP_I')
+    axs[1].legend()
     
     # Third figure. Membrane potential
     if ACTIVE_SPINY:
