@@ -3,7 +3,7 @@ close all
 % addpath ../JR/ % Load nonlinearity
 
 N = 3000; % Number of samples: 1 sample = 1 milisecond
-u = 10;%1.5;
+u = 15;%1.5;
 
 params = set_parameters('allen', u);
 

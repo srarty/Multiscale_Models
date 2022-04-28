@@ -12,9 +12,9 @@
 % Artemio - March 2022
 
 function spectrum(x, y, t)
-%     close all
-    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_39.mat';
-%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_58.mat';
+    close all
+    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_3.mat';
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_61.mat';
     signal = 'vip'; % vpi, vip, lfp
     
     [x_nmm, x_lif, t_nmm, t_lif, v_pi, v_ip] = get_data(signal, x, y, t, data_file);

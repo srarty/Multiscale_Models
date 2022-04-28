@@ -4,7 +4,7 @@
 close all
 
 N = 3000; % Number of samples: 1 sample = 1 milisecond
-u = 30; % 1.5;
+u = 15; % 1.5;
 
 params = set_parameters('allen', u);
 
@@ -55,31 +55,35 @@ function dx = ode(t,x,params,dt)
     lump_i = c2 * 2 * e_0 * params.decay_i; %2.6167e6;
     lump_e = c1 * 2 * e_0 * params.decay_e; %2.5450e7;
     
-    tau_r_e = 0.001001;
-    tau_d_e = 0.008339;
-    tau_s_e = 1.2e-3;
-    tau_m_e = 0.01;
+    tau_s_e = 0.001001;
+    tau_m_e = 0.008339;
     
-    tau_r_i = 0.004378;
-    tau_d_i = 0.01668;
-    tau_s_i = 5.25e-3;
-    tau_m_i = 0.02;
+    tau_s_i = 0.004378;
+    tau_m_i = 0.01668;
     
-    alpha_e = 14e-12; % <- increment in python | amplitude of fit -> %2.25;
-    alpha_i = -14e-12; % <- increment in python | amplitude of fit -> %-1.054;
+    alpha_e = 2.25;
+    alpha_i = -1.054;
 
 %     j_e = 14e-12;
 %     j_i = -74e-12;
     
     dx = zeros(7,1);
-%     dx(1) = x(1) + x(2) - x(1)/tau_r_i;
-%     dx(2) = x(2) - x(2)/tau_d_i + c2 * 2 * e_0 * alpha_i * (1/(tau_d_i + tau_r_i)) * S1(x(3));
-%     dx(3) = x(3) + x(4) - x(3)/tau_r_e;
-%     dx(4) = x(4) - x(4)/tau_d_e + c1 * 2 * e_0 * alpha_e * (1/(tau_d_e + tau_r_e)) * S2(x(1));
-    dx(1) = x(1) - x(2)/tau_m_i - x(1)/tau_m_i;
-    dx(2) = x(2) + - x(2)/tau_s_i + c2 * 2 * e_0 * alpha_i * S1(x(3));
-    dx(3) = x(3) - x(4)/tau_m_e - x(3)/tau_m_e;
-    dx(4) = x(4) + - x(4)/tau_s_e + c1 * 2 * e_0 * alpha_e * S2(x(1));
+    % Double exponential from Nicola-Campbell (2013):
+    dx(1) = x(1) + x(2) - x(1)/tau_m_i;
+    dx(2) = x(2) - x(2)/tau_s_i + c2 * 2 * e_0 * alpha_i * (1/(tau_m_i + tau_s_i)) * S1(x(3));
+    dx(3) = x(3) + x(4) - x(3)/tau_m_e;
+    dx(4) = x(4) - x(4)/tau_s_e + c1 * 2 * e_0 * alpha_e * (1/(tau_m_e + tau_s_e)) * S2(x(1));
+
+%     dx(1) = x(1) - x(1)/tau_m_i - x(2)/tau_m_i;
+%     dx(2) = x(2) - x(2)/tau_s_i + c2 * e_0 * alpha_i * (tau_m_i/(tau_m_i - tau_s_i)) * S1(x(3));
+%     dx(3) = x(3) - x(3)/tau_m_e - x(4)/tau_m_e;
+%     dx(4) = x(4) - x(4)/tau_s_e + c1 * e_0 * alpha_e * (tau_m_e/(tau_m_e - tau_s_e)) * S2(x(1));
+      
+%     dx(1) = x(1) + (-x(1) -x(2)/25e-9)/tau_m_i; % see if dt is needed
+%     dx(2) = x(2) - j_i * x(2) / tau_s_i + c2 * e_0 * alpha_i * S1(x(3));
+%     dx(3) = x(3) + (-x(3) -x(4)/20e-9)/tau_m_e;
+%     dx(4) = x(4) - j_e * x(4) / tau_s_e + c1 * e_0 * alpha_e * S2(x(1));
+    
     dx(5) = x(5);
     dx(6) = x(6);
     dx(7) = x(7);
