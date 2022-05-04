@@ -1,34 +1,81 @@
 % Same as NMM_diff_equations.m but here the synaptic function is a
 % difference of exponentials.
+function [x, y, t] = NMM_diff_equations_DblExp(varargin)
+    option = ''; value = [];
+    if nargin >= 2
+        option = varargin{1};
+        value = varargin{2};
+    end
+    if nargin == 4
+        option2 = varargin{3};
+        value2 = varargin{4};
+    end
+    
+% 	close all
 
-close all
+    N = 2000; % Number of samples: 1 sample = 1 milisecond
+    u = 20; % 1.5;
 
-N = 3000; % Number of samples: 1 sample = 1 milisecond
-u = 15; % 1.5;
+    params = set_parameters('allen', u);
+    % Parse inputs --------------------------------------------------------
+    switch option
+        case "AmplitudeE"
+            params.AmplitudeE = value;
+        case "AmplitudeI"
+            params.AmplitudeI = value;
+        case "tau_s_e"
+            params.tau_s_e = value;
+        case "tau_s_i"
+            params.tau_s_i = value;
+        case "tau_m_e"
+            params.tau_m_e = value;
+        case "tau_m_i"
+            params.tau_m_i = value;
+        case "u"
+            params.u = value;
+    end
+    if exist('option2','var')
+        switch option2
+            case "AmplitudeE"
+                params.AmplitudeE = value2;
+            case "AmplitudeI"
+                params.AmplitudeI = value2;
+            case "tau_s_e"
+                params.tau_s_e = value2;
+            case "tau_s_i"
+                params.tau_s_i = value2;
+            case "tau_m_e"
+                params.tau_m_e = value2;
+            case "tau_m_i"
+                params.tau_m_i = value2;
+        end
+    end
+    % --------------------------------------------------- End input parsing
+    
+    dt = params.dt;
+    t = 0:dt:(N-1)*dt;
 
-params = set_parameters('allen', u);
+    alpha_i = params.alpha_ie;% * c2 * 2 * params.e0 * params.decay_i; % lumped constant (inhibitory input to pyramidal cells)
+    alpha_e = params.alpha_ei;% * c1 * 2 * params.e0 * params.decay_e; % lumped constant (excitatory input to inhibitory interneurons)
 
-dt = params.dt;
-t = 0:dt:(N-1)*dt;
+    x0 =[0;
+        0;
+        0;
+        0;
+        u;
+        alpha_i;
+        alpha_e;
+        ];
 
-alpha_i = params.alpha_ie;% * c2 * 2 * params.e0 * params.decay_i; % lumped constant (inhibitory input to pyramidal cells)
-alpha_e = params.alpha_ei;% * c1 * 2 * params.e0 * params.decay_e; % lumped constant (excitatory input to inhibitory interneurons)
-
-x0 =[0;
-    0;
-    0;
-    0;
-    u;
-    alpha_i;
-    alpha_e;
-    ];
-
-[t,x,y] = ode45(@(t,x) ode(t,x,params, dt), [min(t) max(t)], x0);
-% [t,x,y] = dde23(@(t,x) ode(t,x,params, dt), [min(t) max(t)], x0);
-for i = 1:size(x,1)
-    y(i) = x(i,1) + u;
+    [t,x,y] = ode45(@(t,x) ode(t,x,params, dt), [min(t) max(t)], x0);
+    % [t,x,y] = dde23(@(t,x) ode(t,x,params, dt), [min(t) max(t)], x0);
+    
+    for i = 1:size(x,1)
+        y(i) = x(i,1) + u;
+    end
+    
+%     do_plot(x,t,y)
 end
-do_plot(x,t,y)
 
 function dx = ode(t,x,params,dt)
     alpha_e = params.alpha_ei;
@@ -55,25 +102,41 @@ function dx = ode(t,x,params,dt)
     lump_i = c2 * 2 * e_0 * params.decay_i; %2.6167e6;
     lump_e = c1 * 2 * e_0 * params.decay_e; %2.5450e7;
     
-    tau_s_e = 0.001001;
-    tau_m_e = 0.008339;
+    tau_s_e = 0.001227; % 0.001001;
+    tau_m_e = 0.008115; % 0.008339;
     
-    tau_s_i = 0.004378;
-    tau_m_i = 0.01668;
+    tau_s_i = 0.004674; % 0.004378;
+    tau_m_i = 0.01638; % 0.01668;
     
-    alpha_e = 2.25;
-    alpha_i = -1.054;
+    alpha_e = 2.395; % 2.25;
+    alpha_i = -1.107; % -1.054;
 
 %     j_e = 14e-12;
 %     j_i = -74e-12;
-    
-    dx = zeros(7,1);
-    % Double exponential from Nicola-Campbell (2013):
-    dx(1) = x(1) + x(2) - x(1)/tau_m_i;
-    dx(2) = x(2) - x(2)/tau_s_i + c2 * 2 * e_0 * alpha_i * (1/(tau_m_i + tau_s_i)) * S1(x(3));
-    dx(3) = x(3) + x(4) - x(3)/tau_m_e;
-    dx(4) = x(4) - x(4)/tau_s_e + c1 * 2 * e_0 * alpha_e * (1/(tau_m_e + tau_s_e)) * S2(x(1));
 
+    % Parse the optional inputs -------------------------------------------
+    if ~isfield(params,'AmplitudeI')
+        AmplitudeI = c2 * 2 * e_0 * alpha_i * (1/(tau_m_i + tau_s_i));
+    else
+        AmplitudeI = params.AmplitudeI;
+    end
+    
+    if ~isfield(params,'AmplitudeE')
+        AmplitudeE = c1 * 2 * e_0 * alpha_e * (1/(tau_m_e + tau_s_e));
+    else
+        AmplitudeE = params.AmplitudeE;
+    end
+    
+    if isfield(params,'tau_s_e'), tau_s_e = params.tau_s_e; end
+    if isfield(params,'tau_s_i'), tau_s_i = params.tau_s_i; end
+    if isfield(params,'tau_m_e'), tau_m_e = params.tau_m_e; end
+    if isfield(params,'tau_m_i'), tau_m_i = params.tau_m_i; end    
+    % -------------------------------------------------- End parsing inputs
+
+    
+    % Diff equations ------------------------------------------------------
+    dx = zeros(7,1);
+    
 %     dx(1) = x(1) - x(1)/tau_m_i - x(2)/tau_m_i;
 %     dx(2) = x(2) - x(2)/tau_s_i + c2 * e_0 * alpha_i * (tau_m_i/(tau_m_i - tau_s_i)) * S1(x(3));
 %     dx(3) = x(3) - x(3)/tau_m_e - x(4)/tau_m_e;
@@ -83,7 +146,13 @@ function dx = ode(t,x,params,dt)
 %     dx(2) = x(2) - j_i * x(2) / tau_s_i + c2 * e_0 * alpha_i * S1(x(3));
 %     dx(3) = x(3) + (-x(3) -x(4)/20e-9)/tau_m_e;
 %     dx(4) = x(4) - j_e * x(4) / tau_s_e + c1 * e_0 * alpha_e * S2(x(1));
-    
+
+    % Double exponential from Nicola-Campbell (2013):
+    % TODO: Check the coefficients of the convolution, specifically 1/(tau_m+tau_s)
+    dx(1) = x(1) + x(2) - x(1)/tau_m_i;
+    dx(2) = x(2) - x(2)/tau_s_i + AmplitudeI * S1(x(3));
+    dx(3) = x(3) + x(4) - x(3)/tau_m_e;
+    dx(4) = x(4) - x(4)/tau_s_e + AmplitudeE * S2(x(1));    
     dx(5) = x(5);
     dx(6) = x(6);
     dx(7) = x(7);

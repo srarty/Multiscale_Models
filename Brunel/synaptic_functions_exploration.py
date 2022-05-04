@@ -49,7 +49,7 @@ N_P = 1
 # voltage
 V_leak = -70. * mV      # Resting membrane potential
 V_thr = -50 * mV        # Threshold
-V_reset = -70 * mV # -59 * mV      # Reset voltage. Equal to V_leak-> To use Burkitt's, 2006 Eq. (12)
+V_reset = -59 * mV # -59 * mV      # Reset voltage. Equal to V_leak-> To use Burkitt's, 2006 Eq. (12)
 
 params = set_params(neuron_type, source)
 

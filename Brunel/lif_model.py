@@ -149,38 +149,6 @@ def set_params(type='pyramidal', source='brunel'):
             single_exponential_weight = 8.2
             delayed_exp_weight_AMPA = 1 
             delayed_exp_weight_GABA = 1
-        
-    elif type == 'spiny':
-        #%% Spiny. Brunel
-        # TODO
-        g_leak = 25 * nS # Leak conductance
-        C = 0.5 * nF # Membrane capacitance
-
-        tau_rp = 2 * ms # Absolute refractory period
-        tau_m = 20 * ms # Membrane time constant
-
-        tau_GABA_r = 0.25 * ms
-        tau_GABA_d = 5 * ms
-        tau_AMPA_r = 0.4 * ms
-        tau_AMPA_d = 2 * ms
-        tau_AMPA_r_ext = 0.4 * ms
-        tau_AMPA_d_ext = 2 * ms
-        tau_l = 1 * ms # Latency
-
-        # Synaptic efficacies
-        j_GABA  = 42.5 * pA 
-        j_AMPA  = -10.5 * pA
-        j_AMPA_ext = -13.75 * pA
-
-        # Delta function weight (increment with each input spike)
-        single_exp_weight = 1 # Inverse: 1/1.52 = 0.6578947368421053
-        alpha_simple_weight_AMPA = 1.52
-        alpha_simple_weight_AMPA_ext = 1.52
-        single_exponential_weight = 8.2 # TODO
-        alpha_simple_weight_GABA = 1.52 
-        delayed_exp_weight_AMPA = 6.0995 # Inverse 1.52/6.0995 = 0.24920075416017706
-        delayed_exp_weight_GABA = 6.0995 # Inverse 1.52/6.0995 = 0.24920075416017706
-
     else:
         return 0
 
@@ -188,15 +156,11 @@ def set_params(type='pyramidal', source='brunel'):
     if source == 'brunel':
         p_IP =  0.2
         p_PI =  0.2
-        p_PE =  0.2 
-        p_EP =  0.2 
         p_PP =  0.2
         p_II =  0.2
     else:
         p_IP =  0.411
         p_PI =  0.395
-        p_PE =  0.2 
-        p_EP =  0.2 
         p_PP =  0.16
         p_II =  0.451
 
@@ -218,8 +182,6 @@ def set_params(type='pyramidal', source='brunel'):
         "j_AMPA_ext":   j_AMPA_ext,
         "p_IP":         p_IP,
         "p_PI":         p_PI,
-        "p_PE":         p_PE,
-        "p_EP":         p_EP,
         "p_PP":         p_PP,
         "p_II":         p_II,
         "alpha_weight_AMPA":        alpha_simple_weight_AMPA,
@@ -274,18 +236,6 @@ def get_equations(type = 'pyramidal'):
             
             I_AMPA_rec = j_AMPA_rec_I * s_AMPA : amp
             ds_AMPA / dt = -s_AMPA / tau_s_AMPA_I : 1
-        '''
-        
-    elif type == 'spiny':
-        eqs = '''
-            dv / dt = (-v + V_leak - (I_tot/g_m_E)) / tau_m_E : volt (unless refractory)
-            
-            dv_ep /dt = (-v_ep -(I_AMPA_rec / g_m_E)) / tau_m_P : volt (unless refractory)
-            
-            I_tot = I_AMPA_rec + I_injected_E : amp        
-            
-            I_AMPA_rec = j_AMPA_rec_E * s_AMPA : amp
-            ds_AMPA / dt = -s_AMPA / tau_s_AMPA_E : 1
         '''
     else:
         raise ValueError(format('The option type = %s is not a valid one.' %(type)))
