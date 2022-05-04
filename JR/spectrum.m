@@ -11,21 +11,31 @@
 %
 % Artemio - March 2022
 
-function spectrum(x, y, t)
-    close all
-    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_3.mat';
-%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_61.mat';
+% NOTES:
+% NMM reduced frequency reponse with increased u, LIF other way around
+function varargout = spectrum(x, y, t, varargin)
+    global PLOT
+    if nargin > 3, PLOT = varargin{1}; else, PLOT = true; end
+    
+%     close all
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_8.mat';
+    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_62.mat';
     signal = 'vip'; % vpi, vip, lfp
     
     [x_nmm, x_lif, t_nmm, t_lif, v_pi, v_ip] = get_data(signal, x, y, t, data_file);
     
     [x_nmm, x_lif, t_nmm] = normalization(x_nmm, x_lif, t_nmm, t_lif);
 
-    do_plot('nmm', signal, x_nmm, t_nmm); % After normalization, t_lif applies for both signals, because it includes an interpolation
-    do_plot('lif', signal, x_lif, t_lif);
-    plot_lif_results(v_pi, v_ip, t_lif); % Won't run if lif results haven't been loaded
+    harmonic_nmm = do_plot('nmm', signal, x_nmm, t_nmm); % After normalization, t_lif applies for both signals, because it includes an interpolation
+    varargout = {harmonic_nmm};
+    harmonic_lif = do_plot('lif', signal, x_lif, t_lif);
+    varargout{end + 1} = harmonic_lif;
     
-    do_correlation(x_nmm, x_lif, t_nmm, t_lif);
+%     plot_lif_results(v_pi, v_ip, t_lif); % Won't run if lif results haven't been loaded
+%     
+%     do_correlation(x_nmm, x_lif, t_nmm, t_lif);
+    
+    
 end
 
 function [x_nmm, x_lif, t_nmm, t_lif, v_pi, v_ip] = get_data(signal, x, y, t, data_file)
@@ -80,7 +90,8 @@ function [x_nmm, x_lif, t_nmm] = normalization(x_nmm, x_lif, t_nmm, t_lif)
 end
 
 %%
-function varargout = do_plot(model, signal, x_, t)
+function oscillation = do_plot(model, signal, x_, t)
+    global PLOT
 
     dt = t(2) - t(1);
 
@@ -100,8 +111,8 @@ function varargout = do_plot(model, signal, x_, t)
     freqbins = 10 * w; %Evaluate the spectrum at (128/2)+1=65 frequencies and (length(x)−120)/(128−120)=235 time bins.    
     freqrange = [0 0.2]; % xlim values
 
-    disp(['freq bins = ', num2str( (freqbins/2)+1 )]);
-    disp(['time bins = ', num2str( (length(x_)-so)/(freqbins-so) )]);
+%     disp(['freq bins = ', num2str( (freqbins/2)+1 )]);
+%     disp(['time bins = ', num2str( (length(x_)-so)/(freqbins-so) )]);
             
     %% FFT
 
@@ -112,36 +123,44 @@ function varargout = do_plot(model, signal, x_, t)
     P2 = abs(X/L);
     P1 = P2(:,1:n/2+1);
     P1(:,2:end-1)=2*P1(:,2:end-1);
-
-    f = figure(100); 
-    f.Position([3 4]) = [1230 420];
     
-    if strcmp('lif', model)
-        subplot(1,2,2); 
-        titlestr = 'LIF';
-    else
-        subplot(1,2,1); 
-        titlestr = 'NMM';
+    if PLOT
+        f = figure(100); 
+        f.Position([3 4]) = [1230 420];
+
+        if strcmp('lif', model)
+            subplot(1,2,2); 
+            titlestr = 'LIF';
+        else
+            subplot(1,2,1); 
+            titlestr = 'NMM';
+        end
+
+        plot(0:(Fs/n):(Fs/2-Fs/n), P1(1:n/2));
+        title(titlestr);
+        xlabel('Frequency (Hz)');
+        ylabel(['Power [', ystr, ']']);
+        xlim([0 200]);
     end
-    
-    plot(0:(Fs/n):(Fs/2-Fs/n), P1(1:n/2));
-    title(titlestr);
-    xlabel('Frequency (Hz)');
-    ylabel(['Power [', ystr, ']']);
+    % Calculate harmonic:
+    freqs = 0:(Fs/n):(Fs/2-Fs/n);
+    amps = P1(1:n/2);
+    [~,idx] = max(amps);
+    oscillation = freqs(idx);
+        
+    if PLOT
+        %% Spectrogram
+        f = figure(101);
+        f.Position([3 4]) = [1230 420];
+        if strcmp('lif', model), subplot(1,2,2); else, subplot(1,2,1); end
+        spectrogram(x_, w, so, freqbins, Fs, 'yaxis','power');
+        [~,~,~,ps] = spectrogram(x_, w, so, freqbins, Fs, 'yaxis','power');
 
-    xlim([0 200]);
-
-    %% Spectrogram
-    f = figure(101);
-    f.Position([3 4]) = [1230 420];
-    if strcmp('lif', model), subplot(1,2,2); else, subplot(1,2,1); end
-    spectrogram(x_, w, so, freqbins, Fs, 'yaxis','power');
-    [~,~,~,ps] = spectrogram(x_, w, so, freqbins, Fs, 'yaxis','power');
-
-    title([titlestr, ' (', ystr, ')']);
-    ax = gca;
-%     ax.YScale = 'log';
-    ylim(freqrange);
+        title([titlestr, ' (', ystr, ')']);
+        ax = gca;
+    %     ax.YScale = 'log';
+        ylim(freqrange);
+    end
     
 end
 
@@ -156,14 +175,14 @@ function plot_lif_results(v_pi, v_ip, t)
     xlabel('x1');
     ylabel('x3');
 
-%     figure; plot(x1*1e3,x1_*1e6)
-%     xlabel('v');
-%     ylabel('z');
-%     
-%     figure; plot3(t * 1e3,x3*1e3,x3_*1e6, 'r')
-%     xlabel('t');
-%     ylabel('v');
-%     zlabel('z');
+    figure; plot(x1*1e3,x1_*1e6)
+    xlabel('v');
+    ylabel('z');
+    
+    figure; plot3(t * 1e3,x3*1e3,x3_*1e6, 'r')
+    xlabel('t');
+    ylabel('v');
+    zlabel('z');
 end
 
 function do_correlation(x_nmm, x_lif, t_nmm, t_lif)    
@@ -175,7 +194,7 @@ function do_correlation(x_nmm, x_lif, t_nmm, t_lif)
     plot(lags, correlation);
     
     figure;
-    bar(auto_nmm); hold
-    bar(auto_lif);
+    a = bar(auto_nmm, 'BarWidth', 0.85); hold
+    bar(auto_lif, 'BarWidth', 0.75);
     legend({'NMM', 'LIF'});
 end
