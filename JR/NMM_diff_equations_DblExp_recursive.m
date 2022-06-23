@@ -14,7 +14,7 @@ function [x, y, t] = NMM_diff_equations_DblExp_recursive(varargin)
 % 	close all
 
     N = 2000; % Number of samples: 1 sample = 1 milisecond
-    u = 20; % 1.5;
+    u = 9;%20; % 1.5;
 
     params = set_parameters('allen', u);
     % Parse inputs --------------------------------------------------------
@@ -104,7 +104,7 @@ function dx = ode(t,x,params,dt)
     c1 = 4 * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
     c2 = 1 * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
     c3 = 4 * c_constant * 0.16;
-    c4 = 1 * c_constant * 0.19; % 0.451;
+    c4 = 1 * c_constant * 0.125; % Allen(LIF) = 0.451; % Same oscillatory freq (with u=9) = 0.125
     lump_i = c2 * 2 * e_0 * params.decay_i; %2.6167e6;
     lump_e = c1 * 2 * e_0 * params.decay_e; %2.5450e7;
     
