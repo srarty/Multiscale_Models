@@ -41,8 +41,8 @@ from lif_model import set_params, get_equations
 def brunel(u = 15):
     
     # Options:
-    RECURRENT_PYRAMIDAL = False     # Self excitation 
-    RECURRENT_INHIBITORY = False     # Self inhibition
+    RECURRENT_PYRAMIDAL = True     # Self excitation 
+    RECURRENT_INHIBITORY = True     # Self inhibition
     INHIBIT_INPUT = False            # Excitatory cortical input to inhibitory population
     ACTIVE_INTERNEURONS = True      # Inhibitory population
     PARAMS_SOURCE = 'allen'        # 'brunel' or 'allen'
@@ -55,7 +55,7 @@ def brunel(u = 15):
     input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
     input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
     
-    input_spike_rate = u #[15] # [0, 5, 10] # spikes/ms/cell (driving input)
+    input_spike_rate = [u] #[15] # [0, 5, 10] # spikes/ms/cell (driving input)
     input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
     
     #%% parameters  --------------------------------------------------------------
@@ -579,4 +579,4 @@ def brunel(u = 15):
 
 ranges = np.arange(5, 31, 1)
 for iterations in ranges:
-    brunel(input_spike_rate = iterations)
+    brunel(u = iterations)

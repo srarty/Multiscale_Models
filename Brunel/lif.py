@@ -37,7 +37,7 @@ devices.device.size = []
 
 from lif_model import set_params, get_equations
 
-# def brunel(corriente=0):
+# def brunel(u=0):
 plt.close('all')
     
 # Options:
@@ -55,11 +55,11 @@ corriente = 0
 input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 
-input_spike_rate = [5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
+input_spike_rate = [20] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
 input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
 
 #%% parameters  --------------------------------------------------------------
-simulation_time = 3 * second
+simulation_time = 2 * second
 dt_ = 100 * usecond
 T = np.linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector for plots (in seconds)
    
@@ -606,8 +606,8 @@ else:
 # for iterations in ranges:
 #     brunel(corriente=iterations)
 
-# ranges = np.arange(0.1, 5.1, 0.1)
+# ranges = np.arange(5, 31, 1)
 # for iterations in ranges:
-#     brunel(input_spike_rate = iterations)
+#     brunel(u = iterations)
     
 # brunel(input_spike_rate = 3.7, SAVE = False, PLOT = True)

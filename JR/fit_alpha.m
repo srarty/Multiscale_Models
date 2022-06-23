@@ -5,6 +5,8 @@
 
 load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_ipsp.mat'); psp = -ipsp; % Inhibitory (GABA) on pyramidal
 % load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_epsp.mat'); psp = epsp; % Excitatory (AMPA) on inhibitory interneurons
+% load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_epsp.mat'); psp = epsp; % Excitatory (AMPA) on pyramidal (recursive)
+% load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_ipsp.mat'); psp = -ipsp; % Inhibitory (GABA) on inhibitory interneurons (recursive)
 
 % Adjuisting psp to remove the first sample, which is zero in Brian2
 psp(1) = [];
