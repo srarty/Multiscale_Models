@@ -1,6 +1,6 @@
-% Same as NMM_diff_equations.m but here the synaptic function is a
-% difference of exponentials.
-function [x, y, t] = NMM_diff_equations_DblExp(varargin)
+% Same as NMM_diff_equations_DblExp.m but with recursive connections in the
+% Pyramidal and Ihibitory populations.
+function [x, y, t] = NMM_diff_equations_DblExp_recursive(varargin)
     option = ''; value = [];
     if nargin >= 2
         option = varargin{1};
@@ -62,6 +62,10 @@ function [x, y, t] = NMM_diff_equations_DblExp(varargin)
         0;
         0;
         0;
+        0;
+        0;
+        0;
+        0;
         u;
         alpha_i;
         alpha_e;
@@ -71,7 +75,7 @@ function [x, y, t] = NMM_diff_equations_DblExp(varargin)
     % [t,x,y] = dde23(@(t,x) ode(t,x,params, dt), [min(t) max(t)], x0);
     
     for i = 1:size(x,1)
-        y(i) = x(i,1) + u;
+        y(i) = x(i,1) + u + x(i,5);
     end
     
     do_plot(x,t,y)
@@ -99,6 +103,8 @@ function dx = ode(t,x,params,dt)
     c_constant = 1000;
     c1 = 4 * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
     c2 = 1 * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
+    c3 = 4 * c_constant * 0.16;
+    c4 = 1 * c_constant * 0.19; % 0.451;
     lump_i = c2 * 2 * e_0 * params.decay_i; %2.6167e6;
     lump_e = c1 * 2 * e_0 * params.decay_e; %2.5450e7;
     
@@ -108,9 +114,18 @@ function dx = ode(t,x,params,dt)
     tau_s_i = 0.004674; % 0.004378;
     tau_m_i = 0.01638; % 0.01668;
     
+    tau_s_re = 0.002221;
+    tau_m_re = 0.01646;
+    
+    tau_s_ri = 0.005021;
+    tau_m_ri = 0.007698;
+    
     alpha_e = 2.395; % 2.25;
     alpha_i = -1.107; % -1.054;
-
+    
+    alpha_re = 0.8264;
+    alpha_ri = -2.869;
+    
 %     j_e = 14e-12;
 %     j_i = -74e-12;
 
@@ -127,6 +142,9 @@ function dx = ode(t,x,params,dt)
         AmplitudeE = params.AmplitudeE;
     end
     
+    AmplitudeRE = c3 * 2 * e_0 * alpha_re * (1/(tau_m_re + tau_s_re));
+    AmplitudeRI = c4 * 2 * e_0 * alpha_ri * (1/(tau_m_ri + tau_s_ri));
+    
     if isfield(params,'tau_s_e'), tau_s_e = params.tau_s_e; end
     if isfield(params,'tau_s_i'), tau_s_i = params.tau_s_i; end
     if isfield(params,'tau_m_e'), tau_m_e = params.tau_m_e; end
@@ -135,7 +153,7 @@ function dx = ode(t,x,params,dt)
 
     
     % Diff equations ------------------------------------------------------
-    dx = zeros(7,1);
+    dx = zeros(9,1);
     
 %     dx(1) = x(1) - x(1)/tau_m_i - x(2)/tau_m_i;
 %     dx(2) = x(2) - x(2)/tau_s_i + c2 * e_0 * alpha_i * (tau_m_i/(tau_m_i - tau_s_i)) * S1(x(3));
@@ -149,13 +167,22 @@ function dx = ode(t,x,params,dt)
 
     % Double exponential from Nicola-Campbell (2013):
     % TODO: Check the coefficients of the convolution, specifically 1/(tau_m+tau_s)
+    % I->P
     dx(1) = x(1) + x(2) - x(1)/tau_m_i;
-    dx(2) = x(2) - x(2)/tau_s_i + AmplitudeI * S1(x(3));
+    dx(2) = x(2) - x(2)/tau_s_i + AmplitudeI * S1(x(3) + x(7));
+    % P->I
     dx(3) = x(3) + x(4) - x(3)/tau_m_e;
-    dx(4) = x(4) - x(4)/tau_s_e + AmplitudeE * S2(x(1));    
-    dx(5) = x(5);
-    dx(6) = x(6);
-    dx(7) = x(7);
+    dx(4) = x(4) - x(4)/tau_s_e + AmplitudeE * S2(x(1) + x(5));    
+    % Recurrent Pyramidal P->P
+    dx(5) = x(5) + x(6) - x(5)/tau_m_re;                        
+    dx(6) = x(6) - x(6)/tau_s_re + AmplitudeRE * S2(x(1) + x(5));    
+    % Recurrent Inhibition I->I
+    dx(7) = x(7) + x(8) - x(7)/tau_m_ri;                       
+    dx(8) = x(8) - x(8)/tau_s_ri + AmplitudeRI * S1(x(3) + x(7));    
+    % Parameters:
+    dx(9) = x(9);
+    dx(10) = x(10);
+    dx(11) = x(11);
     
 %     % Recurrent
 %     % TODO

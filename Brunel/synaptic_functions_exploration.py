@@ -27,12 +27,20 @@ from lif_model import set_params
 # save = {'epsp': Py_monitor.v1*1e3}
 # scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/inhibitory_epsp.mat', mdict=save)
 
+# # RECURSIVE Pyramidal:
+# save = {'epsp': Py_monitor.v1*1e3}
+# scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/pyramidal_epsp.mat', mdict=save)
+
+# # RECURSIVE Interneurons:
+# save = {'ipsp': Py_monitor.v1*1e3}
+# scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/inhibitory_ipsp.mat', mdict=save)
+
 
 #%% options  --------------------------------------------------------------
 
 source          = 'allen'       # brunel or allen
-synaptic_type   = 'AMPA'        # AMPA or GABA
-neuron_type     = 'inhibitory'  # pyramidal, inhibitory or spiny
+synaptic_type   = 'GABA'        # AMPA or GABA
+neuron_type     = 'pyramidal'  # pyramidal, inhibitory or spiny
 external        = False         # When AMPA, synapsis can be external or recurrent (local)
 input_spike_rate = 1            # spikes/ms/cell 
 simulation_time = 0.3 * second
