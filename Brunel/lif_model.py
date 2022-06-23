@@ -162,7 +162,7 @@ def set_params(type='pyramidal', source='brunel'):
         p_IP =  0.411
         p_PI =  0.395
         p_PP =  0.16
-        p_II =  0.19#0.451
+        p_II =  0.19 #0.19#0.451
 
     #%% Parse output
     params = {

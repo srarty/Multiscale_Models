@@ -17,7 +17,7 @@ function varargout = spectrum(x, y, t, varargin)
     global PLOT
 
 %     close all
-%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_1.mat';
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_3.mat';
     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_96.mat';
 
     if nargin > 3, PLOT = varargin{1}; else, PLOT = true; end
