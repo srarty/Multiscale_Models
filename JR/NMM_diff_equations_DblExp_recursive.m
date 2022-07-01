@@ -13,8 +13,8 @@ function [x, y, t] = NMM_diff_equations_DblExp_recursive(varargin)
     
 % 	close all
 
-    N = 2000; % Number of samples: 1 sample = 1 milisecond
-    u = 9;%20; % 1.5;
+    N = 3000; % Number of samples: 1 sample = 1 milisecond
+    u = 0.3; %9;%20; % 1.5;
 
     params = set_parameters('allen', u);
     % Parse inputs --------------------------------------------------------
@@ -33,6 +33,10 @@ function [x, y, t] = NMM_diff_equations_DblExp_recursive(varargin)
             params.tau_m_i = value;
         case "u"
             params.u = value;
+        case "pII"
+            params.c4 = value;
+        case "pPP"
+            params.c3 = value;
     end
     if exist('option2','var')
         switch option2
@@ -48,6 +52,12 @@ function [x, y, t] = NMM_diff_equations_DblExp_recursive(varargin)
                 params.tau_m_e = value2;
             case "tau_m_i"
                 params.tau_m_i = value2;
+            case "u"
+                params.u = value2;
+            case "pII"
+                params.c4 = value2;
+            case "pPP"
+                params.c3 = value2;
         end
     end
     % --------------------------------------------------- End input parsing
@@ -66,7 +76,7 @@ function [x, y, t] = NMM_diff_equations_DblExp_recursive(varargin)
         0;
         0;
         0;
-        u;
+        params.u;
         alpha_i;
         alpha_e;
         ];
@@ -75,10 +85,14 @@ function [x, y, t] = NMM_diff_equations_DblExp_recursive(varargin)
     % [t,x,y] = dde23(@(t,x) ode(t,x,params, dt), [min(t) max(t)], x0);
     
     for i = 1:size(x,1)
-        y(i) = x(i,1) + u + x(i,5);
+        y(i) = x(i,1) + params.u + x(i,5);
     end
     
-    do_plot(x,t,y)
+    % Calculate firing rate
+    f_i = sigmoid_io(x(:,3) + x(:,7), params.v0, params.r);
+    f_e = gompertz_io(x(:,1) + x(:,5) + x(:,9), params.gompertz.b, params.gompertz.c, params.gompertz.d);
+    
+    do_plot(x,t,y, params.e0*f_i, params.e0*f_e)
 end
 
 function dx = ode(t,x,params,dt)
@@ -97,14 +111,20 @@ function dx = ode(t,x,params,dt)
     u = params.u;
     
     % Synaptic functions
-    S1 = @(x3) 0.5*erf((x3 - v0) / (sqrt(2)*r)) + 0.5;               
-    S2 = @(x1) exp(-b*exp(-d*(x1+u-c)));                              
+%     S1 = @(x3) 0.5*erf((x3 - v0) / (sqrt(2)*r)) + 0.5; % Sigmoid error                                    
+%     S2 = @(x1) exp(-b*exp(-d*(x1-c))); % Gompertz
+    S1 = @(x) sigmoid_io(x, v0, r);
+    S2 = @(x) gompertz_io(x, b, c, d);   
     
     c_constant = 1000;
     c1 = 4 * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
     c2 = 1 * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
     c3 = 4 * c_constant * 0.16;
-    c4 = 1 * c_constant * 0.125; % Allen(LIF) = 0.451; % Same oscillatory freq (with u=9) = 0.125
+    c4 = 1 * c_constant * 0.125; %0.125;%0.125; % Allen(LIF) = 0.451; % Same oscillatory freq (with u=9) = 0.125; % Same osc freq (u=20)=0.08; % (u=14)=0.06;
+    
+    if isfield(params,'c3'), c3 = 1 * c_constant * params.c3; end
+    if isfield(params,'c4'), c4 = 1 * c_constant * params.c4; end
+    
     lump_i = c2 * 2 * e_0 * params.decay_i; %2.6167e6;
     lump_e = c1 * 2 * e_0 * params.decay_e; %2.5450e7;
     
@@ -154,54 +174,29 @@ function dx = ode(t,x,params,dt)
     
     % Diff equations ------------------------------------------------------
     dx = zeros(9,1);
-    
-%     dx(1) = x(1) - x(1)/tau_m_i - x(2)/tau_m_i;
-%     dx(2) = x(2) - x(2)/tau_s_i + c2 * e_0 * alpha_i * (tau_m_i/(tau_m_i - tau_s_i)) * S1(x(3));
-%     dx(3) = x(3) - x(3)/tau_m_e - x(4)/tau_m_e;
-%     dx(4) = x(4) - x(4)/tau_s_e + c1 * e_0 * alpha_e * (tau_m_e/(tau_m_e - tau_s_e)) * S2(x(1));
-      
-%     dx(1) = x(1) + (-x(1) -x(2)/25e-9)/tau_m_i; % see if dt is needed
-%     dx(2) = x(2) - j_i * x(2) / tau_s_i + c2 * e_0 * alpha_i * S1(x(3));
-%     dx(3) = x(3) + (-x(3) -x(4)/20e-9)/tau_m_e;
-%     dx(4) = x(4) - j_e * x(4) / tau_s_e + c1 * e_0 * alpha_e * S2(x(1));
 
     % Double exponential from Nicola-Campbell (2013):
     % TODO: Check the coefficients of the convolution, specifically 1/(tau_m+tau_s)
     % I->P
-    dx(1) = x(1) + x(2) - x(1)/tau_m_i;
-    dx(2) = x(2) - x(2)/tau_s_i + AmplitudeI * S1(x(3) + x(7));
+    dx(1) = x(2) - x(1)/tau_m_i;
+    dx(2) = - x(2)/tau_s_i + AmplitudeI * S1(x(3) + x(7));
     % P->I
-    dx(3) = x(3) + x(4) - x(3)/tau_m_e;
-    dx(4) = x(4) - x(4)/tau_s_e + AmplitudeE * S2(x(1) + x(5));    
+    dx(3) = x(4) - x(3)/tau_m_e;
+    dx(4) = - x(4)/tau_s_e + AmplitudeE * S2(x(1) + x(5) + x(9));    
     % Recurrent Pyramidal P->P
-    dx(5) = x(5) + x(6) - x(5)/tau_m_re;                        
-    dx(6) = x(6) - x(6)/tau_s_re + AmplitudeRE * S2(x(1) + x(5));    
+    dx(5) = x(6) - x(5)/tau_m_re;                        
+    dx(6) = - x(6)/tau_s_re + AmplitudeRE * S2(x(1) + x(5) + x(9));    
     % Recurrent Inhibition I->I
-    dx(7) = x(7) + x(8) - x(7)/tau_m_ri;                       
-    dx(8) = x(8) - x(8)/tau_s_ri + AmplitudeRI * S1(x(3) + x(7));    
+    dx(7) = x(8) - x(7)/tau_m_ri;                       
+    dx(8) = - x(8)/tau_s_ri + AmplitudeRI * S1(x(3) + x(7));    
     % Parameters:
-    dx(9) = x(9);
-    dx(10) = x(10);
-    dx(11) = x(11);
-    
-%     % Recurrent
-%     % TODO
-%     dx(1) = x(1) + x(2) - x(1)/tau_m_i;
-%     dx(2) = x(2) - x(2)/tau_s_i + AmplitudeI * S1(x(3));
-%     dx(2) = x(2) - x(2)/tau_s_i + AmplitudeI * S1(x(3));
-%     dx(3) = x(3) + x(4) - x(3)/tau_m_e;
-%     dx(4) = x(4) - x(4)/tau_s_e + AmplitudeE * S2(x(1));
-%     dx(4) = x(4) - x(4)/tau_s_e + AmplitudeE * S2(x(1));    
-%     dx(5) = x(5);
-%     dx(6) = x(6);
-%     dx(7) = x(7);
+    dx(9) = 0; %x(9) + 0; % u
+    dx(10) = 0; % x(10);
+    dx(11) = 0; % x(11);
 
 end
 
-%     dx(2) = x(2) - x(2)/(tau_d_i) - x(1)/tau_r_i^2 + c2 * 2 * e_0 * alpha_i * (1/(tau_d_i)) * S1(x(3));       
-%     dx(4) = x(4) - x(4)/(tau_d_e) - x(3)/tau_r_e^2 + c1 * 2 * e_0 * alpha_e * (1/(tau_d_e)) * S2(x(1));
-
-function do_plot(y,t, Vm)    
+function do_plot(y,t, Vm, f_i, f_e)    
     figure
     plot(t,y(:,[1 3]));
     legend({'x1' 'x3'});
@@ -218,4 +213,16 @@ function do_plot(y,t, Vm)
     title('Vm_{Py}');
     ylabel('mV');
     xlabel('time (s)');
+    
+    figure
+    plot(f_e); hold
+    plot(f_i);
+end
+
+function out = sigmoid_io(x, v0, r)
+    out = 0.5*erf((x - v0) / (sqrt(2)*r)) + 0.5;               
+end
+
+function out = gompertz_io(x, b, c, d)
+    out = exp(-b*exp(-d*(x-c)));
 end
