@@ -17,8 +17,19 @@ function varargout = spectrum(x, y, t, varargin)
     global PLOT
 
 %     close all
-%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_1.mat';
-    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_96.mat';
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_3.mat';
+%       data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_96.mat'; % u=9, I_PP = 0.415
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_126.mat'; % u=20, I_PP=0.19
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_127.mat'; % u=20, I_PP=0.125
+
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_261.mat'; % u=9, I_PP=0.415
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_262.mat'; % u=14, I_PP=0.415
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_263.mat'; % u=20, I_PP=0.415
+
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_267.mat'; % u=9, I_PP=0.415, 3 seconds
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_268.mat'; % u=14, I_PP=0.415, 3 seconds
+    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_269.mat'; % u=20, I_PP=0.415, 3 seconds
+    
 
     if nargin > 3, PLOT = varargin{1}; else, PLOT = true; end
     if nargin > 4, data_file = varargin{2}; end
@@ -29,32 +40,36 @@ function varargout = spectrum(x, y, t, varargin)
     
     [x_nmm, x_lif, t_nmm] = normalization(x_nmm, x_lif, t_nmm, t_lif);
     
-    figure(1);clf;
-    plot(t_nmm, x_nmm, 'k');
-    hold;
-    plot(t_lif, x_lif, '--k');
-    legend({'NMM', 'LIF'});
-    xlabel('Time (s)');
-    title(['Comparison of ' signal]);
+    if PLOT
+        figure(1);clf;
+        plot(t_nmm, x_nmm, 'k');
+        hold;
+        plot(t_lif, x_lif, '--k');
+        legend({'NMM', 'LIF'});
+        xlabel('Time (s)');
+        title(['Comparison of ' signal]);
+    end
     
     
     harmonic_nmm = do_plot('nmm', signal, x_nmm, t_nmm);
-%     varargout = {harmonic_nmm};
+    varargout = {harmonic_nmm};
     harmonic_lif = do_plot('lif', signal, x_lif, t_lif);
-%     varargout = {harmonic_lif};
+    varargout = {harmonic_lif};
 %     varargout{end + 1} = u_lif;
     
-    figure(2); clf;
-    subplot(2,1,1);
-    plot(t,x(:,1)); hold on;
-    plot(t,x(:,3));
-    
-    plot_lif_results(v_pi, v_ip, lfp_dt); % Won't run if lif results haven't been loaded
+    if PLOT
+        figure(2); clf;
+        subplot(2,1,1);
+        plot(t,x(:,1)); hold on;
+        plot(t,x(:,3));
+        
+        plot_lif_results(v_pi, v_ip, lfp_dt); % Won't run if lif results haven't been loaded
+    end
      
-    do_correlation(x_nmm, x_lif, t_nmm, t_lif);
-    do_variance(x_nmm, x_lif, t_nmm, t_lif);
+%     do_correlation(x_nmm, x_lif, t_nmm, t_lif);
+%     do_variance(x_nmm, x_lif, t_nmm, t_lif);
     
-    varargout = {x_nmm, x_lif, t_nmm, t_lif};
+%     varargout = {x_nmm, x_lif, t_nmm, t_lif};
 end
 
 function [x_nmm, x_lif, t_nmm, t_lif, v_pi, v_ip, input_spike_rate, dt] = get_data(signal, x, y, t, data_file)
