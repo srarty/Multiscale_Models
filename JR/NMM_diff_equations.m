@@ -54,13 +54,13 @@ function dx = ode(t,x,params,dt)
     lump_e = c1 * 2 * e_0 * params.decay_e; %2.5450e7;
     
     dx = zeros(7,1);
-    dx(1) = x(1) + x(2);
-    dx(2) = x(2) - 2*x(2)/tau_i - x(1)/tau_i^2 + lump_i*alpha_i*S1(x(3));
-    dx(3) = x(3) + x(4);
-    dx(4) = x(4) - 2*x(4)/tau_e - x(3)/tau_e^2 + lump_e*alpha_e*S2(x(1));
-    dx(5) = x(5);
-    dx(6) = x(6);
-    dx(7) = x(7);
+    dx(1) = x(2);
+    dx(2) = - 2*x(2)/tau_i - x(1)/tau_i^2 + lump_i*alpha_i*S1(x(3));
+    dx(3) = x(4);
+    dx(4) = - 2*x(4)/tau_e - x(3)/tau_e^2 + lump_e*alpha_e*S2(x(1));
+    dx(5) = 0;
+    dx(6) = 0;
+    dx(7) = 0;
 end
 
 function do_plot(y,t, Vm)    

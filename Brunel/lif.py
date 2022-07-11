@@ -55,7 +55,7 @@ corriente = 0
 input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 
-input_spike_rate = [20] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
+input_spike_rate = [0, 0.1, 0.2] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
 input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
 
 #%% parameters  --------------------------------------------------------------
@@ -266,11 +266,11 @@ C_I_P.active = ACTIVE_INTERNEURONS
 # Poisson input (Cortico-cortical)
 # External inputs
 input1 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[0] * 1000/num_inputs) * Hz, increment_AMPA_ext_P)
-# input2 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[1] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
-# input3 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[2] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
-# input1.active = False
-# input2.active = False
-# input3.active = False
+input2 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[1] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
+input3 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[2] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
+input1.active = False
+input2.active = False
+input3.active = False
 # Poisson input (Cortico-cortical) input to inhibitory interneurons. Controlled by INHIBIT_INPUT
 C_Cor_I = PoissonInput(In_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[0]*1000/num_inputs) * Hz, increment_AMPA_ext_I)
 C_Cor_I.active = INHIBIT_INPUT # Innactive cortico-cortical -> interneuron
@@ -319,25 +319,25 @@ net = Network(collect())
 input1.active = True
 net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
 
-# input1.active = False
-# input2.active = True
-# net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+input1.active = False
+input2.active = True
+net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
 
-# input2.active = False
-# input3.active = True
-# net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+input2.active = False
+input3.active = True
+net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
     
 #%% analysis ------------------------------------------------------------------
 # spike rates
-window_size = 100.1 * ms # Size of the window for the smooth spike rate # 100.1 instead of 100 to avoid an annoying warning at the end of the simulation
+window_size = 10.1 * ms # Size of the window for the smooth spike rate # 100.1 instead of 100 to avoid an annoying warning at the end of the simulation
 
-r_P_rate = r_P.smooth_rate(window='flat', width=window_size)
+r_P_rate = r_P.smooth_rate(window='gaussian', width=window_size)
 if shape(r_P_rate) != shape(r_P.t):
-    r_P_rate = r_P_rate[1:]
+    r_P_rate = r_P_rate[5:]
 
-r_I_rate = r_I.smooth_rate(window='flat', width=window_size)
+r_I_rate = r_I.smooth_rate(window='gaussian', width=window_size)
 if shape(r_I_rate) != shape(r_I.t):
-    r_I_rate = r_I_rate[1:]
+    r_I_rate = r_I_rate[5:]
     
 # r_Cor_rate = r_Cor.smooth_rate(width = window_size)
 # if shape(r_Cor_rate) != shape(r_Cor.t):

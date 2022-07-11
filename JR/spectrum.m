@@ -26,9 +26,9 @@ function varargout = spectrum(x, y, t, varargin)
 %     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_262.mat'; % u=14, I_PP=0.415
 %     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_263.mat'; % u=20, I_PP=0.415
 
-%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_267.mat'; % u=9, I_PP=0.415, 3 seconds
+    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_267.mat'; % u=9, I_PP=0.415, 3 seconds
 %     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_268.mat'; % u=14, I_PP=0.415, 3 seconds
-    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_269.mat'; % u=20, I_PP=0.415, 3 seconds
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_269.mat'; % u=20, I_PP=0.415, 3 seconds
     
 
     if nargin > 3, PLOT = varargin{1}; else, PLOT = true; end

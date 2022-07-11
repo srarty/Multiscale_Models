@@ -13,8 +13,8 @@ function [x, y, t] = NMM_diff_equations_DblExp_recursive(varargin)
     
 % 	close all
 
-    N = 3000; % Number of samples: 1 sample = 1 milisecond
-    u = 0.3; %9;%20; % 1.5;
+    N = 4000; % Number of samples: 1 sample = 1 milisecond
+    u = 0;%20; % 1.5;
 
     params = set_parameters('allen', u);
     % Parse inputs --------------------------------------------------------
@@ -110,6 +110,16 @@ function dx = ode(t,x,params,dt)
     e_0 = params.e0; 
     u = params.u;
     
+    % Following lines are meant to change the input mid simulation, comment
+    % them to run it with constant input.
+    if t >= 3000 * 1e-3
+        x(9) = 0.4;
+    elseif t >= 2000 * 1e-3
+        x(9) = 0;
+    elseif t >= 1000 * 1e-3
+        x(9) = 0.2;
+    end
+    
     % Synaptic functions
 %     S1 = @(x3) 0.5*erf((x3 - v0) / (sqrt(2)*r)) + 0.5; % Sigmoid error                                    
 %     S2 = @(x1) exp(-b*exp(-d*(x1-c))); % Gompertz
@@ -120,13 +130,10 @@ function dx = ode(t,x,params,dt)
     c1 = 4 * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
     c2 = 1 * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
     c3 = 4 * c_constant * 0.16;
-    c4 = 1 * c_constant * 0.125; %0.125;%0.125; % Allen(LIF) = 0.451; % Same oscillatory freq (with u=9) = 0.125; % Same osc freq (u=20)=0.08; % (u=14)=0.06;
+    c4 = 1 * c_constant * 0.125; % Allen(LIF) = 0.451; % Same oscillatory freq (with u=9) = 0.125; % Same osc freq (u=20)=0.08; % (u=14)=0.06;
     
     if isfield(params,'c3'), c3 = 1 * c_constant * params.c3; end
     if isfield(params,'c4'), c4 = 1 * c_constant * params.c4; end
-    
-    lump_i = c2 * 2 * e_0 * params.decay_i; %2.6167e6;
-    lump_e = c1 * 2 * e_0 * params.decay_e; %2.5450e7;
     
     tau_s_e = 0.001227; % 0.001001;
     tau_m_e = 0.008115; % 0.008339;
@@ -201,7 +208,7 @@ function do_plot(y,t, Vm, f_i, f_e)
     plot(t,y(:,[1 3]));
     legend({'x1' 'x3'});
     ylabel('mV');
-    xlabel('time (s)');
+    xlabel('Time (s)');
     
     figure
     plot(y(:,1),y(:,3));
@@ -212,11 +219,13 @@ function do_plot(y,t, Vm, f_i, f_e)
     plot(t, Vm, 'k');
     title('Vm_{Py}');
     ylabel('mV');
-    xlabel('time (s)');
+    xlabel('Time (s)');
     
     figure
-    plot(f_e); hold
-    plot(f_i);
+    plot(t, f_e); hold
+    plot(t, f_i);
+    ylabel('Spike rate (Hz)');
+    xlabel('Time (s)');
 end
 
 function out = sigmoid_io(x, v0, r)
