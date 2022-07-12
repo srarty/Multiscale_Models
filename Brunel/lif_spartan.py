@@ -38,7 +38,9 @@ devices.device.size = []
 
 from lif_model import set_params, get_equations
 
-# def brunel(u = 15):
+#def brunel(p_II = 0.125):
+#def brunel(p_PP = 0.16, p_II = 0.125):
+#def brunel(p_PP = 0.16, p_II = 0.451, u = 20):
     
 # Options:
 RECURRENT_PYRAMIDAL = True     # Self excitation 
@@ -55,11 +57,11 @@ corriente = 0
 input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 
-input_spike_rate = [20] #[u] #[15] # [0, 5, 10] # spikes/ms/cell (driving input)
+input_spike_rate = [0, 0.2, 0, 0.4] #[u] #[15] # [0, 5, 10] # spikes/ms/cell (driving input)
 input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
 
 #%% parameters  --------------------------------------------------------------
-simulation_time = 2 * second
+simulation_time = 4 * second
 dt_ = 100 * usecond
 T = linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector for plots (in seconds)
 # T_u = linspace(0, simulation_time, round(simulation_time/u_dt)) # Time vector for u for plots (in seconds)
@@ -262,11 +264,13 @@ C_I_P.active = ACTIVE_INTERNEURONS
 # Poisson input (Cortico-cortical)
 # External inputs
 input1 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[0] * 1000/num_inputs) * Hz, increment_AMPA_ext_P)
-# input2 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[1] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
-# input3 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[2] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
-# input1.active = False
-# input2.active = False
-# input3.active = False
+input2 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[1] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
+input3 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[2] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
+input4 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[3] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
+input1.active = False
+input2.active = False
+input3.active = False
+input4.active = False
 # Poisson input (Cortico-cortical) input to inhibitory interneurons. Controlled by INHIBIT_INPUT
 C_Cor_I = PoissonInput(In_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[0]*1000/num_inputs) * Hz, increment_AMPA_ext_I)
 C_Cor_I.active = INHIBIT_INPUT # Innactive cortico-cortical -> interneuron
@@ -308,26 +312,30 @@ net = Network(collect())
 input1.active = True
 net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
 
-# input1.active = False
-# input2.active = True
-# net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
-# 
-# input2.active = False
-# input3.active = True
-# net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+input1.active = False
+input2.active = True
+net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+
+input2.active = False
+input3.active = True
+net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+
+input3.active = False
+input4.active = True
+net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
     
 
 #%% analysis ------------------------------------------------------------------
 # spike rates
 window_size = 100.1 * ms # Size of the window for the smooth spike rate # 100.1 instead of 100 to avoid an annoying warning at the end of the simulation
 
-r_P_rate = r_P.smooth_rate(window='flat', width=window_size)
+r_P_rate = r_P.smooth_rate(window='gaussian', width=window_size)
 if shape(r_P_rate) != shape(r_P.t):
-    r_P_rate = r_P_rate[1:]
+    r_P_rate = r_P_rate[5:]
 
-r_I_rate = r_I.smooth_rate(window='flat', width=window_size)
+r_I_rate = r_I.smooth_rate(window='gaussian', width=window_size)
 if shape(r_I_rate) != shape(r_I.t):
-    r_I_rate = r_I_rate[1:]
+    r_I_rate = r_I_rate[5:]
     
 # r_Cor_rate = r_Cor.smooth_rate(width = window_size)
 # if shape(r_Cor_rate) != shape(r_Cor.t):
@@ -469,26 +477,29 @@ if SAVE:
     save_dictionary={'LFP': lfp_,
                     'LFP_V': lfp_v,
                     'lfp_dt' : dt_,
-                    'Vm': -(I_injected/g_m_P), # To calculate the nonlinearity, need to simulate single cell disconnected network 
-                    'Vm_interneurons': -(I_injected_I/g_m_I), # To calculate the nonlinearity, need to simulate single cell disconnected network 
-                    'R_py': r_P_rate, # 1/diff(np.array(sp_P.t)).mean(),
-                    'R_in': r_I_rate,
-		            'alpha1': alpha_1,
+		    'alpha1': alpha_1,
                     'alpha2': alpha_2,
                     'v_rest': V_leak,
-                    'isi_P': isi_P,
-                    'V_py': Py_monitor.v,
-                    'V_in': In_monitor.v,
-                    'v_pi': Py_monitor.v_pi,
-                    'v_ip': In_monitor.v_ip,
+                    'v_pi': mean(Py_monitor.v_pi,0),
+                    'v_ip': mean(In_monitor.v_ip,0),
+                    'p_PP': p_PP,
+                    'p_II': p_II,
+                    'R_py': r_P_rate, # 1/diff(np.array(sp_P.t)).mean(),
+                    'R_in': r_I_rate,
                     'RECURRENT_PYRAMIDAL': RECURRENT_PYRAMIDAL,
                     'RECURRENT_INHIBITORY': RECURRENT_INHIBITORY,
                     'INHIBIT_INPUT': INHIBIT_INPUT,
                     'ACTIVE_INTERNEURONS': ACTIVE_INTERNEURONS,
                     'input_spike_rate': input_spike_rate,
-  		            'input_spike_rate_thalamic': input_spike_rate_thalamic,
+                    'input_spike_rate_thalamic': input_spike_rate_thalamic,
                     'input_current': input_current}   
-       
+	            
+#                  'isi_P': isi_P,
+#                   'V_py': Py_monitor.v,
+#                    'V_in': In_monitor.v,
+#
+#                    'Vm': -(I_injected/g_m_P), # To calculate the nonlinearity, need to simulate single cell disconnected network 
+#                    'Vm_interneurons': -(I_injected_I/g_m_I), # To calculate the nonlinearity, need to simulate single cell disconnected network 
 #		    'sp_P_i': sp_P.i,
 #		    'sp_P_t': sp_P.t,
 #		    'sp_I_i': sp_I.i,
@@ -577,6 +588,8 @@ f.tight_layout() # Fixes the positions of subplots and labels
 plt.savefig('/data/gpfs/projects/punim0643/artemios/simulations/' + save_str)
 print('Results saved as:' + save_str)
 
-# ranges = np.arange(5, 31, 1)
-# for iterations in ranges:
-#     brunel(u = iterations)
+#ranges = np.arange(0.01, 0.5, 0.01)
+#ranges = [0.1, 0.2, 0.3, 0.4, 0.5]
+#for iterations in ranges:
+#	#brunel(p_II = iterations)
+#	brunel(u = iterations)

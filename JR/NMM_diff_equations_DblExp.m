@@ -14,7 +14,7 @@ function [x, y, t] = NMM_diff_equations_DblExp(varargin)
 % 	close all
 
     N = 2000; % Number of samples: 1 sample = 1 milisecond
-    u = 20; % 1.5;
+    u = 9; % 1.5;
 
     params = set_parameters('allen', u);
     % Parse inputs --------------------------------------------------------
@@ -139,13 +139,13 @@ function dx = ode(t,x,params,dt)
 
     % Double exponential from Nicola-Campbell (2013):
     % TODO: Check the coefficients of the convolution, specifically 1/(tau_m+tau_s)
-    dx(1) = x(1) + x(2) - x(1)/tau_m_i;
-    dx(2) = x(2) - x(2)/tau_s_i + AmplitudeI * S1(x(3));
-    dx(3) = x(3) + x(4) - x(3)/tau_m_e;
-    dx(4) = x(4) - x(4)/tau_s_e + AmplitudeE * S2(x(1));    
-    dx(5) = x(5);
-    dx(6) = x(6);
-    dx(7) = x(7);
+    dx(1) = x(2) - x(1)/tau_m_i;
+    dx(2) = - x(2)/tau_s_i + AmplitudeI * S1(x(3));
+    dx(3) = x(4) - x(3)/tau_m_e;
+    dx(4) = - x(4)/tau_s_e + AmplitudeE * S2(x(1));    
+    dx(5) = 0;
+    dx(6) = 0;
+    dx(7) = 0;
 
 end
 
