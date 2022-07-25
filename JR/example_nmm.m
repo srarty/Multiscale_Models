@@ -13,10 +13,10 @@ NInputs = 1; % Number of external inputs (u)
 NParams = 2; % Number of synaptic strength parameters (alpha_ie, alpha_ei, etc...)
 NAugmented = NStates + NInputs + NParams; % Total size of augmented state vector
 
-ESTIMATE        = false;        % Run the forward model and estimate (ESTIMATE = true), or just forward (ESTIMATE = false)
+ESTIMATE        = true;        % Run the forward model and estimate (ESTIMATE = true), or just forward (ESTIMATE = false)
 PCRB            = 0;            % Compute the PCRB (false = 0, or true > 0) The number here defines the iterations for CRB
 MSE             = 0;            % Compute the MSE (false = 0, or true > 0) The number here defines the iterations for MSE
-REAL_DATA       = true;         % True to load Seizure activity from neurovista recordings, false to generate data with the forward model
+REAL_DATA       = false;         % True to load Seizure activity from neurovista recordings, false to generate data with the forward model
 LFP_SIMULATION  = false;         % True if data is ground truth data from the Brunel model (REAL_DATA must be 'true')
 LFP_TYPE        = 'voltage';    % Source of LFP, it can be 'current' (abstract sum of currents) or 'voltage' (linear combination of Vm_Py and Cortical Input)
 TRUNCATE        = 0; %-50000;   % If ~=0, the real data from recordings is truncated from sample 1 to 'TRUNCATE'. If negative, it keeps the last 'TRUNCATE' samples.
@@ -29,8 +29,8 @@ ADD_NOISE       = false;         % Add noise to the forward model's states
 ADD_OBSERVATION_NOISE = false;	% Add noise to the forward model's states
 C_CONSTANT      = 1000;         % Connectivity constant in nmm_define. It is 'J' or Average number of synapses between populations. (J = 135 in JR)
 
-KF_TYPE         = 'unscented';   % String: 'unscented', 'extended' (default)
-ANALYTIC_TYPE   = 'pip';        % Algorithm to run: 'pip' or 'analytic'. Only makes a difference if the filter (KF_TYPE) is 'extended' or 'none'
+KF_TYPE         = 'extended';   % String: 'unscented', 'extended' (default)
+ANALYTIC_TYPE   = 'analytic';        % Algorithm to run: 'pip' or 'analytic'. Only makes a difference if the filter (KF_TYPE) is 'extended' or 'none'
 
 ALPHA_KF_LBOUND  = false;       % Zero lower bound (threshold) on alpha in the Kalman Filter (boolean)
 ALPHA_KF_UBOUND  = 0;%1e3;      % Upper bound on alpha in the Kalman Filter (integer, if ~=0, the upper bound is ALPHA_KF_UBOUND)
@@ -47,7 +47,7 @@ relativator = @(x)sqrt(mean(x.^2,2)); % @(x)(max(x')-min(x'))'; % If this is dif
 
 % Location of the data
 if ~LFP_SIMULATION
-    data_file = './data/Seizure_1.mat';
+    data_file = './data/Seizure_2.mat';
 %     data_file = 'C:\Users\artemios\Dropbox\University of Melbourne\Epilepsy\Adis_data.mat';
 %     data_file = 'C:\Users\artemios\Dropbox\University of Melbourne\Epilepsy\Resources for meetings\adis data\Adi_data_2.mat';
 else
@@ -64,7 +64,7 @@ rng(0);
 %% Initialization
 N = 3000;                                   % Seizure 1 size: 148262; % number of samples
 no_inputs = 1000; % For mu to be in spikes/milisecond/cell
-input_vector = [0*ones(1,1000) 5*ones(1,1000) 10*ones(1,1000)];
+input_vector = 5*ones(1,N);%[0*ones(1,1000) 5*ones(1,1000) 10*ones(1,1000)];
 mu = 1;
 % params = set_parameters('allen', mu);     % Set params.u from the input argument 'mu' of set_params
 % isi = exprnd(1/mu,[no_inputs,N]);
