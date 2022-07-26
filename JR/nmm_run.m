@@ -18,6 +18,9 @@ A       = nmm.A;
 B       = nmm.B;
 C       = nmm.C;
 
+C_inhibit = C;
+% C_inhibit(2,3) = -1 * C_inhibit(2,3);
+
 % Indexes
 v_idx       = [1 3];
 z_idx       = [2 4];
@@ -93,7 +96,7 @@ y_fast = [0.033765242898424 0.169395306766868 0.380690406958402 0.96623475710157
 
 phi_c = zeros(size(x));
 phi_c(2) = non_linear_sigmoid(C(2,3)*x(3),r,v0);% non_linear_sigmoid(C*x,r,v0, sigma_vector); % Complete phi from C
-phi_c(4) = gompertz(C(4,[1 5])*x([1 5]),nmm.params); % Complete phi from C
+phi_c(4) = non_linear_sigmoid(C(4,[1 5])*x([1 5]),r,v0);% %gompertz(C(4,[1 5])*x([1 5]),nmm.params); % Complete phi from C
 switch mode
     case 'transition'                
         % Nonlinear transition model

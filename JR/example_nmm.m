@@ -1,11 +1,9 @@
-%% Simulate 4 state NMM and EKF estimates. Calculate the CRB
-% Can be modified to more states by changing NStates. And the model
-% functions, e.g. model_NM = 4 states, model_NM_6thOrder = 6 states
+%% Simulate 4 state NMM and EKF or UKF estimates. Calculates the CRB
 %
 % Artemio - March 2022
 
-close all 
-clear
+%close all 
+%clear
 
 %% Options -------------------------------------------------------------- %
 NStates = 4; % Number of states
@@ -13,24 +11,24 @@ NInputs = 1; % Number of external inputs (u)
 NParams = 2; % Number of synaptic strength parameters (alpha_ie, alpha_ei, etc...)
 NAugmented = NStates + NInputs + NParams; % Total size of augmented state vector
 
-ESTIMATE        = true;        % Run the forward model and estimate (ESTIMATE = true), or just forward (ESTIMATE = false)
+ESTIMATE        = true;         % Run the forward model and estimate (ESTIMATE = true), or just forward (ESTIMATE = false)
 PCRB            = 0;            % Compute the PCRB (false = 0, or true > 0) The number here defines the iterations for CRB
 MSE             = 0;            % Compute the MSE (false = 0, or true > 0) The number here defines the iterations for MSE
-REAL_DATA       = false;         % True to load Seizure activity from neurovista recordings, false to generate data with the forward model
-LFP_SIMULATION  = false;         % True if data is ground truth data from the Brunel model (REAL_DATA must be 'true')
+REAL_DATA       = true;         % True to load Seizure activity from neurovista recordings, false to generate data with the forward model
+LFP_SIMULATION  = false;        % True if data is ground truth data from the Brunel model (REAL_DATA must be 'true')
 LFP_TYPE        = 'voltage';    % Source of LFP, it can be 'current' (abstract sum of currents) or 'voltage' (linear combination of Vm_Py and Cortical Input)
-TRUNCATE        = 0; %-50000;   % If ~=0, the real data from recordings is truncated from sample 1 to 'TRUNCATE'. If negative, it keeps the last 'TRUNCATE' samples.
-SCALE_DATA      = 0; % 6/50;    % Scale Raw data to match dynamic range of the membrane potentials in our model. Multiplies 'y' by the value of SCALE_DATA, try SCALE_DATA = 0.12
+TRUNCATE        = -10000;       % If ~=0, the real data from recordings is truncated from sample 1 to 'TRUNCATE'. If negative, it keeps the last 'TRUNCATE' samples.
+SCALE_DATA      = 6/50;         % Scale Raw data to match dynamic range of the membrane potentials in our model. Multiplies 'y' by the value of SCALE_DATA, try SCALE_DATA = 0.12
 INTERPOLATE     = 3;            % Upsample Raw data by interpolating <value> number of samples between each two samples. Doesn't interpolate if INTERPOLATE == {0,1}.
 
-REMOVE_DC       = 0;            % int{1,2} Remove DC offset from observed EEG (1) or observed and simulated (2).
+REMOVE_DC       = 2;            % int{1,2} Remove DC offset from observed EEG (1) or observed and simulated (2).
 SMOOTH          = 0;            % Moving average on EEG to filter fast changes (numeric, window size)
-ADD_NOISE       = false;         % Add noise to the forward model's states
-ADD_OBSERVATION_NOISE = false;	% Add noise to the forward model's states
-C_CONSTANT      = 1000;         % Connectivity constant in nmm_define. It is 'J' or Average number of synapses between populations. (J = 135 in JR)
+ADD_NOISE       = true;         % Add noise to the forward model's states
+ADD_OBSERVATION_NOISE = true;	% Add noise to the forward model's observation
+C_CONSTANT      = 135;%1000;         % Connectivity constant in nmm_define. It is 'J' or Average number of synapses between populations. (J = 135 in JR)
 
-KF_TYPE         = 'extended';   % String: 'unscented', 'extended' (default)
-ANALYTIC_TYPE   = 'analytic';        % Algorithm to run: 'pip' or 'analytic'. Only makes a difference if the filter (KF_TYPE) is 'extended' or 'none'
+KF_TYPE         = 'unscented';  % String: 'unscented', 'extended' (default) or 'none'
+ANALYTIC_TYPE   = 'pip';        % Algorithm to run: 'pip' or 'analytic'. Only makes a difference if the filter (KF_TYPE) is 'extended' or 'none'
 
 ALPHA_KF_LBOUND  = false;       % Zero lower bound (threshold) on alpha in the Kalman Filter (boolean)
 ALPHA_KF_UBOUND  = 0;%1e3;      % Upper bound on alpha in the Kalman Filter (integer, if ~=0, the upper bound is ALPHA_KF_UBOUND)
@@ -47,7 +45,7 @@ relativator = @(x)sqrt(mean(x.^2,2)); % @(x)(max(x')-min(x'))'; % If this is dif
 
 % Location of the data
 if ~LFP_SIMULATION
-    data_file = './data/Seizure_2.mat';
+    data_file = './data/Seizure_1.mat';
 %     data_file = 'C:\Users\artemios\Dropbox\University of Melbourne\Epilepsy\Adis_data.mat';
 %     data_file = 'C:\Users\artemios\Dropbox\University of Melbourne\Epilepsy\Resources for meetings\adis data\Adi_data_2.mat';
 else
@@ -64,14 +62,14 @@ rng(0);
 %% Initialization
 N = 3000;                                   % Seizure 1 size: 148262; % number of samples
 no_inputs = 1000; % For mu to be in spikes/milisecond/cell
-input_vector = 5*ones(1,N);%[0*ones(1,1000) 5*ones(1,1000) 10*ones(1,1000)];
-mu = 1;
-% params = set_parameters('allen', mu);     % Set params.u from the input argument 'mu' of set_params
+% input_vector = 5*ones(1,N);%[0*ones(1,1000) 5*ones(1,1000) 10*ones(1,1000)];
+mu = 10;
+params = set_parameters('alpha', mu);     % Set params.u from the input argument 'mu' of set_params
 % isi = exprnd(1/mu,[no_inputs,N]);
 % input_vector = 1./mean(isi,1);
-params = set_parameters('allen', input_vector); 
+% params = set_parameters('allen', input_vector); 
 
-if (TRUNCATE && REAL_DATA), N = TRUNCATE; end % If TRUNCATE ~=0, only take N = TRUNCATE samples of the recording or simulation
+if (TRUNCATE && REAL_DATA), N = abs(TRUNCATE); end % If TRUNCATE ~=0, only take N = TRUNCATE samples of the recording or simulation
 dT = params.dt;         % sampling time step (global)
 dt = 1*dT;            	% integration time step
 nn = fix(dT/dt);      	% (used in for loop for forward modelling) the integration time step can be small that the sampling (fix round towards zero)
@@ -158,7 +156,7 @@ end
 %   Why noise on all states?
 warning('Initialization of Q differs for Real data vs Simulated data');
 if REAL_DATA
-    Q = 1e-2*eye(NAugmented);
+    Q = 1e-1*eye(NAugmented);
 else
 %     Q = 10^-1.*diag((0.4*std(x,[],2)*nmm.params.scale*sqrt(dt)).^2); % The alpha drift increases with a large covariance noise (Q)
     Q = 10^-1.*diag((0.4*std(x,[],2)*sqrt(dt)).^2); % The alpha drift increases with a large covariance noise (Q)
@@ -169,7 +167,7 @@ v = mvnrnd(zeros(NAugmented,1),Q,N)';% 10e-1.*mvnrnd(zeros(NAugmented,1),Q,N)';
 
 % Get alphas from estimation
 % estimation = load('gt');%load('estimation_ukf'); % Load estimation results from real data (Seizure 1)
-wbhandle = waitbar(0, 'Generating trajectory...'); % Loading bar
+wbhandle = waitbar(0, 'Generating trajectory...', 'Name', 'Close me to stop script'); % Loading bar
 % Generate trajectory again with added noise
 % Euler-Maruyama integration
 for n=1:N-1
@@ -288,7 +286,7 @@ if REAL_DATA
         if strcmp('current', LFP_TYPE), Seizure = LFP; else, Seizure = LFP_V; end
         y = Seizure; % Load the data
         y = reshape(y,1,length(y));% Ensure it's horizontal
-        x = zeros([size(x,1) size(Seizure,2)]); 
+        x = zeros([size(x,1) size(Seizure,2)]);
         x(1,:) = ( mean(v_pi) * 1e3 ); % Substract the resting membrane potential from the Brunel and scale to remove mV
         x(2,:) = [0 diff(x(1,:))/(lfp_dt)];
         x(3,:) = ( mean(v_ip) * 1e3 );
@@ -315,13 +313,16 @@ if REAL_DATA
     % Check if the data contains a time stamp
     if ~exist('T', 'var')
         if ~LFP_SIMULATION
+            if ~exist('fs', 'var')
+                fs = 1e3;
+            end
             T = length(y) / fs; % T = 4.0694e6; % Hardcoded data taken from Seizure_1.mat
         else
             T = lfp_dt * length(y);
         end
     end
     % Define the time step
-    params.dt = T/length(y); % 1e-3*T/length(y); % 1e-3 because we want miliseonds
+    params.dt = 1e-3 * T/length(y); % 1e-3*T/length(y); % 1e-3 because we want miliseonds
     nmm.params.dt = params.dt;
         
     if TRUNCATE > 0
@@ -333,16 +334,16 @@ if REAL_DATA
         
     elseif TRUNCATE < 0
         % Truncate from end
-        y = y(end+N+1 : end);
+        y = y(end-N+1 : end);
         if LFP_SIMULATION
-            x = x(:,end+N+1 : end);
+            x = x(:,end-N+1 : end);
         end
     end
     
     if SCALE_DATA %#ok<BDLGI> % Removes the warning for SCALE_DATA being constant
         y = y * SCALE_DATA; %0.12;
 %         warning('Hardcoding DC offset');
-        y = y + 17.7848; %- 50;%- 150;%30;
+%         y = y + 17.7848; %- 50;%- 150;%30;
     end    
 end
 

@@ -36,9 +36,9 @@ switch mode
     
         params.u = mu; %11;%220;%15;%11;1/0.0        % mean input mem potential
         
-        params.alpha_ie = -1.107; %-0.479; %-128.8; % Inhibitory gain into pyramidal (Interneuron -> Py)
-        params.alpha_ei = 2.395; %ratio * params.alpha_ie;% 1.488; %1011 <- fit result; % Excitatory gain into interneuron (Py -> Interneuron)
-        params.alpha_re = 4.75;%0.8264; % Recursive excitatory gain
+        params.alpha_ie = -1.107; %Inhibitory gain into pyramidal (Interneuron -> Py)
+        params.alpha_ei = 2.395; % Excitatory gain into interneuron (Py -> Interneuron) (bifurcation: alpha_ei > 392.6)
+        params.alpha_re = 5;%0.8264; % Recursive excitatory gain (bifuration: alpha_re > 4.7)
         params.alpha_ri = -2.869; % Recursive inhibitory gain
         
         params.c_constant = 1000; % Connectivity constant
