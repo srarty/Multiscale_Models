@@ -83,7 +83,7 @@ function [x_hat, P_hat, K, fe, fi] = analytic_kalman_filter_2(y,f_,nmm,H,Q,R,var
     
     % Progress bar
     if strcmp(KF_TYPE, 'unscented'), KF_string = 'Unscented'; else, KF_string = 'Analytic'; end
-    if verbose, wbhandle = waitbar(0, [KF_string ' Kalman Filter...']); end
+    if verbose, wbhandle = waitbar(0, [KF_string ' Kalman Filter...'], 'Name', 'Close me to stop script'); end
     for n = 1:NSamples-1
         try % Try catch on the whole for loop to prevent issues with the progress bar
             switch KF_TYPE

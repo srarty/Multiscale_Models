@@ -35,10 +35,10 @@ c_constant = C_CONSTANT; %135;%675; % This should reflect Brunel's 'N' variable
 % c2 = 0.25*c_constant;%0.8*c_constant;
 % c1 = 4*c_constant;	% number of synapses (matches brunel?)
 % c2 = 1*c_constant; % (matches brunel?)
-% c1 = 1*c_constant;
-% c2 = 0.8*c_constant;
-c1 = 4 * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
-c2 = 1 * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
+c1 = 1*c_constant;
+c2 = 0.8*c_constant;
+% c1 = 4 * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
+% c2 = 1 * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
 
 % Number of augmented states
 xlen = length(x0);

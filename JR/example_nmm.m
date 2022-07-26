@@ -1,9 +1,9 @@
-%% Simulate 4 state NMM and EKF estimates. Calculate the CRB
+%% Simulate 4 state NMM and EKF or UKF estimates. Calculates the CRB
 %
 % Artemio - March 2022
 
-close all 
-clear
+%close all 
+%clear
 
 %% Options -------------------------------------------------------------- %
 NStates = 4; % Number of states
@@ -25,7 +25,7 @@ REMOVE_DC       = 2;            % int{1,2} Remove DC offset from observed EEG (1
 SMOOTH          = 0;            % Moving average on EEG to filter fast changes (numeric, window size)
 ADD_NOISE       = true;         % Add noise to the forward model's states
 ADD_OBSERVATION_NOISE = true;	% Add noise to the forward model's observation
-C_CONSTANT      = 1000;         % Connectivity constant in nmm_define. It is 'J' or Average number of synapses between populations. (J = 135 in JR)
+C_CONSTANT      = 135;%1000;         % Connectivity constant in nmm_define. It is 'J' or Average number of synapses between populations. (J = 135 in JR)
 
 KF_TYPE         = 'unscented';  % String: 'unscented', 'extended' (default) or 'none'
 ANALYTIC_TYPE   = 'pip';        % Algorithm to run: 'pip' or 'analytic'. Only makes a difference if the filter (KF_TYPE) is 'extended' or 'none'
@@ -64,7 +64,7 @@ N = 3000;                                   % Seizure 1 size: 148262; % number o
 no_inputs = 1000; % For mu to be in spikes/milisecond/cell
 % input_vector = 5*ones(1,N);%[0*ones(1,1000) 5*ones(1,1000) 10*ones(1,1000)];
 mu = 10;
-params = set_parameters('allen', mu);     % Set params.u from the input argument 'mu' of set_params
+params = set_parameters('alpha', mu);     % Set params.u from the input argument 'mu' of set_params
 % isi = exprnd(1/mu,[no_inputs,N]);
 % input_vector = 1./mean(isi,1);
 % params = set_parameters('allen', input_vector); 
@@ -167,7 +167,7 @@ v = mvnrnd(zeros(NAugmented,1),Q,N)';% 10e-1.*mvnrnd(zeros(NAugmented,1),Q,N)';
 
 % Get alphas from estimation
 % estimation = load('gt');%load('estimation_ukf'); % Load estimation results from real data (Seizure 1)
-wbhandle = waitbar(0, 'Generating trajectory...'); % Loading bar
+wbhandle = waitbar(0, 'Generating trajectory...', 'Name', 'Close me to stop script'); % Loading bar
 % Generate trajectory again with added noise
 % Euler-Maruyama integration
 for n=1:N-1
