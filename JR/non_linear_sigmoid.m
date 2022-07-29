@@ -1,5 +1,4 @@
-% NON_LINEAR_SIGMOID Computes the non linear function for the Neural Mass 
-% Model.
+% NON_LINEAR_SIGMOID Computes the non linear function for the Neural Mass Model.
 %
 %   Implements: 0.5 * erf[(x - v0)/sqrt(2*(r^2 + sigma^2))] + 0.5
 %
@@ -16,7 +15,7 @@
 %
 % Note: Plot the non-linearity with the following code:
 %{
-        params = set_parameters('allen');       % Chose params.u from a constant value in set_params
+        params = set_parameters('recursive');       % Chose params.u from a constant value in set_params
         nonlinearity = [];
         count = 0;
         x = -20:0.1:80;
@@ -25,18 +24,19 @@
             nonlinearity(count) = non_linear_sigmoid(i, params.r, params.v0);
         end
         figure
-        plot(x, params.e0*nonlinearity, 'LineWidth', 2, 'color', [1 0.4118 0.1608]);
+        plot(x, params.e0i*nonlinearity, 'LineWidth', 2, 'color', [1 0.4118 0.1608]);
         box off
         grid on
         ylabel('Output firing rate (spikes/s)');
         xlabel('Input membrane potential (mV)');
         hold;
-        plot([min(x) max(x)],[0.5 0.5]*params.e0,'--k');
-        plot([params.v0 params.v0], [0 1]*params.e0,'--k');
+        plot([min(x) max(x)],[0.5 0.5]*params.e0i,'--k');
+        plot([params.v0 params.v0], [0 1]*params.e0i,'--k');
         title('Inhibitory population');
 %}
 %
 % Artemio - 2021
+%% Sigmoid error function
 function out = non_linear_sigmoid(x, r, v0, varargin)
 %% ERF:
     % Check for optional input argument 'sigma'. The default value is an

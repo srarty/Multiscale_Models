@@ -11,12 +11,10 @@
 % range = [0.002:0.001:0.05]; % tau_m_e
 % range2 = [0.005:0.001:0.055]; % tau_m_i
 
-value = 'e0';%'pII';
-range = [10:5:100]; % P[II] or P[PP]
-value2 = 'e0i';
-range2 = [10:5:100]; % P[II] or P[PP]
-% value2 = 'u';
-% range2 = [7:23];%[0.1:0.025:0.5]; %[8:21];
+value = 'u'; %'e0';%'pII';
+range = [0:0.1:5]; % P[II] or P[PP]
+value2 = 'alpha_re';
+range2 = [0:0.1:5];%[0:0.5:5]; %[0:10]; % P[II] or P[PP]
 
 freqs = [];
 freqs_py = [];
@@ -26,7 +24,7 @@ for i = 1:length(range)
 %         [x, y, t] = NMM_diff_equations_DblExp_recursive(value, range(i));
         [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(value, range(i), value2, range2(ii));
 
-        freqs(ii,i) = spectrum(x,y,t, false); % Oscillations
+%         freqs(ii,i) = spectrum(x,y,t, false); % Oscillations
         freqs_py(ii,i) = mean(f_e(250:end)); % spike rate Py
         freqs_in(ii,i) = mean(f_i(250:end)); % spike rate Py
         disp([num2str(i) '/' num2str(length(range)) ' , ' num2str(ii) '/' num2str(length(range2))]);
@@ -38,8 +36,10 @@ results = struct;
 results.value = value;
 results.range = range;
 results.value2 = value2;
-results.value2 = range2;
+results.range2 = range2;
 results.freqs = freqs;
+results.freqs_py = freqs_py;
+results.freqs_in = freqs_in;
 
 folder = 'C:\Users\artemios\Dropbox\University of Melbourne\Epilepsy\Resources for meetings\2022 07 14\';
 name = [value ' vs ' value2];
@@ -50,38 +50,43 @@ else
     disp('Results not saved, file exists');
 end
 
-%% Plot 3d Mesh
-figure;
-mesh(range, range2, freqs, 'FaceColor', 'flat', 'EdgeColor', 'black')
-% xlabel('\tau_{m_{i}}');
-% ylabel('\tau_{m_{e}}');
-xlabel(value);%('Input rate');
-ylabel(value2);
-zlabel('Frequency (Hz)');
-hold
-% plot3(0.01638,0.008115,25.6339,'rx','LineWidth',3)
-title('NMM | u = 9');
-% title('NMM');
-colormap hsv
-c = colorbar;
-c.Label.String = 'Frequency (Hz)';
-caxis([25 100]);
-c.Limits = [25 65];
-zlim([25 100]);
+%% Plot 3d Mesh for oscillations
+try
+    f_handle = figure;
+    mesh(range, range2, freqs, 'FaceColor', 'flat', 'EdgeColor', 'black')
+    % xlabel('\tau_{m_{i}}');
+    % ylabel('\tau_{m_{e}}');
+    xlabel(value);%('Input rate');
+    ylabel(value2);
+    zlabel('Frequency (Hz)');
+    hold
+    % plot3(0.01638,0.008115,25.6339,'rx','LineWidth',3)
+    title('NMM | u = 9');
+    % title('NMM');
+    colormap hsv
+    c = colorbar;
+    c.Label.String = 'Frequency (Hz)';
+    caxis([25 100]);
+    c.Limits = [25 65];
+    zlim([25 100]);
+catch
+    close(f_handle);
+    disp('Couldn''t plot oscillation frequencies graph.');
+end
 
-%%
-figure;
+%% Plot spike rates mesh
+figure('Position', [325 404 1112 364]);
 subplot(1,2,1)
+
 mesh(range, range2, freqs_py, 'FaceColor', 'flat', 'EdgeColor', 'black')
 xlabel(value);%('Input rate');
 ylabel(value2);
 zlabel('Firing rate (Py)');
-colormap hsv
 c = colorbar;
-% c.Label.String = 'Frequency (Hz)';
+c.Label.String = 'Mean firing rate (Hz)';
 caxis([0 1.5]);
 c.Limits = [0 1.5];
-zlim([0 1.5]);
+% zlim([0 1.5]);
 title('Pyramidal')
 
 subplot(1,2,2)
@@ -90,12 +95,12 @@ xlabel(value);%('Input rate');
 ylabel(value2);
 zlabel('Firing rate (In)');
 title('Inhibitory');
-colormap hsv
+colormap jet
 c = colorbar;
-% c.Label.String = 'Frequency (Hz)';
+c.Label.String = 'Mean firing rate (Hz)';
 caxis([0 1.5]);
 c.Limits = [0 1.5];
-zlim([0 1.5]);
+% zlim([0 1.5]);
 %%
 pause(0.1);
 %{
