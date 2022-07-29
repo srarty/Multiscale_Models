@@ -18,24 +18,45 @@ function varargout = spectrum(x, y, t, varargin)
 
 %     close all
 %     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_3.mat';
-    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_96.mat';
+%       data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_96.mat'; % u=9, P_II = 0.451
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_126.mat'; % u=20, P_II=0.19
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_127.mat'; % u=20, P_PP=0.125
+
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_261.mat'; % u=9, P_II=0.451
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_262.mat'; % u=14, P_II=0.451
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_263.mat'; % u=20, P_II=0.451
+
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_267.mat'; % u=9, P_II=0.451, 3 seconds
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_268.mat'; % u=14, P_II=0.451, 3 seconds
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_269.mat'; % u=20, P_II=0.451, 3 seconds
+    
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_282.mat'; % u = [0 1 0 10];
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_283.mat'; % u=0
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_279.mat'; % u=[0, 0.2, 0, 0.4]
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_286.mat'; % u=10
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_287.mat'; % u=15
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_288.mat'; % u = [0 1 0 15];
+
+    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_u[15].mat';
 
     if nargin > 3, PLOT = varargin{1}; else, PLOT = true; end
     if nargin > 4, data_file = varargin{2}; end
 
-    signal = 'lfp'; % vpi, vip, lfp
+    signal = 'vip'; % Options: 'vpi', 'vip', 'lfp'
     
     [x_nmm, x_lif, t_nmm, t_lif, v_pi, v_ip, u_lif, lfp_dt] = get_data(signal, x, y, t, data_file);
     
     [x_nmm, x_lif, t_nmm] = normalization(x_nmm, x_lif, t_nmm, t_lif);
     
-    figure(1);clf;
-    plot(t_nmm, x_nmm, 'k');
-    hold;
-    plot(t_lif, x_lif, '--k');
-    legend({'NMM', 'LIF'});
-    xlabel('Time (s)');
-    title(['Comparison of ' signal]);
+    if PLOT
+        figure(1);clf;
+        plot(t_nmm, x_nmm, 'k');
+        hold;
+        plot(t_lif, x_lif, '--k');
+        legend({'NMM', 'LIF'});
+        xlabel('Time (s)');
+        title(['Comparison of ' signal]);
+    end
     
     
     harmonic_nmm = do_plot('nmm', signal, x_nmm, t_nmm);
@@ -44,16 +65,19 @@ function varargout = spectrum(x, y, t, varargin)
 %     varargout = {harmonic_lif};
 %     varargout{end + 1} = u_lif;
     
-    figure(2); clf;
-    subplot(2,1,1);
-    plot(t,x(:,1)); hold on;
-    plot(t,x(:,3));
-    
-    plot_lif_results(v_pi, v_ip, lfp_dt); % Won't run if lif results haven't been loaded
-     
-    do_correlation(x_nmm, x_lif, t_nmm, t_lif);
-    do_variance(x_nmm, x_lif, t_nmm, t_lif);
-    
+    if PLOT
+        figure(2); clf;
+        subplot(2,1,1);
+        plot(t,x(:,1)); hold on;
+        plot(t,x(:,3));
+        
+        plot_lif_results(v_pi, v_ip, lfp_dt); % Won't run if lif results haven't been loaded
+    end
+   
+%     do_correlation(x_nmm, x_lif, t_nmm, t_lif);
+%     do_variance(x_nmm, x_lif, t_nmm, t_lif);
+	[R,P] = do_spearmanCorr(x_nmm, x_lif)
+   
     varargout = {x_nmm, x_lif, t_nmm, t_lif};
 end
 
@@ -80,19 +104,28 @@ function [x_nmm, x_lif, t_nmm, t_lif, v_pi, v_ip, input_spike_rate, dt] = get_da
 
     %% LIF
     load(data_file);
-        
-    LFP_V = LFP_V(2500:end);
+    
+    trim = 2500; % Samples to remove from the beginning of the LFP_V vector
+    LFP_V = LFP_V(trim:end);
     
     if exist('lfp_dt','var'), dt = lfp_dt; else, dt = 1e-4; end
     
-    T = length(LFP_V) * dt;
-    t_lif = linspace(0,T,T/dt);
+    T = (trim + length(LFP_V)) * dt;
+    t_lif = linspace(trim*dt,T,(T/dt)-trim);
     
     switch signal
         case 'vpi'
-            x_lif = mean(v_pi,1); % State 3? % LIF
+            if size(v_pi,1) > 1
+                x_lif = mean(v_pi(:,trim:end),1); % State 3? % LIF
+            else
+                x_lif = v_pi(trim:end); % State 3? % LIF
+            end
         case 'vip'
-            x_lif = mean(v_ip,1); % State 1? % LIF
+            if size(v_pi,1) > 1
+                x_lif = mean(v_ip(:,trim:end),1); % State 1? % LIF
+            else
+                x_lif = v_ip(trim:end); % State 1? % LIF
+            end
         case 'lfp'
             x_lif = LFP_V; % LIF
         otherwise
@@ -204,7 +237,11 @@ function plot_lif_results(v_pi, v_ip, dt)
     ylabel('x3');
 
     subplot(1,2,2)
-    plot(x1*1e3,x1_*1e6)
+    try
+        plot(x1*1e3,x1_*1e6);
+    catch 
+        disp('Couldn''t plot x1 vs x1''');
+    end
     xlabel('v');
     ylabel('z');
     
@@ -240,6 +277,11 @@ function do_correlation(x_nmm, x_lif, t_nmm, t_lif)
     legend({'NMM', 'LIF'});
 end
 
+function [R,P] = do_spearmanCorr(x_nmm, x_lif)
+    idxs = 1:min(length(x_nmm),length(x_lif)); % Adjust the index range so vectors are same size.
+%     [R,P] = corrcoef(x_nmm(idxs), x_lif(idxs));
+    [R,P] = corr(x_nmm(idxs)',x_lif(idxs)','Type','Spearman');
+end
 
 function do_variance(x_nmm, x_lif, t_nmm, t_lif)    
 

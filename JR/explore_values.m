@@ -7,38 +7,103 @@
 % range = [-1e7:0.5e6:-0.1e6]; % Range for AmplitudeI
 % range = [5e6:0.2e6:5e7]; % Range for AmplitudeE
 % range2 = [0.5e7:0.5e6:2e7]; % Range for AmplitudeE
-% range = [0:5:300]; % u
-range = [15:25]; % u
-range2 = 1;
+% range = [15:25]; % u
 % range = [0.002:0.001:0.05]; % tau_m_e
 % range2 = [0.005:0.001:0.055]; % tau_m_i
+
+value = 'u'; %'e0';%'pII';
+range = [0:0.1:5]; % P[II] or P[PP]
+value2 = 'alpha_re';
+range2 = [0:0.1:5];%[0:0.5:5]; %[0:10]; % P[II] or P[PP]
+
 freqs = [];
+freqs_py = [];
+freqs_in = [];
 for i = 1:length(range)
     for ii = 1:length(range2)
-%     [x, y, t] = NMM_diff_equations_DblExp('AmplitudeE', range(i));
-%         [x, y, t] = NMM_diff_equations_DblExp('AmplitudeI', range(i), 'AmplitudeE', 1.42e7);
-%         [x, y, t] = NMM_diff_equations_DblExp('AmplitudeI', range(i), 'AmplitudeE', range2(ii));
-        [x, y, t] = NMM_diff_equations_DblExp('u', range(i));
-%         [x, y, t] = NMM_diff_equations_DblExp('tau_m_e', range(i), 'tau_m_i', range2(ii));
-        freqs(i,ii) = spectrum(x,y,t, false);
+%         [x, y, t] = NMM_diff_equations_DblExp_recursive(value, range(i));
+        [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(value, range(i), value2, range2(ii));
+
+%         freqs(ii,i) = spectrum(x,y,t, false); % Oscillations
+        freqs_py(ii,i) = mean(f_e(250:end)); % spike rate Py
+        freqs_in(ii,i) = mean(f_i(250:end)); % spike rate Py
         disp([num2str(i) '/' num2str(length(range)) ' , ' num2str(ii) '/' num2str(length(range2))]);
     end
 end
 
-%% Plot 3d Mesh
-figure;
-mesh(range2, range, freqs, 'FaceColor', 'flat', 'EdgeColor', 'black')
-xlabel('\tau_{m_{i}}');
-ylabel('\tau_{m_{e}}');
-zlabel('Frequency (Hz)');
-hold
-% plot3(0.01638,0.008115,25.6339,'rx','LineWidth',3)
-% title('NMM | u = 15 spikes/ms/cell');
-title('NMM');
+%% Store values
+results = struct;
+results.value = value;
+results.range = range;
+results.value2 = value2;
+results.range2 = range2;
+results.freqs = freqs;
+results.freqs_py = freqs_py;
+results.freqs_in = freqs_in;
+
+folder = 'C:\Users\artemios\Dropbox\University of Melbourne\Epilepsy\Resources for meetings\2022 07 14\';
+name = [value ' vs ' value2];
+if isempty(dir([folder name]))
+    save([folder name '.mat'], 'results');
+    disp('results saved');
+else
+    disp('Results not saved, file exists');
+end
+
+%% Plot 3d Mesh for oscillations
+try
+    f_handle = figure;
+    mesh(range, range2, freqs, 'FaceColor', 'flat', 'EdgeColor', 'black')
+    % xlabel('\tau_{m_{i}}');
+    % ylabel('\tau_{m_{e}}');
+    xlabel(value);%('Input rate');
+    ylabel(value2);
+    zlabel('Frequency (Hz)');
+    hold
+    % plot3(0.01638,0.008115,25.6339,'rx','LineWidth',3)
+    title('NMM | u = 9');
+    % title('NMM');
+    colormap hsv
+    c = colorbar;
+    c.Label.String = 'Frequency (Hz)';
+    caxis([25 100]);
+    c.Limits = [25 65];
+    zlim([25 100]);
+catch
+    close(f_handle);
+    disp('Couldn''t plot oscillation frequencies graph.');
+end
+
+%% Plot spike rates mesh
+figure('Position', [325 404 1112 364]);
+subplot(1,2,1)
+
+mesh(range, range2, freqs_py, 'FaceColor', 'flat', 'EdgeColor', 'black')
+xlabel(value);%('Input rate');
+ylabel(value2);
+zlabel('Firing rate (Py)');
 c = colorbar;
-c.Label.String = 'Frequency (Hz)';
+c.Label.String = 'Mean firing rate (Hz)';
+caxis([0 1.5]);
+c.Limits = [0 1.5];
+% zlim([0 1.5]);
+title('Pyramidal')
 
-
+subplot(1,2,2)
+mesh(range, range2, freqs_in, 'FaceColor', 'flat', 'EdgeColor', 'black')
+xlabel(value);%('Input rate');
+ylabel(value2);
+zlabel('Firing rate (In)');
+title('Inhibitory');
+colormap jet
+c = colorbar;
+c.Label.String = 'Mean firing rate (Hz)';
+caxis([0 1.5]);
+c.Limits = [0 1.5];
+% zlim([0 1.5]);
+%%
+pause(0.1);
+%{
 %% Load LIF results in a loop and store values
 location = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/';
 d = dir([location '*.mat']);
@@ -51,6 +116,9 @@ end
 
 %%
 figure;
-stem(u,freqs)
-xlabel('Input spike rate')
+% stem(u,freqs)
+% xlabel('Input spike rate')
+stem(range,freqs)
+xlabel('Probability of recurrent inhibitory synapses')
 ylabel('Frequency (Hz)')
+%}

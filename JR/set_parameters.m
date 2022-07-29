@@ -13,6 +13,45 @@ elseif nargin > 1
 end
 
 switch mode
+    case 'recursive'
+        params.e0 =  15;%20;%30; % max firing rate
+        params.e0i = 35;%55;%30; % max firing rate
+        params.r = 8; %11;%1;   % Sigmoid slope
+        params.v0 = 15; %15;%21; % Firing Threshold
+        
+        params.gompertz.a = 1; % 70;
+        params.gompertz.b = 3; % 14;
+        params.gompertz.c = 1; % 14.49;
+        params.gompertz.d = 0.15; % 0.3292;
+        
+        % time constants
+        params.tau_se = 0.001227; % Rising tau Excitatory
+        params.tau_me = 0.008115; % Decay tau Pyramidal
+        params.tau_si = 0.004674; % Rising tau Inhibitory
+        params.tau_mi = 0.01638; % Decay tau Interneurons
+        params.tau_sre = 0.002221;% Rising tau recursive excitation
+        params.tau_mre = 0.01646; % Decay tau recursive excitation
+        params.tau_sri = 0.005021;% Rising tau recursive inhibition
+        params.tau_mri = 0.007698; % Decay tau recursive inhibition
+    
+        params.u = mu; %11;%220;%15;%11;1/0.0        % mean input mem potential
+        
+        params.alpha_ie = -1.107; %Inhibitory gain into pyramidal (Interneuron -> Py)
+        params.alpha_ei = 2.395; % Excitatory gain into interneuron (Py -> Interneuron) (bifurcation: alpha_ei > 392.6)
+        params.alpha_re = 0.8264;%5; % Recursive excitatory gain (bifuration: alpha_re > 4.7)
+        params.alpha_ri = -2.869; % Recursive inhibitory gain
+        
+        params.c_constant = 1000; % Connectivity constant
+        
+        params.P_pyTOin = 0.395; % Probability of connection between Py -> Interneuron
+        params.P_inTOpy = 0.411; % Probability of connection between In -> Pyramidal
+        params.P_pyTOpy = 0.16;  % Probability of connection between Py -> Pyramidal
+        params.P_inTOin = 0.045; % 0.125; % Probability of connection between In -> Interneuron
+        
+
+        params.dt = 0.001;     % sampling time step         
+        params.scale = 1;%1e2;% 1e-3; % Scale to fix mismatch in state amplitudes. Not to be confused with the scael in analytic_kalman_filter_2
+        
     case 'allen'
         params.e0 = 30; % max firing rate
         params.r = 8; %11;%1;   % Sigmoid slope
@@ -35,7 +74,7 @@ switch mode
         
         params.P_pyTOin = 0.395; % Probability of connection between Py -> Interneuron
         params.P_inTOpy = 0.411; % Probability of connection between Py -> Interneuron
-
+        
         params.dt = 0.001;     % sampling time step         
         params.scale = 1;%1e2;% 1e-3; % Scale to fix mismatch in state amplitudes. Not to be confused with the scael in analytic_kalman_filter_2
         

@@ -46,7 +46,7 @@ RECURRENT_INHIBITORY = True     # Self inhibition
 INHIBIT_INPUT = False            # Excitatory cortical input to inhibitory population
 ACTIVE_INTERNEURONS = True      # Inhibitory population
 PARAMS_SOURCE = 'allen'        # 'brunel' or 'allen'
-SAVE = True                     # Save ground truth data
+SAVE = False                     # Save ground truth data
 PLOT = True                     # Plot results (main Figure)
 PLOT_EXTRA = True              # Plot extra things.
 
@@ -55,7 +55,7 @@ corriente = 0
 input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 
-input_spike_rate = [20] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
+input_spike_rate = [11.39]#[0, 0.1, 0.2] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
 input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
 
 #%% parameters  --------------------------------------------------------------
@@ -140,9 +140,10 @@ j_AMPA_rec_P = params_py.get('j_AMPA') * 1000/N # * np.sqrt(1000/N)
 j_AMPA_rec_I = params_in.get('j_AMPA') * 1000/N # * np.sqrt(1000/N)
     
 j_AMPA_cor_P = params_py.get('j_AMPA_ext')
-j_AMPA_cor_I = params_in.get('j_AMPA_ext')  # This value is used for both cor 
-                                            # and tha, doesn't matter at the moment because
-                                            # the inhibitory pop doesn't receive cortical input
+j_AMPA_cor_I = params_in.get('j_AMPA_ext')
+
+j_AMPA_tha_P = params_py.get('j_AMPA_tha')
+j_AMPA_tha_I = params_in.get('j_AMPA_tha')
 
 # GABAergic (inhibitory)
 j_GABA_P = params_py.get('j_GABA') * 1000/N # * np.sqrt(1000/N)
@@ -229,7 +230,7 @@ eqs_pre_glut_I = '''
 s_AMPA += increment_AMPA_I
 '''
 
-# Interneurons (self-inhibiton)
+# Interneurons (recurrent inhibiton)
 # eqs_gaba_I = '''
 # s_GABA_post = s_GABA_syn : 1 (summed)
 # ds_GABA_syn / dt = - s_GABA_syn / tau_s_GABA_I + k * x : 1 (clock-driven)
@@ -266,17 +267,18 @@ C_I_P.active = ACTIVE_INTERNEURONS
 # Poisson input (Cortico-cortical)
 # External inputs
 input1 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[0] * 1000/num_inputs) * Hz, increment_AMPA_ext_P)
-# input2 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[1] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
-# input3 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[2] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
-# input1.active = False
-# input2.active = False
-# input3.active = False
+if np.size(input_spike_rate) > 1:
+    input2 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[1] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
+    input3 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[2] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
+    input1.active = False
+    input2.active = False
+    input3.active = False
 # Poisson input (Cortico-cortical) input to inhibitory interneurons. Controlled by INHIBIT_INPUT
 C_Cor_I = PoissonInput(In_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[0]*1000/num_inputs) * Hz, increment_AMPA_ext_I)
 C_Cor_I.active = INHIBIT_INPUT # Innactive cortico-cortical -> interneuron
 
 # Poisson input (Thalamic, baseline spike rate)
-C_Tha_P = PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_P)
+C_Tha_P = PoissonInput(Py_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_P)
 C_Tha_I = PoissonInput(In_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_I)
 
 # Poisson population
@@ -298,7 +300,6 @@ st_AMPA_P = StateMonitor(Py_Pop, ('s_AMPA'), record = 0)
 st_GABA_P = StateMonitor(Py_Pop, 's_GABA', record = 0)
 st_AMPA_cor_P = StateMonitor(Py_Pop, 's_AMPA_cor', record = 0)
 
-
 st_AMPA_I = StateMonitor(In_Pop, 's_AMPA', record = 0)
 st_GABA_I = StateMonitor(In_Pop, 's_GABA', record = 0)
 st_AMPA_cor_I = StateMonitor(In_Pop, 's_AMPA_cor', record = 0)
@@ -319,25 +320,26 @@ net = Network(collect())
 input1.active = True
 net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
 
-# input1.active = False
-# input2.active = True
-# net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
-
-# input2.active = False
-# input3.active = True
-# net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+if np.size(input_spike_rate) > 1:
+    input1.active = False
+    input2.active = True
+    net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+    
+    input2.active = False
+    input3.active = True
+    net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
     
 #%% analysis ------------------------------------------------------------------
 # spike rates
-window_size = 100.1 * ms # Size of the window for the smooth spike rate # 100.1 instead of 100 to avoid an annoying warning at the end of the simulation
+window_size = 10.1 * ms # Size of the window for the smooth spike rate # 100.1 instead of 100 to avoid an annoying warning at the end of the simulation
 
-r_P_rate = r_P.smooth_rate(window='flat', width=window_size)
+r_P_rate = r_P.smooth_rate(window='gaussian', width=window_size)
 if shape(r_P_rate) != shape(r_P.t):
-    r_P_rate = r_P_rate[1:]
+    r_P_rate = r_P_rate[5:]
 
-r_I_rate = r_I.smooth_rate(window='flat', width=window_size)
+r_I_rate = r_I.smooth_rate(window='gaussian', width=window_size)
 if shape(r_I_rate) != shape(r_I.t):
-    r_I_rate = r_I_rate[1:]
+    r_I_rate = r_I_rate[5:]
     
 # r_Cor_rate = r_Cor.smooth_rate(width = window_size)
 # if shape(r_Cor_rate) != shape(r_Cor.t):
@@ -499,31 +501,23 @@ if SAVE:
     save_dictionary={'LFP': lfp_,
                     'LFP_V': lfp_v,
                     'lfp_dt' : dt_,
-                    'Vm': -(I_injected/g_m_P), # To calculate the nonlinearity, need to simulate single cell disconnected network 
-                    'Vm_interneurons': -(I_injected_I/g_m_I), # To calculate the nonlinearity, need to simulate single cell disconnected network 
-                    'R_py': r_P_rate, # 1/diff(np.array(sp_P.t)).mean(),
-                    'R_in': r_I_rate,
-                    'alpha1': alpha_1,
+		    'alpha1': alpha_1,
                     'alpha2': alpha_2,
                     'v_rest': V_leak,
-                    'isi_P': isi_P,
-                    'V_py': Py_monitor.v,
-                    'V_in': In_monitor.v,
-                    'v_pi': Py_monitor.v_pi,
-                    'v_ip': In_monitor.v_ip,
+                    'v_pi': mean(Py_monitor.v_pi,0),
+                    'v_ip': mean(In_monitor.v_ip,0),
+                    'p_PP': p_PP,
+                    'p_II': p_II,
+                    'R_py': r_P_rate, # 1/diff(np.array(sp_P.t)).mean(),
+                    'R_in': r_I_rate,
                     'RECURRENT_PYRAMIDAL': RECURRENT_PYRAMIDAL,
                     'RECURRENT_INHIBITORY': RECURRENT_INHIBITORY,
                     'INHIBIT_INPUT': INHIBIT_INPUT,
                     'ACTIVE_INTERNEURONS': ACTIVE_INTERNEURONS,
                     'input_spike_rate': input_spike_rate,
                     'input_spike_rate_thalamic': input_spike_rate_thalamic,
-                    'input_current': input_current}   
-
-    # 'sp_P_i': sp_P.i,
-    # 'sp_P_t': sp_P.t,
-    # 'sp_T_i': sp_I.i,
-    # 'sp_T_t': sp_I.t,
-        
+                    'input_current': input_current}  
+    
     # Save as lfp_last
     scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/lfp_last.mat',
                      mdict = save_dictionary)

@@ -39,7 +39,7 @@ from lif_model import set_params
 #%% options  --------------------------------------------------------------
 
 source          = 'allen'       # brunel or allen
-synaptic_type   = 'GABA'        # AMPA or GABA
+synaptic_type   = 'GABA'        # AMPA (excitatory) or GABA (inhibitory)
 neuron_type     = 'pyramidal'  # pyramidal, inhibitory or spiny
 external        = False         # When AMPA, synapsis can be external or recurrent (local)
 input_spike_rate = 1            # spikes/ms/cell 

@@ -46,6 +46,7 @@ def set_params(type='pyramidal', source='brunel'):
             j_GABA  = 42.5 * pA 
             j_AMPA  = -10.5 * pA
             j_AMPA_ext = -13.75 * pA
+            j_AMPA_tha = -13.75 * pA
             
             # Delta function weight (increment with each input spike)
             # Defined experimentally with 'synaptic_functions.py'. Based on the 
@@ -77,7 +78,8 @@ def set_params(type='pyramidal', source='brunel'):
             # Synaptic efficacies
             j_GABA  = 74 * pA # 49.7 * pA
             j_AMPA  = -147 * pA
-            j_AMPA_ext = -13.75 * pA
+            j_AMPA_ext = -1.375 * pA
+            j_AMPA_tha = -13.75 * pA
             
             # Delta function weight (increment with each input spike)
             # Defined experimentally with 'synaptic_functions.py'. Based on the 
@@ -111,6 +113,7 @@ def set_params(type='pyramidal', source='brunel'):
             j_GABA  = 54 * pA 
             j_AMPA  = -14 * pA
             j_AMPA_ext = -19 * pA
+            j_AMPA_tha = -19 * pA
             
             # Delta function weight (increment with each input spike)
             single_exp_weight = 1
@@ -140,6 +143,7 @@ def set_params(type='pyramidal', source='brunel'):
             j_GABA  = 35.1 * pA 
             j_AMPA  = -330 * pA # <- single exp # -12.55 * pA # <- bifurcation # -896 * pA
             j_AMPA_ext = -19 * pA
+            j_AMPA_tha = -19 * pA
             
             # Delta function weight (increment with each input spike)
             single_exp_weight = 1
@@ -162,7 +166,7 @@ def set_params(type='pyramidal', source='brunel'):
         p_IP =  0.411
         p_PI =  0.395
         p_PP =  0.16
-        p_II =  0.19 #0.19#0.451
+        p_II =  0.451#0.125 #0.19#0.451
 
     #%% Parse output
     params = {
@@ -180,6 +184,7 @@ def set_params(type='pyramidal', source='brunel'):
         "j_GABA":       j_GABA,
         "j_AMPA":       j_AMPA,
         "j_AMPA_ext":   j_AMPA_ext,
+        "j_AMPA_tha":   j_AMPA_tha,
         "p_IP":         p_IP,
         "p_PI":         p_PI,
         "p_PP":         p_PP,
@@ -201,10 +206,13 @@ def get_equations(type = 'pyramidal'):
             dv_pe /dt = (-v_pe - ((I_AMPA_spi + I_AMPA_cor) / g_m_P)) / tau_m_P : volt (unless refractory)
             dv_pi /dt = (-v_pi - ( I_GABA_rec               / g_m_P)) / tau_m_P : volt (unless refractory)
         
-            I_tot = I_AMPA_cor + I_AMPA_rec + I_AMPA_spi + I_GABA_rec + I_injected : amp
+            I_tot = I_AMPA_cor + I_AMPA_tha + I_AMPA_rec + I_AMPA_spi + I_GABA_rec + I_injected : amp
             
             I_AMPA_cor = j_AMPA_cor_P * s_AMPA_cor : amp
             ds_AMPA_cor / dt = -s_AMPA_cor / tau_s_AMPA_P : 1    
+            
+            I_AMPA_tha = j_AMPA_tha_P * s_AMPA_tha : amp
+            ds_AMPA_tha / dt = -s_AMPA_tha / tau_s_AMPA_P : 1
             
             I_GABA_rec = j_GABA_P * s_GABA : amp
             ds_GABA / dt = -s_GABA / tau_s_GABA_P : 1
@@ -228,7 +236,7 @@ def get_equations(type = 'pyramidal'):
             I_AMPA_cor = j_AMPA_cor_I * s_AMPA_cor : amp
             ds_AMPA_cor / dt = - s_AMPA_cor / tau_s_AMPA_I : 1
             
-            I_AMPA_tha = j_AMPA_cor_I * s_AMPA_tha : amp
+            I_AMPA_tha = j_AMPA_tha_I * s_AMPA_tha : amp
             ds_AMPA_tha / dt = - s_AMPA_tha / tau_s_AMPA_I_ext : 1
             
             I_GABA_rec = j_GABA_I * s_GABA : amp
