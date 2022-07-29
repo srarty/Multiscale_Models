@@ -38,7 +38,7 @@ switch mode
         
         params.alpha_ie = -1.107; %Inhibitory gain into pyramidal (Interneuron -> Py)
         params.alpha_ei = 2.395; % Excitatory gain into interneuron (Py -> Interneuron) (bifurcation: alpha_ei > 392.6)
-        params.alpha_re = 5;%0.8264; % Recursive excitatory gain (bifuration: alpha_re > 4.7)
+        params.alpha_re = 0.8264;%5; % Recursive excitatory gain (bifuration: alpha_re > 4.7)
         params.alpha_ri = -2.869; % Recursive inhibitory gain
         
         params.c_constant = 1000; % Connectivity constant

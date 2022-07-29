@@ -230,7 +230,7 @@ eqs_pre_glut_I = '''
 s_AMPA += increment_AMPA_I
 '''
 
-# Interneurons (self-inhibiton)
+# Interneurons (recurrent inhibiton)
 # eqs_gaba_I = '''
 # s_GABA_post = s_GABA_syn : 1 (summed)
 # ds_GABA_syn / dt = - s_GABA_syn / tau_s_GABA_I + k * x : 1 (clock-driven)
@@ -299,7 +299,6 @@ r_I = PopulationRateMonitor(In_Pop)
 st_AMPA_P = StateMonitor(Py_Pop, ('s_AMPA'), record = 0)
 st_GABA_P = StateMonitor(Py_Pop, 's_GABA', record = 0)
 st_AMPA_cor_P = StateMonitor(Py_Pop, 's_AMPA_cor', record = 0)
-
 
 st_AMPA_I = StateMonitor(In_Pop, 's_AMPA', record = 0)
 st_GABA_I = StateMonitor(In_Pop, 's_GABA', record = 0)

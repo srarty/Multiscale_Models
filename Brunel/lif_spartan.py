@@ -143,22 +143,23 @@ j_AMPA_rec_I = params_in.get('j_AMPA') * 1000/N # * np.sqrt(1000/N)
 j_AMPA_cor_P = params_py.get('j_AMPA_ext')
 j_AMPA_cor_I = params_in.get('j_AMPA_ext')
 
+j_AMPA_tha_P = params_py.get('j_AMPA_tha')
+j_AMPA_tha_I = params_in.get('j_AMPA_tha')
+
 # GABAergic (inhibitory)
 j_GABA_P = params_py.get('j_GABA') * 1000/N # * np.sqrt(1000/N)
 j_GABA_I = params_in.get('j_GABA') * 1000/N # * np.sqrt(1000/N)
 
 # Weight constants. Amplitude of the synaptic input
 # Pyramidal 
-increment_AMPA_P =  params_py.get('alpha_weight_AMPA') #* 500/N
-increment_AMPA_ext_P = params_py.get('single_exp') #* 500/N
-increment_GABA_P = params_py.get('alpha_weight_GABA') #* 500/N
+increment_AMPA_P =  params_py.get('alpha_weight_AMPA') #* np.sqrt(1000/N)
+increment_AMPA_ext_P = params_py.get('single_exp') #* np.sqrt(1000/N)
+increment_GABA_P = params_py.get('alpha_weight_GABA') #* np.sqrt(1000/N)
 
 # Inhibitory interneurons
-increment_AMPA_I = params_in.get('alpha_weight_AMPA') #* 500/N
-increment_AMPA_ext_I = params_in.get('single_exp') #* 500/N
-increment_GABA_I = params_in.get('alpha_weight_GABA') #* 500/N
-
-
+increment_AMPA_I = params_in.get('alpha_weight_AMPA') #* np.sqrt(1000/N)
+increment_AMPA_ext_I = params_in.get('single_exp') #* np.sqrt(1000/N)
+increment_GABA_I = params_in.get('alpha_weight_GABA') #* np.sqrt(1000/N)
 
 # Alpha function's parameter (and double exponential) to fix the units in ds/dt
 k = 1 / ms # 0.62 / ms # Dimmensionless?, check Nicola and Campbell 2013
@@ -177,6 +178,7 @@ I_injected_I = -input_current_I * pA # Input current to Pyramidal population. Se
 eqs_P = get_equations('pyramidal')
 
 eqs_I = get_equations('inhibitory')
+
 
 # Neuron groups
 Py_Pop = NeuronGroup(N_P, eqs_P, threshold='v > V_thr', reset='''v = V_reset
@@ -228,7 +230,7 @@ eqs_pre_glut_I = '''
 s_AMPA += increment_AMPA_I
 '''
 
-# Interneurons (autoinhibiton)
+# Interneurons (recurrent inhibition)
 # eqs_gaba_I = '''
 # s_GABA_post = s_GABA_syn : 1 (summed)
 # ds_GABA_syn / dt = - s_GABA_syn / tau_s_GABA_I + k * x : 1 (clock-driven)
@@ -260,23 +262,25 @@ C_I_P = Synapses(In_Pop, Py_Pop, on_pre=eqs_pre_gaba_P, method='rk4', dt=dt_, de
 C_I_P.connect(p = p_IP)    
 C_I_P.active = ACTIVE_INTERNEURONS
 
+
 # external input
 # Poisson input (Cortico-cortical)
 # External inputs
 input1 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[0] * 1000/num_inputs) * Hz, increment_AMPA_ext_P)
-input2 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[1] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
-input3 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[2] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
-input4 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[3] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
-input1.active = False
-input2.active = False
-input3.active = False
-input4.active = False
+if np.size(input_spike_rate) > 1:
+    input2 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[1] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
+    input3 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[2] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
+    input3 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[3] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
+    input1.active = False
+    input2.active = False
+    input3.active = False
+    input4.active = False
 # Poisson input (Cortico-cortical) input to inhibitory interneurons. Controlled by INHIBIT_INPUT
 C_Cor_I = PoissonInput(In_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[0]*1000/num_inputs) * Hz, increment_AMPA_ext_I)
 C_Cor_I.active = INHIBIT_INPUT # Innactive cortico-cortical -> interneuron
 
 # Poisson input (Thalamic, baseline spike rate)
-C_Tha_P = PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_P)
+C_Tha_P = PoissonInput(Py_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_P)
 C_Tha_I = PoissonInput(In_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_I)
 
 # Poisson population
@@ -293,7 +297,6 @@ sp_I = SpikeMonitor(In_Pop[:]) #N_activity_plot])
 
 r_P = PopulationRateMonitor(Py_Pop) # [0:N_activity_plot])
 r_I = PopulationRateMonitor(In_Pop)
-# r_Cor = PopulationRateMonitor(input_cortical)
 
 st_AMPA_P = StateMonitor(Py_Pop, ('s_AMPA'), record = 0)
 st_GABA_P = StateMonitor(Py_Pop, 's_GABA', record = 0)
@@ -312,17 +315,20 @@ net = Network(collect())
 input1.active = True
 net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
 
-input1.active = False
-input2.active = True
-net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+if np.size(input_spike_rate) > 1:
+    input1.active = False
+    input2.active = True
+    net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
 
-input2.active = False
-input3.active = True
-net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
-
-input3.active = False
-input4.active = True
-net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+if np.size(input_spike_rate) > 2:    
+    input2.active = False
+    input3.active = True
+    net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+       
+if np.size(input_spike_rate) > 3:
+    input3.active = False
+    input4.active = True
+    net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
     
 
 #%% analysis ------------------------------------------------------------------
