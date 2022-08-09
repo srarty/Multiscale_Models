@@ -149,7 +149,7 @@ def brunel(alpha_ii=0, u=1):
     
     # GABAergic (inhibitory)
     j_GABA_P = params_py.get('j_GABA') * 1000/N # * np.sqrt(1000/N)
-    j_GABA_I = alpha_ii * 1000/N # params_in.get('j_GABA') * 1000/N # * np.sqrt(1000/N)
+    j_GABA_I = alpha_ii * amp * 1000/N # params_in.get('j_GABA') * 1000/N # * np.sqrt(1000/N)
     
     # Weight constants. Amplitude of the synaptic input
     # Pyramidal 
@@ -484,7 +484,7 @@ def brunel(alpha_ii=0, u=1):
         save_dictionary={'LFP': lfp_,
                         'LFP_V': lfp_v,
                         'lfp_dt' : dt_,
-    		    'alpha1': alpha_1,
+                        'alpha1': alpha_1,
                         'alpha2': alpha_2,
                         'v_rest': V_leak,
                         'v_pi': mean(Py_monitor.v_pi,0),
@@ -524,8 +524,8 @@ def brunel(alpha_ii=0, u=1):
         # scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/lfp_%s.mat' %(i),
         #                  mdict = save_dictionary)
 
-        save_str = format('lfp_u%s_ii%s.png' %(u,i))
-        scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/lfp_u%s_ii%s.mat' %(i),
+        save_str = format('lfp_u%s_ii%s.png' %(u,alpha_ii))
+        scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/lfp_u%s_ii%s.mat' %(u,alpha_ii),
                           mdict = save_dictionary)        
         
     else:

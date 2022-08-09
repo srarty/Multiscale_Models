@@ -16,9 +16,7 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
         value2 = varargin{4};
     end
     
-	close all
-
-    N = 4000; % Number of samples: 1 sample = 1 milisecond
+    N = 2000; % Number of samples: 1 sample = 1 milisecond
     u = 0; %20; % 1.5;
 
     params = set_parameters('recursive', u);
@@ -157,7 +155,8 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     f_i = params.e0i * sigmoid_io(x(:,3) + x(:,7), params.v0, params.r);
     f_e = params.e0 * gompertz_io(x(:,1) + x(:,5) + x(:,9), params.gompertz.b, params.gompertz.c, params.gompertz.d);
     
-    if nargin == 0
+    if nargin == 0        
+        close all
         do_plot(x,t,y, f_e, f_i);
     end
 end
@@ -175,14 +174,14 @@ function dx = ode(t,x,params,dt)
     
     % Following lines are meant to change the input mid simulation, comment
     % them to run it with constant input.
-    if t >= 3000 * 1e-3
-        u = 5;
-    elseif t >= 2000 * 1e-3
-        u = 3;
-    elseif t >= 1000 * 1e-3
-        u = 1;
-    end
-    x(9) = u;
+%     if t >= 3000 * 1e-3
+%         u = 5;
+%     elseif t >= 2000 * 1e-3
+%         u = 3;
+%     elseif t >= 1000 * 1e-3
+%         u = 1;
+%     end
+%     x(9) = u;
     
     % Synaptic functions
     S1 = @(x) sigmoid_io(x, v0, r);

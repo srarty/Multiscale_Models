@@ -25,28 +25,33 @@ switch mode
         params.gompertz.d = 0.15; % 0.3292;
         
         % time constants
-        params.tau_se = 0.001227; % Rising tau Excitatory
-        params.tau_me = 0.008115; % Decay tau Pyramidal
-        params.tau_si = 0.004674; % Rising tau Inhibitory
-        params.tau_mi = 0.01638; % Decay tau Interneurons
-        params.tau_sre = 0.002221;% Rising tau recursive excitation
-        params.tau_mre = 0.01646; % Decay tau recursive excitation
-        params.tau_sri = 0.005021;% Rising tau recursive inhibition
-        params.tau_mri = 0.007698; % Decay tau recursive inhibition
-    
+        params.tau_me = 0.009738; % Decay tau Pyramidal ('a' in fit)
+        params.tau_se = 0.001472; % Rising tau Excitatory ('b' in fit)
+        
+        params.tau_mi = 0.01966; % Decay tau Interneurons
+        params.tau_si = 0.005608; % Rising tau Inhibitory
+        
+        params.tau_mre = 0.01975; % Decay tau recursive excitation
+        params.tau_sre = 0.002665;% Rising tau recursive excitation
+        
+        params.tau_mri = 0.00923; % Decay tau recursive inhibition
+        params.tau_sri = 0.006031;% Rising tau recursive inhibition
+        
+        % External input
         params.u = mu; %11;%220;%15;%11;1/0.0        % mean input mem potential
         
+        % Gains
         params.alpha_ie = -1.107; %Inhibitory gain into pyramidal (Interneuron -> Py)
         params.alpha_ei = 2.395; % Excitatory gain into interneuron (Py -> Interneuron) (bifurcation: alpha_ei > 392.6)
-        params.alpha_re = 0.8264;%5; % Recursive excitatory gain (bifuration: alpha_re > 4.7)
-        params.alpha_ri = -2.869; % Recursive inhibitory gain
+        params.alpha_re = 0.8264; % Recursive excitatory gain (bifuration: alpha_re > 4.7)
+        params.alpha_ri = -2.882; % Recursive inhibitory gain
         
         params.c_constant = 1000; % Connectivity constant
         
         params.P_pyTOin = 0.395; % Probability of connection between Py -> Interneuron
         params.P_inTOpy = 0.411; % Probability of connection between In -> Pyramidal
         params.P_pyTOpy = 0.16;  % Probability of connection between Py -> Pyramidal
-        params.P_inTOin = 0.045; % 0.125; % Probability of connection between In -> Interneuron
+        params.P_inTOin = 0.125; %0.125; % Probability of connection between In -> Interneuron
         
 
         params.dt = 0.001;     % sampling time step         
