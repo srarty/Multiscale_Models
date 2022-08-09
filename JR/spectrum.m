@@ -37,7 +37,8 @@ function varargout = spectrum(x, y, t, varargin)
 %     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_287.mat'; % u=15
 %     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_288.mat'; % u = [0 1 0 15];
 
-    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_u[15].mat';
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_u[15].mat';
+    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_298.mat';
 
     if nargin > 3, PLOT = varargin{1}; else, PLOT = true; end
     if nargin > 4, data_file = varargin{2}; end

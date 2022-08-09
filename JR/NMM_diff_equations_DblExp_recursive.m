@@ -16,15 +16,13 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
         value2 = varargin{4};
     end
     
-% 	close all
-
     N = 2000; % Number of samples: 1 sample = 1 milisecond
-    u = 1; %20; % 1.5;
+    u = 0; %20; % 1.5;
 
     params = set_parameters('recursive', u);
     
     % Options
-    params.options.ADD_NOISE = 1; % External input noise (0 = no noise, 1 = noise)
+    params.options.ADD_NOISE = 0; % External input noise (0 = no noise, 1 = noise)
     
     % Parse inputs --------------------------------------------------------
     switch option
@@ -157,7 +155,8 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     f_i = params.e0i * sigmoid_io(x(:,3) + x(:,7), params.v0, params.r);
     f_e = params.e0 * gompertz_io(x(:,1) + x(:,5) + x(:,9), params.gompertz.b, params.gompertz.c, params.gompertz.d);
     
-    if nargin == 0
+    if nargin == 0        
+        close all
         do_plot(x,t,y, f_e, f_i);
     end
 end
@@ -175,13 +174,14 @@ function dx = ode(t,x,params,dt)
     
     % Following lines are meant to change the input mid simulation, comment
     % them to run it with constant input.
-%     if t >= 505 * 1e-3
-%         u = 0;
-%     elseif t >= 500 * 1e-3
-%         u = 1;
+%     if t >= 3000 * 1e-3
+%         u = 5;
+%     elseif t >= 2000 * 1e-3
+%         u = 3;
 %     elseif t >= 1000 * 1e-3
-%         u = 0.2;
+%         u = 1;
 %     end
+%     x(9) = u;
     
     % Synaptic functions
     S1 = @(x) sigmoid_io(x, v0, r);
@@ -270,7 +270,7 @@ function dx = ode(t,x,params,dt)
     dx(7) = x(8) - x(7)/tau_mri;                       
     dx(8) = - x(8)/tau_sri + AmplitudeRI * S1(x(3) + x(7));    
     % Parameters:
-    dx(9) = -x(9) + u + (params.options.ADD_NOISE * (sqrt(u).*randn(1,1))); % Random number % 1.1; % <- steady increase of 1.1 spike/ms/cell/s
+    dx(9) = 0;%-x(9) + u + (params.options.ADD_NOISE * (sqrt(u).*randn(1,1))); % Random number % 1.1; % <- steady increase of 1.1 spike/ms/cell/s
     dx(10) = 0; % alpha_i
     dx(11) = 0; % alpha_e
     dx(12) = 0; % alpha_re
