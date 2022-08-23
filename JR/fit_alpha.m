@@ -3,27 +3,26 @@
 %
 % Artemio - February 2022
 
-load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_ipsp.mat'); psp = -ipsp; % Inhibitory (GABA) on pyramidal
-% load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_epsp.mat'); psp = epsp; % Excitatory (AMPA) on inhibitory interneurons
+% load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_ipsp.mat'); psp = -ipsp; % Inhibitory (GABA) on pyramidal
+load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_epsp.mat'); psp = epsp; % Excitatory (AMPA) on inhibitory interneurons
 % load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_epsp.mat'); psp = epsp; % Excitatory (AMPA) on pyramidal (recursive)
 % load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_ipsp.mat'); psp = -ipsp; % Inhibitory (GABA) on inhibitory interneurons (recursive)
+
+% load('C:\Users\artemios\Documents\Multiscale_Models_Data\taus_fit\inhibitory_ipsp_-8.2.mat'); psp = ipsp;
 
 % Adjuisting psp to remove the first sample, which is zero in Brian2
 psp(1) = [];
 
-T = linspace(0,0.25,length(psp));
+T = linspace(0,0.3,length(psp));
 
 
 % ft = fittype( 'b*t*exp(-t/a)', 'independent', 't', 'dependent', 'y' ); % Alpha function | a = tau_mn
 ft = fittype( 'c*(exp(-t/a)-exp(-t/b))', 'independent', 't', 'dependent', 'y');
 
 opts = fitoptions(ft);
-% opts.StartPoint = [0.02 1];
-% opts.Lower = [0.0001 0];     
-% opts.Upper = [0.1 10000];
 opts.StartPoint = [0.008339 0.01001 1];
-opts.Lower = [0.0001 0.0001 0];     
-opts.Upper = [0.1 0.2 5];    
+opts.Lower = [0.0001 0.0001 0];     % opts.Lower = [0.0001 0.006031 0]; 
+opts.Upper = [0.5 1 10];    % opts.Upper = [0.1 0.006031 10];    
 opts.Robust = 'Off';
 fitresult = fit(T', psp', ft, opts) % With options
 % fitresult = fit(T', psp', ft) % No options

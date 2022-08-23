@@ -11,10 +11,10 @@
 % range = [0.002:0.001:0.05]; % tau_m_e
 % range2 = [0.005:0.001:0.055]; % tau_m_i
 
-value = 'u'; %'e0';%'pII';
-range = [0:0.1:5]; % P[II] or P[PP]
-value2 = 'alpha_re';
-range2 = [0:0.1:5];%[0:0.5:5]; %[0:10]; % P[II] or P[PP]
+value = 'e0'; %'e0';%'pII';
+range = [10:5:100]; % P[II] or P[PP]
+value2 = 'e0i';
+range2 = 1*[10:5:100];%[0:0.5:5]; %[0:10]; % P[II] or P[PP]
 
 freqs = [];
 freqs_py = [];
@@ -75,32 +75,39 @@ catch
 end
 
 %% Plot spike rates mesh
-figure('Position', [325 404 1112 364]);
-subplot(1,2,1)
+if results.range2(end)<0, angle=[0 -90]; else, angle=[0 90]; end
 
-mesh(range, range2, freqs_py, 'FaceColor', 'flat', 'EdgeColor', 'black')
-xlabel(value);%('Input rate');
-ylabel(value2);
+figure('Position', [325 404 1112 364]);
+ax = subplot(1,2,1);
+
+mesh(results.range, results.range2, results.freqs_py, 'FaceColor', 'flat', 'EdgeColor', 'none')
+xlabel(results.value);%('Input rate');
+ylabel(results.value2);
 zlabel('Firing rate (Py)');
 c = colorbar;
+
 c.Label.String = 'Mean firing rate (Hz)';
 caxis([0 1.5]);
 c.Limits = [0 1.5];
 % zlim([0 1.5]);
 title('Pyramidal')
+%xlim([0 5])
+ax.View = (angle);
 
-subplot(1,2,2)
-mesh(range, range2, freqs_in, 'FaceColor', 'flat', 'EdgeColor', 'black')
-xlabel(value);%('Input rate');
-ylabel(value2);
+ax = subplot(1,2,2);
+mesh(results.range, results.range2, results.freqs_in, 'FaceColor', 'flat', 'EdgeColor', 'none')
+xlabel(results.value);%('Input rate');
+ylabel(results.value2);
 zlabel('Firing rate (In)');
 title('Inhibitory');
 colormap jet
 c = colorbar;
 c.Label.String = 'Mean firing rate (Hz)';
-caxis([0 1.5]);
-c.Limits = [0 1.5];
+caxis([0 3.5]);
+c.Limits = [0 3.5];
 % zlim([0 1.5]);
+% xlim([0 5])
+ax.View = (angle);
 %%
 pause(0.1);
 %{

@@ -51,17 +51,4 @@ function out = non_linear_sigmoid(x, r, v0, varargin)
         end
     end
     out = 0.5*erf(input) + 0.5;
-    
-% %% Double exponential sigmoid 2^-2^-x
-%     if (nargin > 3) && ~isempty(varargin{1})
-%         sigma = varargin{1}; % The optional input is the diagonal of the covariance matrix, i.e. variance vector
-%         if numel(sigma) > 1
-%             sigma = reshape(sigma, [size(x,1) 1]); % If sigma has more than 1 element, shape it the same as x
-%         end
-%         r_ = r + sigma;
-%     else
-%         r_ = r; 
-%     end
-%     out = 2.^-(r_.^-(x-v0)); 
-
 end
