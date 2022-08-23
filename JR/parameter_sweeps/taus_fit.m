@@ -9,7 +9,7 @@
 % Artemio - August 2022
 
 PRE = 'i'; % PRE = {'i', 'e'} % 'i'=inhibitory, 'e'=excitatory
-POST = 'i'; % POST = {'i', 'p'} % 'i'=interneuron, 'p'=pyramidal 
+POST = 'p'; % POST = {'i', 'p'} % 'i'=interneuron, 'p'=pyramidal 
 
 root = 'C:\Users\artemios\Documents\Multiscale_Models_Data\taus_fit\';
 d = dir([root POST '*_' PRE '*.mat']);
@@ -92,7 +92,7 @@ gf = gf(idx);
 ft = fittype( 'm*x + b', 'independent', 'x', 'dependent', 'y');
 L = length(j);
 if negative_gain
-    fit_range = 1:L;
+    fit_range = 2:L;
 else
     fit_range = 1:L-1;
 end

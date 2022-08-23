@@ -4,13 +4,18 @@
 % Artemio - August 2021
 
 clear
+close all
+
+POPULATION = "Py"; % 'Py' or 'In'
 
 %% NMM sigmoid
-params = set_parameters('allen');       % Chose params.u from a constant value in set_params
+params = set_parameters('recursive');       % Chose params.u from a constant value in set_params
+if strcmp(POPULATION, 'Py'), max_firing_rate = params.e0; elseif strcmp(POPULATION, 'In'), max_firing_rate = params.e0i; else, error('Wrong POPULATION'); end
+    
 x = -20:0.1:50;
 nonlinearity = nan(size(x));
 for i = 1:numel(x)
-    nonlinearity(i) = params.e0 * non_linear_sigmoid(x(i), params.r, params.v0);
+    nonlinearity(i) = max_firing_rate * non_linear_sigmoid(x(i), params.r, params.v0);
 end
 figure
 plot(x,nonlinearity, 'LineWidth', 2);
@@ -19,8 +24,8 @@ grid on
 ylabel('Output');
 xlabel('Input');
 hold;
-plot([min(x) max(x)],[params.e0*0.5 params.e0*0.5],'--k');
-plot([params.v0 params.v0], [0 params.e0*1],'--k');
+plot([min(x) max(x)],[max_firing_rate*0.5 max_firing_rate*0.5],'--k');
+plot([params.v0 params.v0], [0 max_firing_rate*1],'--k');
 xlabel('Membrane potential (mV)');
 ylabel('Spike rate');
 
@@ -33,12 +38,10 @@ ylabel('Spike rate');
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\nonlinearity\';
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\nonlinearity background activity (external input for baseline)\';
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\nonlinearity\tau_e_13ms\';
-folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\nonlinearity\double_exp\';
+folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\nonlinearity\double_exp_v2\';
 
 d = dir([folder '*.mat']);
 no_files = numel(d);
-
-input_rate = 0.1:0.1:5;
 
 membrane_potentials = zeros(1, no_files);
 pyramidal_rates = zeros(1, no_files);
@@ -47,10 +50,15 @@ for ii = 1:no_files
     data_file = [folder d(ii).name];    
     load(data_file);
     
-%     membrane_potentials(ii) = 1000*Vm;
-%     pyramidal_rates(ii) = mean(R_py);
-    membrane_potentials(ii) = 1000*Vm_interneurons;
-    pyramidal_rates(ii) = mean(R_in); %/params.e0;
+    if strcmp(POPULATION, 'Py')
+        membrane_potentials(ii) = 1000*Vm;
+        pyramidal_rates(ii) = mean(R_py);
+    elseif strcmp(POPULATION, 'In')
+        membrane_potentials(ii) = 1000*Vm_interneurons;
+        pyramidal_rates(ii) = mean(R_in); %/max_firing_rate;
+    else
+        error('Wrong POPULATION');
+    end
 end
 
 % % Append zeros in the beginning for a better fit
@@ -65,49 +73,60 @@ pyramidal_rates(isnan(pyramidal_rates)) = 0;
 % pyramidal_rates(1:19) = 0;
 %%
 fig = figure;
-yyaxis left
+% yyaxis left
 scatter(membrane_potentials, pyramidal_rates, 5, 'filled');
 xlabel('Membrane potential (mV)');
 ylabel('Pyramidal firing rate');
 
 %% Fit
-ft = fittype( '(0.5*erf((x - a) / (sqrt(2) * b)) + 0.5)', 'independent', 'x', 'dependent', 'y' ); % Error function | a = v0 | b = r
-% ft = fittype( '2.^-(a.^-(x-b))', 'independent', 'x', 'dependent', 'y' );                          % Double exponential sigmoid
-% ft = fittype( 'a*exp(-b*exp(-d*(x-c)))', 'independent', 'x', 'dependent', 'y' );                  % Gompertz sigmoid
-% ft = fittype( 'c/(1+exp(-a*(x-b)))+d', 'independent', 'x', 'dependent','y' );                     % sigmoid
-
-opts = fitoptions(ft);
-% Gompertz (Py)
-% opts.StartPoint =  [1 1 1 0];
-% opts.Lower =   [1 3 1 0.15];
-% opts.Upper =  [1 100 100 0.15];
-
-% Error (In)
-opts.StartPoint =  [10 5];
-opts.Lower =   [15 8];
-opts.Upper =  [15 8];
+if strcmp(POPULATION, 'In')
+    % ft = fittype( '2.^-(a.^-(x-b))', 'independent', 'x', 'dependent', 'y' );                          % Double exponential sigmoid
+    % ft = fittype( 'c/(1+exp(-a*(x-b)))+d', 'independent', 'x', 'dependent','y' );                     % sigmoid
+    ft = fittype( '(0.5*erf((x - a) / (sqrt(2) * b)) + 0.5)', 'independent', 'x', 'dependent', 'y' ); % Error function | a = v0 | b = r
+    
+    % Error (In)
+    opts = fitoptions(ft);
+    opts.StartPoint =  [10 5];
+    opts.Lower =   [15 8];
+    opts.Upper =  [15 8];    
+        
+elseif strcmp(POPULATION, 'Py')
+    ft = fittype( 'a*exp(-b*exp(-d*(x-c)))', 'independent', 'x', 'dependent', 'y' );                  % Gompertz sigmoid
+    
+    % Gompertz (Py)
+    opts = fitoptions(ft);
+    opts.StartPoint =  [1 1 1 0];
+    opts.Lower =  [1 3 1 0.15];
+    opts.Upper =  [1 100 100 0.15];
+    
+else
+    error('Wrong POPULATION');
+end
 
 fitresult_Py = fit(membrane_potentials', pyramidal_rates', ft, opts) % With options
 % fitresult_Py = fit(membrane_potentials', pyramidal_rates', ft) % No options
+    
+% Define nonlinear function according to population
+if strcmp(POPULATION, 'In')
+    f_nonlinearity = @(x) non_linear_sigmoid(x, fitresult_Py.b, fitresult_Py.a);
+elseif strcmp(POPULATION, 'Py')
+    params.gompertz.a = fitresult_Py.a;
+    params.gompertz.b = fitresult_Py.b;
+    params.gompertz.c = fitresult_Py.c;
+    params.gompertz.d = fitresult_Py.d;
+    
+    f_nonlinearity = @(x) gompertz(x, params);
+end
 
-
+%%
 figure(fig);
 yyaxis right
 hold
-plot(fitresult_Py);
-ylim([0 1])
-xlabel('Membrane potential (mV)');
-ylabel('Pyramidal firing rate (spikes/s)');
+nonlinearity_post = nan(size(x));
+for i = 1:numel(x)
+    nonlinearity_post(i) = f_nonlinearity(x(i));
+end
+plot(x, max_firing_rate * nonlinearity_post);xlabel('Membrane potential (mV)');
+ylabel('Firing rate (spikes/s)');
 yyaxis left
-% ylim([0 1]);
-% ylim([0 250]);
-% ylim([0 params.e0]);
-
-% %% Plot firing rates of both populations
-% figure
-% scatter(input_rate(1:length(pyramidal_rates)-1), pyramidal_rates(2:end),5,'filled');
-% hold
-% scatter(input_rate(1:length(inhibitory_rates)-1), inhibitory_rates(2:end), 5, 'r','filled');
-% xlabel('External input (spikes/ms)/cell')
-% ylabel('Spike rate (spikes/s)')
-% legend({'Pyramidal', 'Inhibitory'})
+ylim([0 max_firing_rate]);

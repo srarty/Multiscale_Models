@@ -52,7 +52,7 @@ else
 %     data_file = 'C:/Users/artemios/Documents/GitHub2/mycroeeg/simulations/lfp_last.mat';
 %     data_file = 'C:/Users/artemios/Documents/GitHub2/mycroeeg/simulations/CUBN/lfp_last.mat';
 %     data_file = 'C:/Users/artemios/Documents/GitHub2/mycroeeg/simulations/CUBN/oscillations 2 seconds N_500.mat';
-    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_last.mat';
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_last.mat';
 
 end
 
