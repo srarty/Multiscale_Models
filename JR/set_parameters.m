@@ -14,16 +14,21 @@ end
 
 switch mode
     case 'recursive'
-        params.e0 =  120;%30;%10;%30; %15; % max firing rate
-        params.e0i = 250;%35;%40;%35; % max firing rate
+        params.e0 =  10;% 10; %120;%30;%10;%30; %15; % max firing rate
+        params.e0i = 40;% 30; %250;%35;%40;%35; % max firing rate
         
         params.v0 = 15; % Firing Threshold (a)
         params.r = 8; % Sigmoid slope (b)
         
         params.gompertz.a = 1;
-        params.gompertz.b = 3;
-        params.gompertz.c = 1;
-        params.gompertz.d = 0.15;
+        params.gompertz.b = 3.5;%3;
+        params.gompertz.c = 0.8;%1;
+        params.gompertz.d = 0.1;%0.15;
+        
+        params.gompertzi.a = 1;
+        params.gompertzi.b = 3.5;%3;
+        params.gompertzi.c = 0.5;%1;
+        params.gompertzi.d = 0.125;%0.15;
         
         % time constants
         params.tau_me = 0.009738; % Decay tau Pyramidal ('b' in fit)
@@ -50,9 +55,9 @@ switch mode
         params.c_constant = 1000; % Connectivity constant
         
         params.P_pyTOin = 0.395; %0.1975;%0.395; % Probability of connection between Py -> Interneuron
-        params.P_inTOpy = 0.411; % Probability of connection between In -> Pyramidal
+        params.P_inTOpy = 0.411;%0.411; % Probability of connection between In -> Pyramidal
         params.P_pyTOpy = 0.16; %0.16;  % Probability of connection between Py -> Pyramidal
-        params.P_inTOin = 0.125;%0.451;%0.451; %0.250; %0.451; % Probability of connection between In -> Interneuron
+        params.P_inTOin = 0.451;%0.451;%0.451; %0.250; %0.451; % Probability of connection between In -> Interneuron
         
 
         params.dt = 0.001;     % sampling time step         

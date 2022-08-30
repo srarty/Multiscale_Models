@@ -245,15 +245,18 @@ def brunel(corriente=0):
     C_I_P.connect(p = p_IP)    
     C_I_P.active = ACTIVE_INTERNEURONS
         
-    # external input
-    # Poisson input (Cortico-cortical)
-    C_Cor_P = PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate*1000/num_inputs) * Hz, increment_AMPA_ext_P)
-    C_Cor_I = PoissonInput(In_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate*1000/num_inputs) * Hz, increment_AMPA_ext_I)
+    # External inputs
+    input1 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate * 1000/num_inputs) * Hz, increment_AMPA_ext_P)
+
+    # Poisson input (Cortico-cortical) input to inhibitory interneurons. Controlled by INHIBIT_INPUT
+    C_Cor_I = PoissonInput(In_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate * 1000/num_inputs) * Hz, increment_AMPA_ext_I)
     C_Cor_I.active = INHIBIT_INPUT # Innactive cortico-cortical -> interneuron
+    
     # Poisson input (Thalamic, baseline spike rate)
-    C_Tha_P = PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_P)
+    C_Tha_P = PoissonInput(Py_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_P)
     C_Tha_I = PoissonInput(In_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_I)
     
+
     # Poisson population
     # C_Cor_P = Synapses(Pop_Cor, Py_Pop, model=eqs_cor_P, on_pre=eqs_pre_cor_P, method='rk4', dt=dt_, delay=delay, name='synapses_pext')
     # C_Cor_P.connect(p = 1)    
@@ -539,16 +542,10 @@ def brunel(corriente=0):
 
 
 # Run iteratively. Need to uncomment the def line at the start of the file.
-# a = np.arange(500, 501, 0.1)
-# b = np.arange(501, 510, 1)
-# c = np.arange(510, 700, 10)
-# d = np.arange(0, 1000, 100)
-# e = np.arange(350, 500, 10)
-# f = np.arange(400, 401, 0.1)
-# ranges = np.concatenate((c,d,e))
-ranges = np.arange(-200, 610, 10)
-# ranges = np.concatenate((a,f))
-# ranges = np.arange(-15, 16, 15)
+a = np.arange(500.5, 510, 0.5)
+b = np.arange(-200, 610, 10)
+ranges = np.concatenate((a,b))
+# ranges = np.arange(-200, 610, 10)
 for iterations in ranges:
     brunel(corriente = iterations)
 
