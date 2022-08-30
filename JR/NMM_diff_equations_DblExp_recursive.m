@@ -1,7 +1,7 @@
 % Same as NMM_diff_equations_DblExp.m but with recursive connections in the
 % Pyramidal and Ihibitory populations.
 %
-% Alex's: pubmed.ncbi.nlm.nih.gov/17628690/
+% Spike train synchrony (Alex): pubmed.ncbi.nlm.nih.gov/17628690/
 %
 % Machine learning to find ideal parameters for NMM taht match the LIF.
 % Having one NMM for each different LIF.
@@ -51,24 +51,24 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     alpha_re = params.alpha_re; 
     alpha_ri = params.alpha_ri; 
 
-% %     Equilibrium point (calculated with matcont, u=0)
-%     eq =   [-3.23168169898182;
-%             -197.294592134328;
-%             0.466141540947026;
-%             57.4505344246254;
-%             0.119624560623965;
-%             7.26758948851708;
-%             -0.766353825579389;
-%             -99.5524432048123;];
+%     Equilibrium point (calculated with matcont, u=0)
+    eq =   [-0.1156;
+            -5.8791;
+            0.0713;
+            7.3161;
+            0.0366;
+            1.8515;
+            -0.1667;
+            -18.0624;];
         
-    eq =[0;
-         0;
-         0;
-         0;
-         0;
-         0;
-         0;
-         0;];
+%     eq =[0;
+%          0;
+%          0;
+%          0;
+%          0;
+%          0;
+%          0;
+%          0;];
         
     x0 =[eq(1);
         eq(2);
@@ -94,8 +94,8 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     end
     
     % Calculate firing rate
-    f_i = params.e0i * sigmoid_io(x(:,3) + x(:,7), params.v0, params.r);
-    f_e = params.e0 * gompertz_io(x(:,1) + x(:,5) + x(:,9), params.gompertz.b, params.gompertz.c, params.gompertz.d);
+    f_i = params.e0i * sigmoid_io(x(:,3) + x(:,7), params.v0, params.r); % gompertz_io(x(:,3) + x(:,7),params.gompertzi.b, params.gompertzi.c, params.gompertzi.d); % 
+    f_e = params.e0 * gompertz_io(x(:,1) + x(:,5) + x(:,9), params.gompertz.b, params.gompertz.c, params.gompertz.d); % sigmoid_io(x(:,1) + x(:,5) + x(:,9), params.v0, params.r); % 
     
     if nargin == 0        
         close all
@@ -107,6 +107,10 @@ function dx = ode(t,x,params,dt)
     b = params.gompertz.b;
     c = params.gompertz.c;
     d = params.gompertz.d;
+    
+    ib = params.gompertzi.b;
+    ic = params.gompertzi.c;
+    id = params.gompertzi.d;
     
     v0 = params.v0;
     r = params.r;
@@ -128,11 +132,11 @@ function dx = ode(t,x,params,dt)
     end
     
     % Synaptic functions
-    S1 = @(x) sigmoid_io(x, v0, r);
-    S2 = @(x) sigmoid_io(x, v0, r);%gompertz_io(x, b, c, d);   
-    Tau_coeff = @(m, s) 1/(m+s); % 1/(m+s)
+    S1 = @(x) sigmoid_io(x, v0, r); % gompertz_io(x,ib, ic ,id);% 
+    S2 = @(x) gompertz_io(x, b, c, d);  % sigmoid_io(x, v0, r); % 
+    Tau_coeff = @(m, s) 1/(m*s);%m/(m-s);%m/(m-s); % 1/(m+s)
     
-    c_constant = 2000;%params.c_constant; %1000;
+    c_constant = 1000;%params.c_constant; %1000;
     c1 = 4 * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
     c2 = 1 * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
     c3 = 4 * c_constant * params.P_pyTOpy;
@@ -163,16 +167,16 @@ function dx = ode(t,x,params,dt)
     % TODO: Check the coefficients of the convolution, specifically 1/(tau_m+tau_s)
     % I->P
     dx(1) = x(2) - x(1)/tau_mi;
-    dx(2) = - x(2)/tau_si + AmplitudeI * S1(x(3) + x(7));
+    dx(2) = - x(2)/tau_si + AmplitudeI/c2 * S1(x(3) + x(7));
     % P->I
     dx(3) = x(4) - x(3)/tau_me;
-    dx(4) = - x(4)/tau_se + AmplitudeE * S2(x(1) + x(5) + x(9));
+    dx(4) = - x(4)/tau_se + AmplitudeE/c1 * S2(x(1) + x(5) + x(9));
     % Recurrent Pyramidal P->P
     dx(5) = x(6) - x(5)/tau_mre;
-    dx(6) = - x(6)/tau_sre + AmplitudeRE * S2(x(1) + x(5) + x(9));
+    dx(6) = - x(6)/tau_sre + AmplitudeRE/c3 * S2(x(1) + x(5) + x(9));
     % Recurrent Inhibition I->I
     dx(7) = x(8) - x(7)/tau_mri;                       
-    dx(8) = - x(8)/tau_sri + AmplitudeRI * S1(x(3) + x(7));    
+    dx(8) = - x(8)/tau_sri + AmplitudeRI/c4 * S1(x(3) + x(7));    
     % Parameters:
     dx(9) = 0;%-x(9) + u + (params.options.ADD_NOISE * (sqrt(u).*randn(1,1))); % Random number % 1.1; % <- steady increase of 1.1 spike/ms/cell/s
     dx(10) = 0; % alpha_i

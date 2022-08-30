@@ -6,11 +6,17 @@
 clear
 close all
 
-POPULATION = "Py"; % 'Py' or 'In'
+
+%% Options ----------------------------------------------------------------
+
+POPULATION = 'Py'; % 'Py' or 'In'
+
+% -------------------------------------------------------------------------
 
 %% NMM sigmoid
 params = set_parameters('recursive');       % Chose params.u from a constant value in set_params
-if strcmp(POPULATION, 'Py'), max_firing_rate = params.e0; elseif strcmp(POPULATION, 'In'), max_firing_rate = params.e0i; else, error('Wrong POPULATION'); end
+% if strcmp(POPULATION, 'Py'), max_firing_rate = params.e0; elseif strcmp(POPULATION, 'In'), max_firing_rate = params.e0i; else, error('Wrong POPULATION'); end
+if strcmp(POPULATION, 'Py'), max_firing_rate = 120; elseif strcmp(POPULATION, 'In'), max_firing_rate = 250; else, error('Wrong POPULATION'); end
     
 x = -20:0.1:50;
 nonlinearity = nan(size(x));
@@ -38,6 +44,7 @@ ylabel('Spike rate');
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\nonlinearity\';
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\nonlinearity background activity (external input for baseline)\';
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\nonlinearity\tau_e_13ms\';
+% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\nonlinearity\double_exp\';
 folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\nonlinearity\double_exp_v2\';
 
 d = dir([folder '*.mat']);
@@ -53,24 +60,25 @@ for ii = 1:no_files
     if strcmp(POPULATION, 'Py')
         membrane_potentials(ii) = 1000*Vm;
         pyramidal_rates(ii) = mean(R_py);
+        
     elseif strcmp(POPULATION, 'In')
         membrane_potentials(ii) = 1000*Vm_interneurons;
         pyramidal_rates(ii) = mean(R_in); %/max_firing_rate;
+        
     else
         error('Wrong POPULATION');
+        
     end
 end
-
-% % Append zeros in the beginning for a better fit
-% membrane_potentials = [0 0 membrane_potentials 40 50];
-% pyramidal_rates = [0 0 pyramidal_rates 70 70];
+% % Uncomment the following two lines to fit the Inhibitory population to a
+% % gompertz function instead of an sigmoid error function
+POPULATION = 'Py';
+warning('Changin to Py');
 
 % When there's no spike, R_py is NaN. Fix it:
 pyramidal_rates(isnan(pyramidal_rates)) = 0;
+% pyramidal_rates(pyramidal_rates > max_firing_rate) = max_firing_rate;
 
-
-% warning('remove next line, it''s dodgy');
-% pyramidal_rates(1:19) = 0;
 %%
 fig = figure;
 % yyaxis left
@@ -87,17 +95,23 @@ if strcmp(POPULATION, 'In')
     % Error (In)
     opts = fitoptions(ft);
     opts.StartPoint =  [10 5];
-    opts.Lower =   [15 8];
-    opts.Upper =  [15 8];    
+    opts.Lower =   [16 10];
+    opts.Upper =  [16 10];    
         
 elseif strcmp(POPULATION, 'Py')
     ft = fittype( 'a*exp(-b*exp(-d*(x-c)))', 'independent', 'x', 'dependent', 'y' );                  % Gompertz sigmoid
     
-    % Gompertz (Py)
+%     % Gompertz (Py)
     opts = fitoptions(ft);
     opts.StartPoint =  [1 1 1 0];
-    opts.Lower =  [1 3 1 0.15];
-    opts.Upper =  [1 100 100 0.15];
+    opts.Lower =  [1 3.5 0.5 0.01];%[1 3 1 0.15];
+    opts.Upper =  [1 100 100 0.125];%[1 100 100 0.15];
+
+    % Gompertz (In)
+%     opts = fitoptions(ft);
+%     opts.StartPoint =  [1 1 1 0];
+%     opts.Lower =  [1 3.5 0.8 0.1];%[1 3 1 0.15];
+%     opts.Upper =  [1 100 100 0.1];%[1 100 100 0.15];
     
 else
     error('Wrong POPULATION');
