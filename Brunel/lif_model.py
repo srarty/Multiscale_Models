@@ -14,7 +14,7 @@ References:
         interactions between current-based and conductance-based integrate-and-
         fire recurrent networks.
 """
-# TESTESTESTSETESTSETSET
+# AAA
 from brian2 import *
 
 def set_params(type='pyramidal', source='brunel'):
