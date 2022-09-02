@@ -3,38 +3,49 @@
 %
 % Artemio - February 2022
 
-load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_ipsp.mat'); psp = ipsp; % Onhibitory (GABA) on pyramidal
+% load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_ipsp.mat'); psp = -ipsp; % Inhibitory (GABA) on pyramidal
 % load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_epsp.mat'); psp = epsp; % Excitatory (AMPA) on inhibitory interneurons
-T = linspace(0,0.25,length(psp));
+% load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_epsp.mat'); psp = epsp; % Excitatory (AMPA) on pyramidal (recursive)
+% load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_ipsp.mat'); psp = -ipsp; % Inhibitory (GABA) on inhibitory interneurons (recursive)
+load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_externalEPSP.mat'); psp = epsp; % Excitatory (AMPA_ext) on pyramidal (external input)
+
+% load('C:\Users\artemios\Documents\Multiscale_Models_Data\taus_fit\inhibitory_ipsp_-8.2.mat'); psp = ipsp;
+
+% Adjuisting psp to remove the first sample, which is zero in Brian2
+psp(1) = [];
+
+T = linspace(0,0.3,length(psp));
 
 
-ft = fittype( 'b*t*exp(-t/a)', 'independent', 't', 'dependent', 'y' ); % Alpha function | a = tau_mn
+% ft = fittype( 'b*t*exp(-t/a)', 'independent', 't', 'dependent', 'y' ); % Alpha function | a = tau_mn
+ft = fittype( 'c*(exp(-t/a)-exp(-t/b))', 'independent', 't', 'dependent', 'y');
 
 opts = fitoptions(ft);
-opts.StartPoint = [0.02 1];
-opts.Lower = [0.001 -1000];     
-opts.Upper = [0.1 1000];    
-% fitresult = fit(T', psp', ft, opts) % With options
-fitresult = fit(T', psp', ft) % No options
+opts.StartPoint = [0.008339 0.01001 1];
+opts.Lower = [0.0001 0.0001 0];     % opts.Lower = [0.0001 0.006031 0]; 
+opts.Upper = [0.5 1 10];    % opts.Upper = [0.1 0.006031 10];    
+opts.Robust = 'Off';
+fitresult = fit(T', psp', ft, opts) % With options
+% fitresult = fit(T', psp', ft) % No options
 
 figure
 plot(fitresult)
 hold
-plot(T,psp)
+plot(T,psp,'b--')
 legend({'fit' 'brunel'})
 
-%%
-alpha = fitresult.b;
-tau =  fitresult.a;
-
-fun = @(t) alpha * t * exp(-t/tau);
-output = zeros(size(T));
-for i = 1:length(T)
-    output(i) = fun(T(i));
-end
-
-figure
-plot(T, psp);
-hold
-plot(T, output);
-legend({'brunel', 'nmm'});
+% %%
+% alpha = fitresult.b; % 277; %
+% tau = fitresult.a; % 0.01452; %
+% 
+% fun = @(t) alpha * t * exp(-t/tau);
+% output = zeros(size(T));
+% for i = 1:length(T)
+%     output(i) = fun(T(i));
+% end
+% 
+% figure
+% plot(T, psp);
+% hold
+% plot(T, output);
+% legend({'brunel', 'nmm'});

@@ -19,7 +19,7 @@ devices.device.size = []
 #%% load data -----------------------------------------------------------------
 # folder = "C://Users/artemios/Documents/Multiscale_Models_Data/"
 folder = "C://Users/artemios/Documents/Multiscale_Models_Data/Spartan/"
-file = "lfp_28.mat"
+file = "lfp_267.mat"
 
 data = scipy.io.loadmat(folder + file)
 
@@ -71,7 +71,7 @@ axs[1].spines["top"].set_visible(False)
 axs[1].spines["right"].set_visible(False)   
     
 axs[1].plot(T * 1000, transpose(r_P_rate) / Hz, label='Pyramidal', c=c_py)
-axs[1].plot(T * 1000, transpose(r_E_rate) / Hz, label='Excitatory', c=c_ex)
+# axs[1].plot(T * 1000, transpose(r_E_rate) / Hz, label='Excitatory', c=c_ex)
 axs[1].plot(T * 1000, transpose(r_I_rate) / Hz, label='Interneuron', c=c_inter)
 # axs[1].plot(r_Cor.t / ms, r_Cor_rate / Hz, label='Cortico-cortical (OU)', c=c_Cor)
 # axs[1].plot(T_u / ms, u / Hz)
