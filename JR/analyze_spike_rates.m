@@ -5,7 +5,7 @@
 %
 % Artemio - July 2022
 
-close all;
+% close all;
 
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_279.mat'; % u=[0, 0.2, 0, 0.4]
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_280.mat'; % u=0.1
@@ -18,7 +18,7 @@ close all;
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_288.mat'; % u=[0, 1, 0, 15], non-smooth
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_289.mat'; 
 
-data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_299.mat'; 
+data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_303.mat'; 
 
 load(data_file);
 tt = lfp_dt:lfp_dt:lfp_dt*length(v_ip);

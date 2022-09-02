@@ -76,8 +76,8 @@ def set_params(type='pyramidal', source='brunel'):
             tau_l = 1 * ms # Latency
     
             # Synaptic efficacies
-            j_GABA  =  74 * pA # NMM(5.01) = LIF(335*pA)
-            j_AMPA  = -147 * pA # NMM(5.003) = LIF(-890*pA)
+            j_GABA  = 37 * pA # 74 * pA # NMM(5.01) = LIF(335*pA)
+            j_AMPA  = -73.5 * pA #-147 * pA # NMM(5.003) = LIF(-890*pA)
             j_AMPA_ext = -1.375 * pA
             j_AMPA_tha = -13.75 * pA
             
@@ -140,8 +140,8 @@ def set_params(type='pyramidal', source='brunel'):
             tau_l = 1 * ms # Latency
     
             # Synaptic efficacies
-            j_GABA  = 35.1 * pA # Default = 35.1*pA # NMM(5.008) = LIF(61*pA)
-            j_AMPA  = -330 * pA # Default = -330*pA # NMM(5.009) = LIF(-690*pA)
+            j_GABA  = 17.55 * pA # 35.1 * pA # Default = 35.1*pA # NMM(5.008) = LIF(61*pA)
+            j_AMPA  = -165 * pA # -330 * pA # Default = -330*pA # NMM(5.009) = LIF(-690*pA)
             j_AMPA_ext = -19 * pA
             j_AMPA_tha = -19 * pA
             

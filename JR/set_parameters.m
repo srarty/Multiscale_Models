@@ -14,44 +14,54 @@ end
 
 switch mode
     case 'recursive'
-        params.e0 =  15;%20;%30; % max firing rate
-        params.e0i = 35;%55;%30; % max firing rate
-        params.r = 8; %11;%1;   % Sigmoid slope
-        params.v0 = 15; %15;%21; % Firing Threshold
+        params.e0 =  1.5;%120;% 10; %120;%30;%10;%30; %15; % max firing rate
+        params.e0i = 20;%250;% 30; %250;%35;%40;%35; % max firing rate
         
-        params.gompertz.a = 1; % 70;
-        params.gompertz.b = 3; % 14;
-        params.gompertz.c = 1; % 14.49;
-        params.gompertz.d = 0.15; % 0.3292;
+        params.v0 = 19.72; % Firing Threshold (a)
+        params.r = 34.34; % Sigmoid slope (b)
+        
+        params.v0_p = 16; %15; % Firing Threshold (a)
+        params.r_p = 10; %8; % Sigmoid slope (b)
+        
+        params.gompertz.a = 1;
+        params.gompertz.b = 3.824;
+        params.gompertz.c = -9.142;
+        params.gompertz.d = 0.03179;
+        
+        params.gompertzi.a = 1;
+        params.gompertzi.b = 4;%3;
+        params.gompertzi.c = 0.2;%1;
+        params.gompertzi.d = 0.15;%0.15;
         
         % time constants
-        params.tau_me = 0.009738; % Decay tau Pyramidal ('a' in fit)
-        params.tau_se = 0.001472; % Rising tau Excitatory ('b' in fit)
+        params.tau_mp = 0.009738; % Membrane time constant - Pyramidal (decay)
+        params.tau_sp = 0.001472; % Synaptic time constant - AMPA on Py (rising)
         
-        params.tau_mi = 0.01966; % Decay tau Interneurons
+        params.tau_mi = 0.01966;  % Decay tau Interneurons
         params.tau_si = 0.005608; % Rising tau Inhibitory
         
-        params.tau_mre = 0.01975; % Decay tau recursive excitation
-        params.tau_sre = 0.002665;% Rising tau recursive excitation
+        params.tau_mrp = 0.01975;  % Decay tau recursive excitation
+        params.tau_srp = 0.002665; % Rising tau recursive excitation
         
-        params.tau_mri = 0.00923; % Decay tau recursive inhibition
-        params.tau_sri = 0.006031;% Rising tau recursive inhibition
+        params.tau_mri = 0.009229; % Decay tau recursive inhibition
+        params.tau_sri = 0.006031; % Rising tau recursive inhibition
         
         % External input
         params.u = mu; %11;%220;%15;%11;1/0.0        % mean input mem potential
         
         % Gains
-        params.alpha_ie = -1.107; %Inhibitory gain into pyramidal (Interneuron -> Py)
-        params.alpha_ei = 2.395; % Excitatory gain into interneuron (Py -> Interneuron) (bifurcation: alpha_ei > 392.6)
-        params.alpha_re = 0.8264; % Recursive excitatory gain (bifuration: alpha_re > 4.7)
-        params.alpha_ri = -2.882; % Recursive inhibitory gain
+        params.alpha_ie = -0.5533; %Inhibitory gain into pyramidal (Interneuron -> Py)
+        params.alpha_ei = 1.1975; % Excitatory gain into interneuron (Py -> Interneuron) (bifurcation: alpha_ei > 392.6)
+        params.alpha_re = 0.4132; % Recursive excitatory gain (bifuration: alpha_re > 4.7)
+        params.alpha_ri = -1.441; % Recursive inhibitory gain
+        params.alpha_u = 0.06338; % External excitatory gain into pyramidal (U -> Py)
         
         params.c_constant = 1000; % Connectivity constant
         
-        params.P_pyTOin = 0.395; % Probability of connection between Py -> Interneuron
-        params.P_inTOpy = 0.411; % Probability of connection between In -> Pyramidal
-        params.P_pyTOpy = 0.16;  % Probability of connection between Py -> Pyramidal
-        params.P_inTOin = 0.125; %0.125; % Probability of connection between In -> Interneuron
+        params.P_pyTOin = 0.395; %0.1975;%0.395; % Probability of connection between Py -> Interneuron
+        params.P_inTOpy = 0.411;%0.411; % Probability of connection between In -> Pyramidal
+        params.P_pyTOpy = 0.16; %0.16;  % Probability of connection between Py -> Pyramidal
+        params.P_inTOin = 0.451;%0.451;%0.451; %0.250; %0.451; % Probability of connection between In -> Interneuron
         
 
         params.dt = 0.001;     % sampling time step         

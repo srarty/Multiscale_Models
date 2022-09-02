@@ -27,6 +27,7 @@ def brunel(corriente=0):
     INHIBIT_INPUT = True            # Excitatory cortical input to inhibitory population
     ACTIVE_INTERNEURONS = False      # Inhibitory population
     ACTIVE_SPINY = False            # Spiny Stellate population
+    PARAMS_SOURCE = 'allen'        # 'brunel' or 'allen'
     SAVE = True                     # Save ground truth data
     PLOT = False                     # Plot results (main Figure)
     PLOT_EXTRA = False              # Plot extra things.
@@ -54,123 +55,95 @@ def brunel(corriente=0):
     N_E = 1#int(N)    # excitatory neurons (spiny stellate) 
     N_I = 1#int(N)    # interneurons
     
+    # set populations parameters
+    params_py = set_params('pyramidal', PARAMS_SOURCE)
+    params_in = set_params('inhibitory', PARAMS_SOURCE)
+    
     # Probability of connection
-    p_IP =  0.411  # * 1000/N #0.2 #* 100/N # Inhibitory to Pyramidal
-    p_PI =  0.395  #  * 500/N #0.2 #* 100/N # Pyramidal to Inhibitory
-    p_PE =  0.2 #  * 500/N  #0.2 #* 100/N # Pyramidal to Excitatory
-    p_EP =  0.2 #  * 500/N #0.2 #* 100/N # Excitatory to Pyramidal
-    p_PP =  0.16 #  * 500/N  #0.2 #* 100/N # recurrent excitation (pyramidal) # Generally less than PI, IP connectivity (Bryson et al., 2021)
-    p_II =  0.451 #  * 500/N  #0.2 #* 100/N # recurrent inhibition
+    p_IP = params_py.get('p_IP') # * np.sqrt(1000/N) #* 500/N #0.2 #* 100/N # Inhibitory to Pyramidal
+    p_PI = params_py.get('p_PI') # * np.sqrt(1000/N) # * 500/N #0.2 #* 100/N # Pyramidal to Inhibitory
+    p_PP = params_py.get('p_PP') # * np.sqrt(1000/N) #* 500/N  #0.2 #* 100/N # recurrent excitation (pyramidal) # Generally less than PI, IP connectivity (Bryson et al., 2021)
+    p_II = params_py.get('p_II') # * np.sqrt(1000/N) # * 500/N  #0.2 #* 100/N # recurrent inhibition
+    P_uP = 0.2
     
     # voltage
     V_leak = -70. * mV      # Resting membrane potential
     V_thr = -50 * mV        # Threshold
     V_reset = -59 * mV # -59 * mV      # Reset voltage. Equal to V_leak-> To use Burkitt's, 2006 Eq. (12)
     
-    # set populations parameters
-    params_py = set_params('pyramidal', 'allen')
-    params_in = set_params('inhibitory', 'allen')
-    params_ex = set_params('spiny', 'allen')
-    
     # membrane capacitance
     C_m_P = params_py.get('C')
     C_m_I = params_in.get('C')
-    C_m_E = params_ex.get('C')
     
     # membrane leak
     g_m_P = params_py.get('g_leak')
     g_m_I = params_in.get('g_leak')
-    g_m_E = params_ex.get('g_leak')
     
     # membrane time constants
     tau_m_P = params_py.get('tau_m')
     tau_m_I = params_in.get('tau_m')
-    tau_m_E = params_ex.get('tau_m')
     
     # connectivity time constants
     # Pyramidal
     tau_d_AMPA_P = params_py.get('tau_AMPA_d') # Decay time constant (From Brunel and Wang 2001)
     tau_r_AMPA_P = params_py.get('tau_AMPA_r')   # Rising time constant (< 1 ms), set to 0.05 isntead of 0.4 to match the ratio from GABA
+    tau_s_AMPA_P = tau_d_AMPA_P + tau_r_AMPA_P      # "Lumped" time constant for alpha function. 
+    
+    tau_d_AMPA_P_ext = params_py.get('tau_AMPA_d_ext') # Decay time constant (From Brunel and Wang 2001)
+    tau_r_AMPA_P_ext = params_py.get('tau_AMPA_r_ext')   # Rising time constant (< 1 ms), set to 0.05 isntead of 0.4 to match the ratio from GABA
+    tau_s_AMPA_P_ext = tau_d_AMPA_P_ext + tau_r_AMPA_P_ext      # "Lumped" time constant for alpha function. 
+    
     tau_d_GABA_P = params_py.get('tau_GABA_d') # From Brunel and Wang 2001
     tau_r_GABA_P = params_py.get('tau_GABA_r')
-    tau_s_AMPA_P = 0.5 * (tau_d_AMPA_P + tau_r_AMPA_P) + 0.05*ms      # "Lumped" time constant for alpha function. 
-    tau_s_GABA_P = 0.5 * (tau_d_GABA_P + tau_r_GABA_P) + 0.05*ms      # "Lumped" time constant for alpha function. 
+    tau_s_GABA_P = tau_d_GABA_P + tau_r_GABA_P      # "Lumped" time constant for alpha function. 
     #Inhibitory Interneurons
     tau_d_AMPA_I = params_in.get('tau_AMPA_d')  
     tau_r_AMPA_I = params_in.get('tau_AMPA_r')
+    tau_s_AMPA_I = tau_d_AMPA_I + tau_r_AMPA_I      # "Lumped" time constant for alpha function. 
+    
     tau_d_AMPA_I_ext = params_in.get('tau_AMPA_d_ext')  
     tau_r_AMPA_I_ext = params_in.get('tau_AMPA_r_ext')
+    tau_s_AMPA_I_ext = tau_d_AMPA_I_ext + tau_r_AMPA_I_ext      # "Lumped" time constant for alpha function. 
+    
     tau_d_GABA_I = params_in.get('tau_GABA_d')
     tau_r_GABA_I = params_in.get('tau_GABA_r')
-    tau_s_AMPA_I = 0.5 * (tau_d_AMPA_I + tau_r_AMPA_I) + 0.05*ms      # "Lumped" time constant for alpha function. 
-    tau_s_GABA_I = 0.5 * (tau_d_GABA_I + tau_r_GABA_I) + 0.05*ms      # "Lumped" time constant for alpha function. 
-    # Spiny Stellate
-    tau_d_AMPA_E = params_ex.get('tau_AMPA_d')  # TODO
-    tau_r_AMPA_E = params_ex.get('tau_AMPA_r')  
-    tau_s_AMPA_E = 0.5 * (tau_d_AMPA_E + tau_r_AMPA_E) + 0.05*ms      # "Lumped" time constant for alpha function. 
+    tau_s_GABA_I = tau_d_GABA_I + tau_r_GABA_I      # "Lumped" time constant for alpha function. 
     
     # refractory period
     tau_rp_P = params_py.get('tau_rp')
-    tau_rp_E = params_ex.get('tau_rp')
     tau_rp_I = params_in.get('tau_rp')
     
     # Synaptic delay
-    delay = 0 * ms # 1 * ms # 0.5 * ms # 0.5 * ms in Brunel and Wang 2001
+    delay = 0.2 * ms # 1 * ms # 0.5 * ms # 0.5 * ms in Brunel and Wang 2001
     
     # Cortical input
     num_inputs = 800                    # Both thalamo-cortical and cortico-cortical 
     
-    
-    # # Timed array -> input firing rate
-    # l = simulation_time/dt_
-    # segments = 3 # Number of segments of different spike rate
-    # timed_rate = ones(int(l))
-    # timed_rate[:] = input_spike_rate
-    # ## Uncomment the following lines for a timed array of rates, i.e. different input rates trhoughout a single simulation
-    # timed_rate[0 : int(l/segments)] = 0.5
-    # timed_rate[int(1*l/segments) : int(2*l/segments)] = 1
-    # timed_rate[int(2*l/segments) : int(3*l/segments)] = 2
-    # # timed_rate[int(3*l/segments) : int(4*l/segments)] = 30
-    # # timed_rate[int(4*l/segments) : int(5*l/segments)] = 40
-    # # timed_rate[int(5*l/segments) : int(6*l/segments)] = 50
-    # # timed_rate[int(6*l/segments) : int(7*l/segments)] = 100
-    # # timed_rate[int(7*l/segments) : int(8*l/segments)] = 125
-    # # timed_rate[int(8*l/segments) : int(9*l/segments)] = 150
-    # # timed_rate[int(9*l/segments) :] = 200
-    # timed_rate = (timed_rate * 1000/num_inputs) * Hz
-    # timed_rate = TimedArray(timed_rate, dt=dt_)
-    
-    
     # Synaptic efficacies
     # AMPA (excitatory)
-    j_AMPA_rec_P = params_py.get('j_AMPA')
-    j_AMPA_rec_E = params_ex.get('j_AMPA')
-    j_AMPA_rec_I = params_in.get('j_AMPA')
+    j_AMPA_rec_P = params_py.get('j_AMPA') * 1000/N # * np.sqrt(1000/N)
+    j_AMPA_rec_I = params_in.get('j_AMPA') * 1000/N # * np.sqrt(1000/N)
         
     j_AMPA_cor_P = params_py.get('j_AMPA_ext')
     j_AMPA_cor_I = params_in.get('j_AMPA_ext')
     
+    j_AMPA_tha_P = params_py.get('j_AMPA_tha')
+    j_AMPA_tha_I = params_in.get('j_AMPA_tha')
+    
     # GABAergic (inhibitory)
-    j_GABA_P = params_py.get('j_GABA')
-    j_GABA_I = params_py.get('j_GABA')
+    j_GABA_P = params_py.get('j_GABA') * 1000/N # * np.sqrt(1000/N)
+    j_GABA_I = params_in.get('j_GABA') * 1000/N # * np.sqrt(1000/N) #alpha_ii * -1 * pA * 1000/N # 
     
     # Weight constants. Amplitude of the synaptic input
     # Pyramidal 
-    increment_AMPA_P =  params_py.get('alpha_weight_AMPA') #* 500/N
-    increment_AMPA_ext_P = params_py.get('single_exp') #* 500/N
-    increment_GABA_P = params_py.get('alpha_weight_GABA') #* 500/N
+    increment_AMPA_P =  params_py.get('alpha_weight_AMPA') #* np.sqrt(1000/N)
+    increment_AMPA_ext_P = params_py.get('single_exp') #* np.sqrt(1000/N)
+    increment_GABA_P = params_py.get('alpha_weight_GABA') #* np.sqrt(1000/N)
     
     # Inhibitory interneurons
-    increment_AMPA_I = params_in.get('alpha_weight_AMPA') #* 500/N
-    increment_AMPA_ext_I = params_in.get('single_exp') #* 500/N
-    increment_GABA_I = params_in.get('alpha_weight_GABA') #* 500/N
-    
-    # Excitatory interneurons
-    increment_AMPA_E =  params_ex.get('alpha_weight_AMPA') #* 500/N
-    increment_AMPA_ext_E = params_ex.get('single_exp') #* 500/N
-    increment_GABA_E = params_ex.get('alpha_weight_GABA') #* 500/N
-    
-    
+    increment_AMPA_I = params_in.get('alpha_weight_AMPA') #* np.sqrt(1000/N)
+    increment_AMPA_ext_I = params_in.get('single_exp') #* np.sqrt(1000/N)
+    increment_GABA_I = params_in.get('alpha_weight_GABA') #* np.sqrt(1000/N)
     
     # Alpha function's parameter (and double exponential) to fix the units in ds/dt
     k = 1 / ms # 0.62 / ms # Dimmensionless?, check Nicola and Campbell 2013
@@ -179,8 +152,7 @@ def brunel(corriente=0):
     # Injected current
     I_injected = -input_current * pA # Input current to Pyramidal population. Sets a baseline spiking rate
     I_injected_I = -input_current_I * pA # Input current to Pyramidal population. Sets a baseline spiking rate
-    I_injected_E = -input_current_E * pA # Input current to Pyramidal population. Sets a baseline spiking rate
-    
+
     # I_injected = np.random.normal(loc=-input_current, scale=10, size=int(l))
     # I_injected[:] = I_injected
     # I_injected = TimedArray(I_injected * pA, dt=dt_)
@@ -191,7 +163,6 @@ def brunel(corriente=0):
     
     eqs_I = get_equations('inhibitory')
     
-    eqs_E = get_equations('spiny')
     
     # Neuron groups
     Py_Pop = NeuronGroup(N_P, eqs_P, threshold='v > V_thr', reset='''v = V_reset
@@ -200,10 +171,6 @@ def brunel(corriente=0):
                                                                     ''', refractory=tau_rp_P, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
     Py_Pop.v = V_leak
     
-    Ex_Pop = NeuronGroup(N_E, eqs_E, threshold='v > V_thr', reset='''v = V_reset
-                                                                    v_ep = V_reset-V_leak
-                                                                    ''', refractory=tau_rp_E, method='rk4', dt=dt_, name='SpinyPop') # Excitatory interneuron population
-    Ex_Pop.v = V_leak
     
     In_Pop = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='''v = V_reset
                                                                     v_ip = V_reset-V_leak
@@ -227,17 +194,6 @@ def brunel(corriente=0):
     s_AMPA += increment_AMPA_P
     '''
     
-    # Pyramidal (from spiny)
-    # eqs_glut_spi_P = '''
-    # s_AMPA_spi_post = s_AMPA_spi_syn : 1 (summed)
-    # ds_AMPA_spi_syn / dt = - s_AMPA_spi_syn / tau_s_AMPA_P + k * x : 1 (clock-driven)
-    # dx / dt = - x / tau_s_AMPA_P : 1 (clock-driven)
-    # '''
-    eqs_pre_glut_spi_P = '''
-    s_AMPA_spi += increment_AMPA_P
-    '''
-    
-    
     # Pyramidal (gabaergic, inhibitory to pyramidal)
     # eqs_gaba_P = '''
     # s_GABA_post = s_GABA_syn : 1 (summed)
@@ -246,16 +202,6 @@ def brunel(corriente=0):
     # '''
     eqs_pre_gaba_P = '''
     s_GABA += increment_GABA_P
-    '''
-    
-    # Excitatory (glutamate, pyramidal to spiny)
-    # eqs_glut_E = '''
-    # s_AMPA_post = s_AMPA_syn : 1 (summed)
-    # ds_AMPA_syn / dt = - s_AMPA_syn / tau_s_AMPA_E + k * x : 1 (clock-driven)
-    # dx / dt = - x / tau_s_AMPA_E : 1 (clock-driven)
-    # '''
-    eqs_pre_glut_E = '''
-    s_AMPA += increment_AMPA_E
     '''
     
     # Interneurons (glutamate, pyramidal to inhibitory)
@@ -268,7 +214,7 @@ def brunel(corriente=0):
     s_AMPA += increment_AMPA_I
     '''
     
-    # Interneurons (autoinhibiton)
+    # Interneurons (recurrent inhibition)
     # eqs_gaba_I = '''
     # s_GABA_post = s_GABA_syn : 1 (summed)
     # ds_GABA_syn / dt = - s_GABA_syn / tau_s_GABA_I + k * x : 1 (clock-driven)
@@ -277,7 +223,6 @@ def brunel(corriente=0):
     eqs_pre_gaba_I = '''
     s_GABA += increment_GABA_I
     '''
-
     
        
     # Synapses
@@ -286,11 +231,6 @@ def brunel(corriente=0):
     C_P_P.connect('i != j', p = p_PP)
     C_P_P.active = RECURRENT_PYRAMIDAL    # Testing no recursive connections to match NMM
     
-    # P to E
-    C_P_E = Synapses(Py_Pop, Ex_Pop, on_pre=eqs_pre_glut_E, method='rk4', dt=dt_, delay=delay, name='synapses_pe')
-    C_P_E.connect(p = p_PE)
-    C_P_E.active = ACTIVE_SPINY   
-        
     # P to I
     C_P_I = Synapses(Py_Pop, In_Pop, on_pre=eqs_pre_glut_I, method='rk4', dt=dt_, delay=delay, name='synapses_pi')
     C_P_I.connect(p = p_PI)     
@@ -305,21 +245,19 @@ def brunel(corriente=0):
     C_I_P = Synapses(In_Pop, Py_Pop, on_pre=eqs_pre_gaba_P, method='rk4', dt=dt_, delay=delay, name='synapses_ip')
     C_I_P.connect(p = p_IP)    
     C_I_P.active = ACTIVE_INTERNEURONS
-    
-    # E to P
-    C_E_P = Synapses(Ex_Pop, Py_Pop, on_pre=eqs_pre_glut_spi_P, method='rk4', dt=dt_, delay=delay, name='synapses_ep')
-    C_E_P.connect(p = p_EP)    
-    C_E_P.active = ACTIVE_SPINY
-    
-    # external input
-    # Poisson input (Cortico-cortical)
-    C_Cor_P = PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate*1000/num_inputs) * Hz, increment_AMPA_ext_P)
-    C_Cor_I = PoissonInput(In_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate*1000/num_inputs) * Hz, increment_AMPA_ext_I)
+        
+    # External inputs
+    input1 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate * 1000/num_inputs) * Hz, increment_AMPA_ext_P)
+
+    # Poisson input (Cortico-cortical) input to inhibitory interneurons. Controlled by INHIBIT_INPUT
+    C_Cor_I = PoissonInput(In_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate * 1000/num_inputs) * Hz, increment_AMPA_ext_I)
     C_Cor_I.active = INHIBIT_INPUT # Innactive cortico-cortical -> interneuron
+    
     # Poisson input (Thalamic, baseline spike rate)
-    C_Tha_P = PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_P)
+    C_Tha_P = PoissonInput(Py_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_P)
     C_Tha_I = PoissonInput(In_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_I)
     
+
     # Poisson population
     # C_Cor_P = Synapses(Pop_Cor, Py_Pop, model=eqs_cor_P, on_pre=eqs_pre_cor_P, method='rk4', dt=dt_, delay=delay, name='synapses_pext')
     # C_Cor_P.connect(p = 1)    
@@ -329,13 +267,11 @@ def brunel(corriente=0):
     #%% monitors  -----------------------------------------------------------------
     N_activity_plot = 30 # How many neurons in the raster plots (too large takes longer to monitor and plot)
     sp_P = SpikeMonitor(Py_Pop[:]) # N_activity_plot])
-    sp_E = SpikeMonitor(Ex_Pop[:]) # N_activity_plot])
     sp_I = SpikeMonitor(In_Pop[:]) # N_activity_plot])
     # sp_Cor = SpikeMonitor(input_cortical[:N_activity_plot])
     
     
     r_P = PopulationRateMonitor(Py_Pop) # [0:N_activity_plot])
-    r_E = PopulationRateMonitor(Ex_Pop) # [0:N_activity_plot])
     r_I = PopulationRateMonitor(In_Pop)
     # r_Cor = PopulationRateMonitor(input_cortical)
     
@@ -343,15 +279,12 @@ def brunel(corriente=0):
     st_GABA_P = StateMonitor(Py_Pop, 's_GABA', record = 0)
     st_AMPA_cor_P = StateMonitor(Py_Pop, 's_AMPA_cor', record = 0)
     
-    st_AMPA_E = StateMonitor(Ex_Pop, ('s_AMPA'), record = 0)
-    
     st_AMPA_I = StateMonitor(In_Pop, 's_AMPA', record = 0)
     st_GABA_I = StateMonitor(In_Pop, 's_GABA', record = 0)
     st_AMPA_cor_I = StateMonitor(In_Pop, 's_AMPA_cor', record = 0)
     
-    Py_monitor = StateMonitor(Py_Pop, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'I_tot', 'v', 'v_pe', 'v_pi'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
+    Py_monitor = StateMonitor(Py_Pop, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_tot', 'v', 'v_pi'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
     In_monitor = StateMonitor(In_Pop, ['v', 'v_ip'], record = True)
-    Ex_monitor = StateMonitor(Ex_Pop, ['v', 'v_ep'], record = True)
     
     #%% simulate  -----------------------------------------------------------------
     net = Network(collect())
@@ -365,18 +298,14 @@ def brunel(corriente=0):
     #%% analysis ------------------------------------------------------------------
     # spike rates
     window_size = 100.1 * ms # Size of the window for the smooth spike rate # 100.1 instead of 100 to avoid an annoying warning at the end of the simulation
-    
-    r_P_rate = r_P.smooth_rate(window='flat', width=window_size)
+
+    r_P_rate = r_P.smooth_rate(window='gaussian', width=window_size)
     if shape(r_P_rate) != shape(r_P.t):
-        r_P_rate = r_P_rate[1:]
+        r_P_rate = r_P_rate[5:]
     
-    r_E_rate = r_E.smooth_rate(window='flat', width=window_size)
-    if shape(r_E_rate) != shape(r_E.t):
-        r_E_rate = r_E_rate[1:]
-        
-    r_I_rate = r_I.smooth_rate(window='flat', width=window_size)
+    r_I_rate = r_I.smooth_rate(window='gaussian', width=window_size)
     if shape(r_I_rate) != shape(r_I.t):
-        r_I_rate = r_I_rate[1:]
+        r_I_rate = r_I_rate[5:]
         
     # r_Cor_rate = r_Cor.smooth_rate(width = window_size)
     # if shape(r_Cor_rate) != shape(r_Cor.t):
@@ -390,7 +319,7 @@ def brunel(corriente=0):
     # current based
     # lfp = abs(Py_monitor.I_AMPA_cor) + abs(Py_monitor.I_AMPA_rec) + abs(Py_monitor.I_GABA_rec) # Absolute sum of currents
     # lfp = (Py_monitor.I_GABA_rec) - (Py_monitor.I_AMPA_cor + Py_monitor.I_AMPA_rec + Py_monitor.I_AMPA_spi + I_injected) # Difference of currents
-    lfp = (Py_monitor.I_GABA_rec) - (Py_monitor.I_AMPA_cor + Py_monitor.I_AMPA_rec + Py_monitor.I_AMPA_spi) # Difference of currents
+    lfp = (Py_monitor.I_GABA_rec) - (Py_monitor.I_AMPA_cor + Py_monitor.I_AMPA_rec) # Difference of currents
     lfp_ = sum(lfp,0) / g_m_P # Sum across all Pyramidal neurons and divide by the leak conductance to get volts
     
     # voltage based
@@ -531,36 +460,22 @@ def brunel(corriente=0):
         i = 0
         while os.path.exists('C://Users/artemios/Documents/Multiscale_Models_Data/lfp_%s.mat' % i):
             i += 1
-            
-        alpha_1 = j_GABA_P * N_I * p_IP /pA
-        alpha_2 = j_AMPA_rec_I * N_P * p_PI /pA
-        
-        E_ = np.array(list(sp_E.spike_trains().values()))
+
+        P_ = np.array(list(sp_P.spike_trains().values()))
         I_ = np.array(list(sp_I.spike_trains().values()))
-        for i in range(0,shape(E_)[0]):
-            E_[i] = E_[i]/second
+        for i in range(0,shape(P_)[0]):
+            P_[i] = P_[i]/second
             
         for i in range(0,shape(I_)[0]):
             I_[i] = I_[i]/second
-        
+    
         save_dictionary={'LFP': lfp_,
                         'LFP_V': lfp_v,
                         'lfp_dt' : dt_,
                         'Vm': -(I_injected/g_m_P), # To calculate the nonlinearity, need to simulate single cell disconnected network 
                         'Vm_interneurons': -(I_injected_I/g_m_I), # To calculate the nonlinearity, need to simulate single cell disconnected network 
                         'R_py': r_P_rate, # 1/diff(np.array(sp_P.t)).mean(),
-                        'R_ex': r_E_rate,
                         'R_in': r_I_rate,
-                        'alpha1': alpha_1,
-                        'alpha2': alpha_2,
-                        'v_rest': V_leak,
-                        'isi_P': isi_P,
-                        'V_py': Py_monitor.v,
-                        'V_in': In_monitor.v,
-                        'v_pi': Py_monitor.v_pi,
-                        'v_pe': Py_monitor.v_pe,
-                        'v_ip': In_monitor.v_ip,
-                        'v_ep': Ex_monitor.v_ep,
                         'RECURRENT_PYRAMIDAL': RECURRENT_PYRAMIDAL,
                         'RECURRENT_INHIBITORY': RECURRENT_INHIBITORY,
                         'INHIBIT_INPUT': INHIBIT_INPUT,
@@ -574,10 +489,10 @@ def brunel(corriente=0):
                          mdict = save_dictionary)
         
         i = 0
-        while os.path.exists('C://Users/artemios/Documents/Multiscale_Models_Data/nonlinearity/double_exp/lfp_inputCurrent_%s_%s.mat' % (floor(input_current),i)):
+        while os.path.exists('C://Users/artemios/Documents/Multiscale_Models_Data/nonlinearity/double_exp_v2/lfp_inputCurrent_%s_%s.mat' % (floor(input_current),i)):
             i += 1
         
-        scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/nonlinearity/double_exp/lfp_inputCurrent_%s_%s.mat' % (floor(input_current),i),
+        scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/nonlinearity/double_exp_v2/lfp_inputCurrent_%s_%s.mat' % (floor(input_current),i),
                           mdict=save_dictionary)
     
         # scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/lfp_%s.mat' % i,
@@ -628,16 +543,10 @@ def brunel(corriente=0):
 
 
 # Run iteratively. Need to uncomment the def line at the start of the file.
-# a = np.arange(500, 501, 0.1)
-# b = np.arange(501, 510, 1)
-# c = np.arange(510, 700, 10)
-# d = np.arange(0, 1000, 100)
-# e = np.arange(350, 500, 10)
-# f = np.arange(400, 401, 0.1)
-# ranges = np.concatenate((c,d,e))
-ranges = np.arange(-200, 610, 10)
-# ranges = np.concatenate((a,f))
-# ranges = np.arange(-15, 16, 15)
+a = np.arange(500.5, 510, 0.5)
+b = np.arange(-200, 610, 10)
+ranges = np.concatenate((a,b))
+# ranges = np.arange(-200, 610, 10)
 for iterations in ranges:
     brunel(corriente = iterations)
 

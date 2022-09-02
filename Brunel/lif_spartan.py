@@ -35,6 +35,7 @@ import matplotlib.pyplot as plt
 prefs.codegen.target = 'cython'  # use the Python fallback instead of C compilation
 devices.device.shape = []       # This and the following line remove an annoying warning when brian2 is imported and loaded into RAM
 devices.device.size = []
+from brian2.__init__ import clear_cache
 
 from lif_model import set_params, get_equations
 
@@ -42,7 +43,10 @@ from lif_model import set_params, get_equations
 #def brunel(p_PP = 0.16, p_II = 0.125):
 #def brunel(p_PP = 0.16, p_II = 0.451, u = 20):
 def brunel(alpha_ii=0, u=1):
-        
+    
+    # arguments from sbatch
+    # u = float(sys.argv[1])
+    	    
     # Options:
     RECURRENT_PYRAMIDAL = True     # Self excitation 
     RECURRENT_INHIBITORY = True     # Self inhibition
@@ -58,7 +62,7 @@ def brunel(alpha_ii=0, u=1):
     input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
     input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
     
-    input_spike_rate = [u] #[0, 1, 3, 5] #[u] #[15] # [0, 5, 10] # spikes/ms/cell (driving input)
+    input_spike_rate = [u]#[0, 1, 3, 5] #[u] #[15] # [0, 5, 10] # spikes/ms/cell (driving input)
     input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
     
     #%% parameters  --------------------------------------------------------------
@@ -130,7 +134,7 @@ def brunel(alpha_ii=0, u=1):
     tau_rp_I = params_in.get('tau_rp')
     
     # Synaptic delay
-    delay = 0.2 * ms # 1 * ms # 0.5 * ms # 0.5 * ms in Brunel and Wang 2001
+    delay = 0.0 * ms # 1 * ms # 0.5 * ms # 0.5 * ms in Brunel and Wang 2001
     
     # Cortical input
     num_inputs = 800                    # Both thalamo-cortical and cortico-cortical 
@@ -138,8 +142,8 @@ def brunel(alpha_ii=0, u=1):
     
     # Synaptic efficacies
     # AMPA (excitatory)
-    j_AMPA_rec_P = params_py.get('j_AMPA') * 1000/N # * np.sqrt(1000/N)
-    j_AMPA_rec_I = params_in.get('j_AMPA') * 1000/N # * np.sqrt(1000/N)
+    j_AMPA_rec_P = params_py.get('j_AMPA') * 2000/N # * np.sqrt(1000/N)
+    j_AMPA_rec_I = params_in.get('j_AMPA') * 2000/N # * np.sqrt(1000/N)
         
     j_AMPA_cor_P = params_py.get('j_AMPA_ext')
     j_AMPA_cor_I = params_in.get('j_AMPA_ext')
@@ -148,8 +152,8 @@ def brunel(alpha_ii=0, u=1):
     j_AMPA_tha_I = params_in.get('j_AMPA_tha')
     
     # GABAergic (inhibitory)
-    j_GABA_P = params_py.get('j_GABA') * 1000/N # * np.sqrt(1000/N)
-    j_GABA_I = alpha_ii * amp * 1000/N # params_in.get('j_GABA') * 1000/N # * np.sqrt(1000/N)
+    j_GABA_P = params_py.get('j_GABA') * 2000/N # * np.sqrt(1000/N)
+    j_GABA_I = params_in.get('j_GABA') * 2000/N # * np.sqrt(1000/N) #alpha_ii * -1 * pA * 1000/N 
     
     # Weight constants. Amplitude of the synaptic input
     # Pyramidal 
@@ -335,6 +339,7 @@ def brunel(alpha_ii=0, u=1):
     #%% analysis ------------------------------------------------------------------
     # spike rates
     window_size = 100.1 * ms # Size of the window for the smooth spike rate # 100.1 instead of 100 to avoid an annoying warning at the end of the simulation
+    window_size_2 = 10.1 * ms # Size of the window for the smooth spike rate # 100.1 instead of 100 to avoid an annoying warning at the end of the simulation
     
     r_P_rate = r_P.smooth_rate(window='gaussian', width=window_size)
     if shape(r_P_rate) != shape(r_P.t):
@@ -343,6 +348,15 @@ def brunel(alpha_ii=0, u=1):
     r_I_rate = r_I.smooth_rate(window='gaussian', width=window_size)
     if shape(r_I_rate) != shape(r_I.t):
         r_I_rate = r_I_rate[5:]
+        
+    
+    r_P_rate_2 = r_P.smooth_rate(window='gaussian', width=window_size_2)
+    if shape(r_P_rate_2) != shape(r_P.t):
+        r_P_rate_2 = r_P_rate_2[5:]
+    
+    r_I_rate_2 = r_I.smooth_rate(window='gaussian', width=window_size_2)
+    if shape(r_I_rate_2) != shape(r_I.t):
+        r_I_rate_2 = r_I_rate_2[5:]
         
     # r_Cor_rate = r_Cor.smooth_rate(width = window_size)
     # if shape(r_Cor_rate) != shape(r_Cor.t):
@@ -468,11 +482,7 @@ def brunel(alpha_ii=0, u=1):
         
         
     #%% Save simulation  ------------------------------------------------------------
-    if SAVE:
-           
-        alpha_1 = j_GABA_P * N_I * p_IP /pA
-        alpha_2 = j_AMPA_rec_I * N_P * p_PI /pA
-        
+    if SAVE:    
         P_ = np.array(list(sp_P.spike_trains().values()))
         I_ = np.array(list(sp_I.spike_trains().values()))
         for i in range(0,shape(P_)[0]):
@@ -484,15 +494,17 @@ def brunel(alpha_ii=0, u=1):
         save_dictionary={'LFP': lfp_,
                         'LFP_V': lfp_v,
                         'lfp_dt' : dt_,
-                        'alpha1': alpha_1,
-                        'alpha2': alpha_2,
                         'v_rest': V_leak,
+                        'v_p': mean(Py_monitor.v,0),
+                        'v_i': mean(In_monitor.v,0),
                         'v_pi': mean(Py_monitor.v_pi,0),
                         'v_ip': mean(In_monitor.v_ip,0),
                         'p_PP': p_PP,
                         'p_II': p_II,
                         'R_py': r_P_rate, # 1/diff(np.array(sp_P.t)).mean(),
                         'R_in': r_I_rate,
+                        'R_py_2': r_P_rate_2,
+                        'R_in_2': r_I_rate_2,
                         'RECURRENT_PYRAMIDAL': RECURRENT_PYRAMIDAL,
                         'RECURRENT_INHIBITORY': RECURRENT_INHIBITORY,
                         'INHIBIT_INPUT': INHIBIT_INPUT,
@@ -517,16 +529,16 @@ def brunel(alpha_ii=0, u=1):
         scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/lfp_last.mat',
                          mdict = save_dictionary)
         
-        # i = 0
-        # while os.path.exists('/data/gpfs/projects/punim0643/artemios/simulations/lfp_%s.mat' % i):
-        #     i += 1
-        # save_str = format('lfp_%s.png' %(i))
-        # scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/lfp_%s.mat' %(i),
-        #                  mdict = save_dictionary)
-
-        save_str = format('lfp_u%s_ii%s.png' %(u,alpha_ii))
-        scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/lfp_u%s_ii%s.mat' %(u,alpha_ii),
-                          mdict = save_dictionary)        
+       # i = 0
+       # while os.path.exists('/data/gpfs/projects/punim0643/artemios/simulations/lfp_%s.mat' % i):
+       #     i += 1
+       # save_str = format('lfp_%s.png' %(i))
+       # scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/lfp_%s.mat' %(i),
+       #                  mdict = save_dictionary)
+    
+        save_str = format('sweep/lfp_u%s_ii%s.png' %(u,alpha_ii))
+        scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/sweep/Aug26/lfp_u%s_ii%s.mat' %(u,alpha_ii),
+                         mdict = save_dictionary)        
         
     else:
         print('Attention! Results of simulation were not saved. SAVE = False')
@@ -592,9 +604,11 @@ def brunel(alpha_ii=0, u=1):
     
     plt.savefig('/data/gpfs/projects/punim0643/artemios/simulations/' + save_str)
     print('Results saved as:' + save_str)
+    plt.close('all')
 
-ranges = np.arange(0, 5.1, 1)
-ranges2 = np.arange(-5, 0.1, 1)
+ranges = np.arange(0, 5.1, 0.1)
+ranges2 = np.arange(-61, 0.1, 1.2) # alpha_ii, 51 elements
 for iterations in ranges:
     for iterations2 in ranges2:
         brunel(u = iterations, alpha_ii=iterations2)
+        clear_cache('cython')
