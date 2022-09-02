@@ -312,7 +312,7 @@ def brunel(alpha_ii=0, u=1):
     st_AMPA_cor_I = StateMonitor(In_Pop, 's_AMPA_cor', record = 0)
     
     Py_monitor = StateMonitor(Py_Pop, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'I_tot', 'v', 'v_pe', 'v_pi'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
-    In_monitor = StateMonitor(In_Pop, ['v', 'v_ip'], record = True)
+    In_monitor = StateMonitor(In_Pop, ['v', 'v_ip', 'I_tot'], record = True)
     
     #%% simulate  -----------------------------------------------------------------
     net = Network(collect())
@@ -361,7 +361,12 @@ def brunel(alpha_ii=0, u=1):
     # r_Cor_rate = r_Cor.smooth_rate(width = window_size)
     # if shape(r_Cor_rate) != shape(r_Cor.t):
     #     r_Cor_rate = r_Cor_rate[1:]
-    
+
+    # Calculate mean I
+    I_in = mean(In_monitor.I_tot, 0)
+    I_py = mean(Py_monitor.I_tot, 0)
+
+
     # Calculate mean PSP (NMM states)
     v_pi = mean(Py_monitor.v_pi, 0)
     v_ip = mean(In_monitor.v_ip, 0)
