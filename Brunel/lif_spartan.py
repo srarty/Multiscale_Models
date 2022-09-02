@@ -142,8 +142,8 @@ def brunel(alpha_ii=0, u=1):
     
     # Synaptic efficacies
     # AMPA (excitatory)
-    j_AMPA_rec_P = params_py.get('j_AMPA') * 1000/N # * np.sqrt(1000/N)
-    j_AMPA_rec_I = params_in.get('j_AMPA') * 1000/N # * np.sqrt(1000/N)
+    j_AMPA_rec_P = params_py.get('j_AMPA') * 2000/N # * np.sqrt(1000/N)
+    j_AMPA_rec_I = params_in.get('j_AMPA') * 2000/N # * np.sqrt(1000/N)
         
     j_AMPA_cor_P = params_py.get('j_AMPA_ext')
     j_AMPA_cor_I = params_in.get('j_AMPA_ext')
@@ -152,8 +152,8 @@ def brunel(alpha_ii=0, u=1):
     j_AMPA_tha_I = params_in.get('j_AMPA_tha')
     
     # GABAergic (inhibitory)
-    j_GABA_P = params_py.get('j_GABA') * 1000/N # * np.sqrt(1000/N)
-    j_GABA_I = params_in.get('j_GABA') * 1000/N # * np.sqrt(1000/N) #alpha_ii * -1 * pA * 1000/N 
+    j_GABA_P = params_py.get('j_GABA') * 2000/N # * np.sqrt(1000/N)
+    j_GABA_I = params_in.get('j_GABA') * 2000/N # * np.sqrt(1000/N) #alpha_ii * -1 * pA * 1000/N 
     
     # Weight constants. Amplitude of the synaptic input
     # Pyramidal 

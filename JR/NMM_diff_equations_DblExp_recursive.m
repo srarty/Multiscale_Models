@@ -23,7 +23,7 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     
     % Options
     params.options.ADD_NOISE = 0; % External input noise (0 = no noise, 1 = noise)
-    params.options.CHANGE_U = 1; % 0: U doesn't change during simulation. Anyother value of CHANGE_U: U changes.
+    params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Anyother value of CHANGE_U: U changes.
     
     % Parse inputs --------------------------------------------------------
     if exist('option','var')
@@ -50,25 +50,30 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     alpha_e = params.alpha_ei; 
     alpha_re = params.alpha_re; 
     alpha_ri = params.alpha_ri; 
+    alpha_u = params.alpha_u; 
 
-%     Equilibrium point (calculated with matcont, u=0)
-    eq =   [-0.1156;
-            -5.8791;
-            0.0713;
-            7.3161;
-            0.0366;
-            1.8515;
-            -0.1667;
-            -18.0624;];
+    % Equilibrium point (calculated with matcont, u=0)
+%     eq =   [-1.2544;
+%             -63.8028;
+%             0.7239;
+%             74.3429;
+%             0.2498;
+%             12.6478;
+%             -3.2656;
+%             -353.8463;
+%             0;
+%             0;];
         
-%     eq =[0;
-%          0;
-%          0;
-%          0;
-%          0;
-%          0;
-%          0;
-%          0;];
+    eq =[0;
+         0;
+         0;
+         0;
+         0;
+         0;
+         0;
+         0;
+         0;
+         0;];
         
     x0 =[eq(1);
         eq(2);
@@ -78,11 +83,13 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
         eq(6);
         eq(7);
         eq(8);
-        params.u;
+        eq(9);
+        eq(10);
         alpha_i;
         alpha_e;
         alpha_re;
         alpha_ri;
+        alpha_u;
         ];
     
     [t,x,y] = ode45(@(t,x) ode(t,x,params,dt), [min(t) max(t)], x0);
@@ -94,7 +101,7 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     end
     
     % Calculate firing rate
-    f_i = params.e0i * sigmoid_io(x(:,3) + x(:,7), params.v0, params.r); % gompertz_io(x(:,3) + x(:,7),params.gompertzi.b, params.gompertzi.c, params.gompertzi.d); % 
+    f_i = params.e0i * sigmoid_io(x(:,3) + x(:,7), params.v0, params.r); % gompertz_io(x(:,3) + x(:,7), params.gompertzi.b, params.gompertzi.c, params.gompertzi.d); % 
     f_e = params.e0 * gompertz_io(x(:,1) + x(:,5) + x(:,9), params.gompertz.b, params.gompertz.c, params.gompertz.d); % sigmoid_io(x(:,1) + x(:,5) + x(:,9), params.v0, params.r); % 
     
     if nargin == 0        
@@ -128,61 +135,65 @@ function dx = ode(t,x,params,dt)
         elseif t >= 1000 * 1e-3
             u = 1;
         end
-        x(9) = u;
     end
     
     % Synaptic functions
-    S1 = @(x) sigmoid_io(x, v0, r); % gompertz_io(x,ib, ic ,id);% 
+    S1 = @(x) sigmoid_io(x, v0, r); %gompertz_io(x,ib, ic ,id);% 
     S2 = @(x) gompertz_io(x, b, c, d);  % sigmoid_io(x, v0, r); % 
-    Tau_coeff = @(m, s) 1/(m*s);%m/(m-s);%m/(m-s); % 1/(m+s)
+    Tau_coeff = @(m, s) 1/(m*s);% Nicola Campbell
     
-    c_constant = 1000;%params.c_constant; %1000;
+    c_constant = 2000;%params.c_constant; %1000;
     c1 = 4 * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
     c2 = 1 * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
     c3 = 4 * c_constant * params.P_pyTOpy;
-    c4 = 1 * c_constant * params.P_inTOin; % Allen(LIF) = 0.451; % Same oscillatory freq (with u=9) = 0.125; % Same osc freq (u=20)=0.08; % (u=14)=0.06;
+    c4 = 1 * c_constant * params.P_inTOin; 
+    c5 = 0.5 * c_constant; % External excitatory synapses into pyramidal population
     
-    tau_se = params.tau_se;
-    tau_me = params.tau_me;
+    tau_sp = params.tau_sp;
+    tau_mp = params.tau_mp;
     
     tau_si = params.tau_si;
     tau_mi = params.tau_mi;
     
-    tau_sre = params.tau_sre;
-    tau_mre = params.tau_mre;
+    tau_srp = params.tau_srp;
+    tau_mrp = params.tau_mrp;
     
     tau_sri = params.tau_sri;
     tau_mri = params.tau_mri;
     
     % Lumped parameters
-    AmplitudeI  = c2 * 2 * e_0i * x(10) * Tau_coeff(tau_mi,  tau_si);
-    AmplitudeE  = c1 * 2 * e_0  * x(11) * Tau_coeff(tau_me,  tau_se);
-    AmplitudeRE = c3 * 2 * e_0  * x(12) * Tau_coeff(tau_mre, tau_sre);
-    AmplitudeRI = c4 * 2 * e_0i * x(13) * Tau_coeff(tau_mri, tau_sri);
+    AmplitudeI  = c2 * 2 * e_0i * x(11) * Tau_coeff(tau_mi,  tau_si);
+    AmplitudeE  = c1 * 2 * e_0  * x(12) * Tau_coeff(tau_mp,  tau_sp);
+    AmplitudeRE = c3 * 2 * e_0  * x(13) * Tau_coeff(tau_mrp, tau_srp);
+    AmplitudeRI = c4 * 2 * e_0i * x(14) * Tau_coeff(tau_mri, tau_sri);
+    AmplitudeU  = c5 * 2 *  1   * x(15) * Tau_coeff(tau_mp, tau_sp);
     
     % Diff equations ------------------------------------------------------
-    dx = zeros(9,1);
+    dx = zeros(15,1);
 
     % Double exponential from Nicola-Campbell (2013):
     % TODO: Check the coefficients of the convolution, specifically 1/(tau_m+tau_s)
     % I->P
     dx(1) = x(2) - x(1)/tau_mi;
-    dx(2) = - x(2)/tau_si + AmplitudeI/c2 * S1(x(3) + x(7));
+    dx(2) = - x(2)/tau_si + AmplitudeI * S1(x(3) + x(7));
     % P->I
-    dx(3) = x(4) - x(3)/tau_me;
-    dx(4) = - x(4)/tau_se + AmplitudeE/c1 * S2(x(1) + x(5) + x(9));
+    dx(3) = x(4) - x(3)/tau_mp;
+    dx(4) = - x(4)/tau_sp + AmplitudeE * S2(x(1) + x(5) + x(9));
     % Recurrent Pyramidal P->P
-    dx(5) = x(6) - x(5)/tau_mre;
-    dx(6) = - x(6)/tau_sre + AmplitudeRE/c3 * S2(x(1) + x(5) + x(9));
+    dx(5) = x(6) - x(5)/tau_mrp;
+    dx(6) = - x(6)/tau_srp + AmplitudeRE * S2(x(1) + x(5) + x(9));
     % Recurrent Inhibition I->I
     dx(7) = x(8) - x(7)/tau_mri;                       
-    dx(8) = - x(8)/tau_sri + AmplitudeRI/c4 * S1(x(3) + x(7));    
+    dx(8) = - x(8)/tau_sri + AmplitudeRI * S1(x(3) + x(7));    
+    % External input u->P
+    dx(9) = x(10) - x(9)/tau_mp;
+    dx(10) = - x(10)/tau_sp + AmplitudeU * u; % -x(9) + u + (params.options.ADD_NOISE * (sqrt(u).*randn(1,1))); % Random number % 1.1; % <- steady increase of 1.1 spike/ms/cell/s
     % Parameters:
-    dx(9) = 0;%-x(9) + u + (params.options.ADD_NOISE * (sqrt(u).*randn(1,1))); % Random number % 1.1; % <- steady increase of 1.1 spike/ms/cell/s
-    dx(10) = 0; % alpha_i
-    dx(11) = 0; % alpha_e
-    dx(12) = 0; % alpha_re
-    dx(13) = 0; % alpha_ri
+    dx(11) = 0; % alpha_i
+    dx(12) = 0; % alpha_e
+    dx(13) = 0; % alpha_re
+    dx(14) = 0; % alpha_ri
+    dx(15) = 0; % alpha_u
 
 end
 
@@ -194,9 +205,12 @@ function do_plot(x,t, Vm, f_e, f_i)
     xlabel('Time (s)');
     
     figure
-    plot(x(:,1),x(:,3));
-    xlabel('x1');
-    ylabel('x3');
+    plot(t, x(:,1) + x(:,5) + x(:,9));
+    hold
+    plot(t, x(:,3) + x(:,7));
+    legend({'V_{mp}' 'V_{mi}'});
+    ylabel('mV');
+    xlabel('Time (s)');
 
     figure
     plot(t, Vm, 'k');

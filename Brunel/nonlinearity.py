@@ -64,6 +64,7 @@ def brunel(corriente=0):
     p_PI = params_py.get('p_PI') # * np.sqrt(1000/N) # * 500/N #0.2 #* 100/N # Pyramidal to Inhibitory
     p_PP = params_py.get('p_PP') # * np.sqrt(1000/N) #* 500/N  #0.2 #* 100/N # recurrent excitation (pyramidal) # Generally less than PI, IP connectivity (Bryson et al., 2021)
     p_II = params_py.get('p_II') # * np.sqrt(1000/N) # * 500/N  #0.2 #* 100/N # recurrent inhibition
+    P_uP = 0.2
     
     # voltage
     V_leak = -70. * mV      # Resting membrane potential

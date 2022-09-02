@@ -35,15 +35,19 @@ from lif_model import set_params
 # save = {'ipsp': Py_monitor.v1*1e3}
 # scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/inhibitory_ipsp.mat', mdict=save)
 
-def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=''):
-    plt.close('all')
+# # External input -> Pyramidal:
+# save = {'epsp': Py_monitor.v1*1e3}
+# scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/pyramidal_externalEPSP.mat', mdict=save)
+
+def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii='', PLOT=True):
+    # plt.close('all')
     #%% options  --------------------------------------------------------------
     
     source          = 'allen'       # brunel or allen
     synaptic_type   = 'GABA'        # AMPA (excitatory) or GABA (inhibitory)
     neuron_type     = 'inhibitory'  # pyramidal, inhibitory or spiny
     external        = False         # When AMPA, synapsis can be external or recurrent (local)
-    input_spike_rate = 1            # spikes/ms/cell 
+    input_spike_rate = 0            # spikes/ms/cell 
     simulation_time = 0.3 * second
     
         
@@ -217,29 +221,31 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     net = Network(collect())
     net.run(simulation_time, report='stdout')
     
+    
+    #%% Plot
+    if PLOT:
+        f, axs = plt.subplots(2, 1, sharex=True, figsize=(10, 6.25)) # New figure with two subplots
+            
+        axs[0].set_title('Neuron type: {} | Synapses: {} | j: {} pA'.format(neuron_type, synaptic_type, j/pA))
+        axs[0].set_ylabel('PSP (mV)')
+        axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v1) * 1e3), lw=1, label='v1 (single exp)')
+        axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v6) * 1e3), lw=1, label='v6 (alpha)', linestyle='dashed')
+        axs[0].plot(T * 1e3, ((np.transpose(Py_monitor.v) - V_leak) * 1e3), lw=1, label='Vm', linestyle='solid')
+        axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v1 + Py_monitor.v6) * 1e3), lw=1, label='Sum', linestyle='dashed')
+        # if external:
+            # axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v1) * 1e3), lw=1, label='single exp')
+        axs[0].legend()
+            
+        axs[1].set_xlabel('Time (ms)')
+        axs[1].set_ylabel('PSC (pA)')
+        axs[1].plot(T * 1e3, np.transpose(Py_monitor.I_AMPA1), lw=1)
+        axs[1].plot(T * 1e3, np.transpose(Py_monitor.I_AMPA6), lw=1, linestyle='dashed')
+        axs[1].plot(T * 1e3, np.transpose(Py_monitor.I_tot), lw=1)
+        # if external:
+            # axs[1].plot(T * 1e3, (np.transpose(Py_monitor.s_AMPA1)*j/pA), lw=1)
+        
+        # f.tight_layout()
+        
+        plt.show()
+    
     return Py_monitor
-    
-    # #%% Plot
-    # f, axs = plt.subplots(2, 1, sharex=True, figsize=(10, 6.25)) # New figure with two subplots
-        
-    # axs[0].set_title('Neuron type: {} | Synapses: {} | j: {} pA'.format(neuron_type, synaptic_type, j/pA))
-    # axs[0].set_ylabel('PSP (mV)')
-    # axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v1) * 1e3), lw=1, label='v1 (single exp)')
-    # axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v6) * 1e3), lw=1, label='v6 (alpha)', linestyle='dashed')
-    # axs[0].plot(T * 1e3, ((np.transpose(Py_monitor.v) - V_leak) * 1e3), lw=1, label='Vm', linestyle='solid')
-    # axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v1 + Py_monitor.v6) * 1e3), lw=1, label='Sum', linestyle='dashed')
-    # # if external:
-    #     # axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v1) * 1e3), lw=1, label='single exp')
-    # axs[0].legend()
-        
-    # axs[1].set_xlabel('Time (ms)')
-    # axs[1].set_ylabel('PSC (pA)')
-    # axs[1].plot(T * 1e3, np.transpose(Py_monitor.I_AMPA1), lw=1)
-    # axs[1].plot(T * 1e3, np.transpose(Py_monitor.I_AMPA6), lw=1, linestyle='dashed')
-    # axs[1].plot(T * 1e3, np.transpose(Py_monitor.I_tot), lw=1)
-    # # if external:
-    #     # axs[1].plot(T * 1e3, (np.transpose(Py_monitor.s_AMPA1)*j/pA), lw=1)
-    
-    # # f.tight_layout()
-    
-    # plt.show()
