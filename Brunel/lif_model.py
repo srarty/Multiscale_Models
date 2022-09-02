@@ -14,6 +14,7 @@ References:
         interactions between current-based and conductance-based integrate-and-
         fire recurrent networks.
 """
+# Testing git on Spartan. Can I see this in local?
 from brian2 import *
 
 def set_params(type='pyramidal', source='brunel'):
