@@ -18,15 +18,16 @@
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_288.mat'; % u=[0, 1, 0, 15], non-smooth
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_289.mat'; 
 
-data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_303.mat'; 
+% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_303.mat'; 
+data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_2.mat'; 
 
 load(data_file);
 tt = lfp_dt:lfp_dt:lfp_dt*length(v_ip);
 
 figure
 plot(t,x(:,[1 3])); hold on;
-plot(tt,v_pi*0.5e3,'b--');
-plot(tt,v_ip*0.5e3,'r--');
+plot(tt,v_pi*1e3,'b--');
+plot(tt,v_ip*1e3,'r--');
 legend({'x1' 'x3'});
 ylabel('Membrane Potential (mV)');
 xlabel('Time (s)');

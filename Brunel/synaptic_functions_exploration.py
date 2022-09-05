@@ -39,6 +39,10 @@ from lif_model import set_params
 # save = {'epsp': Py_monitor.v1*1e3}
 # scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/pyramidal_externalEPSP.mat', mdict=save)
 
+# # External input -> Inhibitory:
+# save = {'epsp': Py_monitor.v1*1e3}
+# scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/inhibitory_externalEPSP.mat', mdict=save)
+
 def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii='', PLOT=True):
     # plt.close('all')
     #%% options  --------------------------------------------------------------

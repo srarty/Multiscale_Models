@@ -14,8 +14,8 @@ end
 
 switch mode
     case 'recursive'
-        params.e0 =  1.5;%120;% 10; %120;%30;%10;%30; %15; % max firing rate
-        params.e0i = 20;%250;% 30; %250;%35;%40;%35; % max firing rate
+        params.e0 =  30; %1.5;%120;% 10; %120;%30;%10;%30; %15; % max firing rate
+        params.e0i = 30; %20;%250;% 30; %250;%35;%40;%35; % max firing rate
         
         params.v0 = 19.72; % Firing Threshold (a)
         params.r = 34.34; % Sigmoid slope (b)
