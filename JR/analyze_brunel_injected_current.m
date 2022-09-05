@@ -9,13 +9,16 @@ clear
 
 %% Options ----------------------------------------------------------------
 
-POPULATION = 'Py'; % 'Py' or 'In'
+POPULATION = 'In'; % 'Py' or 'In'
 FUNCTION = 'G'; % 'G' (Gompertz) or 'S' (Sigmoid)
 
 % -------------------------------------------------------------------------
 
 g_m_P = 25e-9;
 g_m_I = 20e-9;
+
+C_P = 0.5e-9;
+C_I = 0.2e-9;
 
 %% NMM sigmoid
 params = set_parameters('recursive');       % Chose params.u from a constant value in set_params
@@ -65,19 +68,21 @@ for ii = 1:no_files
     L = length(LFP);
     
     if strcmp(POPULATION, 'Py')
-        try
-            membrane_potentials(ii) = 1000*Vm;
-        catch
-            membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_P;
-        end
+%         try
+%             membrane_potentials(ii) = 1000*Vm;
+%         catch
+%             membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_P;
+%         end
+        membrane_potentials(ii) = -sum(I_py)/C_P;
         firing_rates(ii) = mean(R_py(0.2*L : 0.8*L));
         
     elseif strcmp(POPULATION, 'In')
-        try
-            membrane_potentials(ii) = 1000*Vm_interneurons;
-        catch
-            membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_I;
-        end
+%         try
+%             membrane_potentials(ii) = 1000*Vm_interneurons;
+%         catch
+%             membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_I;
+%         end
+        membrane_potentials(ii) = -sum(I_in)/C_I; % (-sum(I_in)/C_I)*lfp_dt/4 ??? 
         firing_rates(ii) = mean(R_in(0.2*L : 0.8*L)); %/max_firing_rate;
         
     else
