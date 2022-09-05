@@ -16,8 +16,8 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
         value2 = varargin{4};
     end
     
-    N = 4000; % Number of samples: 1 sample = 1 milisecond
-    u = 0; %20; % 1.5;
+    N = 2000; % Number of samples: 1 sample = 1 milisecond
+    u = 1.5; %20; % 1.5;
 
     params = set_parameters('recursive', u);
     
@@ -147,7 +147,7 @@ function dx = ode(t,x,params,dt)
     c2 = 1 * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
     c3 = 4 * c_constant * params.P_pyTOpy;
     c4 = 1 * c_constant * params.P_inTOin; 
-    c5 = 0.5 * c_constant; % External excitatory synapses into pyramidal population
+    c5 = 1 * c_constant; % External excitatory synapses into pyramidal population
     
     tau_sp = params.tau_sp;
     tau_mp = params.tau_mp;
@@ -166,13 +166,12 @@ function dx = ode(t,x,params,dt)
     AmplitudeE  = c1 * 2 * e_0  * x(12) * Tau_coeff(tau_mp,  tau_sp);
     AmplitudeRE = c3 * 2 * e_0  * x(13) * Tau_coeff(tau_mrp, tau_srp);
     AmplitudeRI = c4 * 2 * e_0i * x(14) * Tau_coeff(tau_mri, tau_sri);
-    AmplitudeU  = c5 * 2 *  1   * x(15) * Tau_coeff(tau_mp, tau_sp);
+    AmplitudeU  = c5 * x(15) * Tau_coeff(tau_mp, tau_sp);
     
     % Diff equations ------------------------------------------------------
     dx = zeros(15,1);
 
     % Double exponential from Nicola-Campbell (2013):
-    % TODO: Check the coefficients of the convolution, specifically 1/(tau_m+tau_s)
     % I->P
     dx(1) = x(2) - x(1)/tau_mi;
     dx(2) = - x(2)/tau_si + AmplitudeI * S1(x(3) + x(7));
@@ -188,6 +187,12 @@ function dx = ode(t,x,params,dt)
     % External input u->P
     dx(9) = x(10) - x(9)/tau_mp;
     dx(10) = - x(10)/tau_sp + AmplitudeU * u; % -x(9) + u + (params.options.ADD_NOISE * (sqrt(u).*randn(1,1))); % Random number % 1.1; % <- steady increase of 1.1 spike/ms/cell/s
+%     % External input Tha->P
+%     dx(11) = x(12) - x(11)/tau_mp;
+%     dx(12) = - x(12)/tau_sp + AmplitudeU * 10 * 1.5;
+%     % External input Tha->I
+%     dx(13) = x(14) - x(13)/tau_mp;
+%     dx(14) = - x(14)/tau_sp + AmplitudeU * 10 * 1.5;
     % Parameters:
     dx(11) = 0; % alpha_i
     dx(12) = 0; % alpha_e

@@ -3,13 +3,13 @@
 %
 % Artemio - August 2021
 
-clear
+% clear
 % close all
 
 
 %% Options ----------------------------------------------------------------
 
-POPULATION = 'In'; % 'Py' or 'In'
+POPULATION = 'Py'; % 'Py' or 'In'
 FUNCTION = 'G'; % 'G' (Gompertz) or 'S' (Sigmoid)
 
 % -------------------------------------------------------------------------
@@ -54,36 +54,39 @@ ylabel('Spike rate');
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\nonlinearity\double_exp\';
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\nonlinearity\double_exp_v2\';
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity\';
-folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_connected\';
+% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_disconnected\';
+folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_disconnected_noTha\';
+% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_connected\';
+% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_connected_noTha\';
 
 d = dir([folder '*.mat']);
 no_files = numel(d);
 
 membrane_potentials = zeros(1, no_files);
 firing_rates = zeros(1, no_files);
-inhibitory_rates = zeros(1, no_files);
+potential_integral = zeros(1, no_files);
 for ii = 1:no_files
     data_file = [folder d(ii).name];    
     load(data_file);
     L = length(LFP);
     
     if strcmp(POPULATION, 'Py')
-%         try
-%             membrane_potentials(ii) = 1000*Vm;
-%         catch
-%             membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_P;
-%         end
-        membrane_potentials(ii) = -sum(I_py)/C_P;
+        try
+            membrane_potentials(ii) = 1000*Vm;
+        catch
+            membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_P;
+        end
+        potential_integral(ii) = -(sum(I_py)/C_P)/1000;%*1000*lfp_dt/length(LFP);
         firing_rates(ii) = mean(R_py(0.2*L : 0.8*L));
         
     elseif strcmp(POPULATION, 'In')
-%         try
-%             membrane_potentials(ii) = 1000*Vm_interneurons;
-%         catch
-%             membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_I;
-%         end
-        membrane_potentials(ii) = -sum(I_in)/C_I; % (-sum(I_in)/C_I)*lfp_dt/4 ??? 
-        firing_rates(ii) = mean(R_in(0.2*L : 0.8*L)); %/max_firing_rate;
+        try
+            membrane_potentials(ii) = 1000*Vm_interneurons;
+        catch
+            membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_I;
+        end
+        potential_integral(ii) = -(sum(I_in)/C_I)/2000;%*1000*lfp_dt/length(LFP);
+        firing_rates(ii) = mean(R_in(0.2*L : 0.8*L));
         
     else
         error('Wrong POPULATION');
@@ -101,7 +104,8 @@ firing_rates(isnan(firing_rates)) = 0;
 
 %%
 fig = figure;
-scatter(membrane_potentials, firing_rates, 5, 'filled');
+% scatter(membrane_potentials, firing_rates, 5, 'filled');
+scatter(potential_integral, firing_rates, 5, 'filled');
 xlabel('Membrane potential (mV)');
 ylabel('Firing rate');
 
@@ -160,16 +164,16 @@ elseif strcmp(FUNCTION, 'G')
 end
 
 %%
-figure(fig);
-yyaxis right
-hold
-nonlinearity_post = nan(size(x));
-for i = 1:numel(x)
-    nonlinearity_post(i) = f_nonlinearity(x(i));
-end
-% plot(x, max_firing_rate * nonlinearity_post);xlabel('Membrane potential (mV)');
-plot(x, nonlinearity_post);xlabel('Membrane potential (mV)');
-ylabel('Firing rate (spikes/s)');
-ylim([0 max_firing_rate]);
-yyaxis left
-ylim([0 max_firing_rate]);
+% figure(fig);
+% yyaxis right
+% hold
+% nonlinearity_post = nan(size(x));
+% for i = 1:numel(x)
+%     nonlinearity_post(i) = f_nonlinearity(x(i));
+% end
+% % plot(x, max_firing_rate * nonlinearity_post);xlabel('Membrane potential (mV)');
+% plot(x, nonlinearity_post);xlabel('Membrane potential (mV)');
+% ylabel('Firing rate (spikes/s)');
+% ylim([0 max_firing_rate]);
+% yyaxis left
+% ylim([0 max_firing_rate]);

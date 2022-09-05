@@ -143,7 +143,7 @@ def set_params(type='pyramidal', source='brunel'):
             # Synaptic efficacies
             j_GABA  = 17.55 * pA # 35.1 * pA # Default = 35.1*pA # NMM(5.008) = LIF(61*pA)
             j_AMPA  = -165 * pA # -330 * pA # Default = -330*pA # NMM(5.009) = LIF(-690*pA)
-            j_AMPA_ext = -19 * pA
+            j_AMPA_ext = -1.9 * pA
             j_AMPA_tha = -19 * pA
             
             # Delta function weight (increment with each input spike)

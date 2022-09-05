@@ -55,7 +55,7 @@ corriente = 0
 input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 
-input_spike_rate = [11.39]#[0, 0.1, 0.2] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
+input_spike_rate = [5]#[0, 0.1, 0.2] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
 input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
 
 #%% parameters  --------------------------------------------------------------
@@ -64,7 +64,7 @@ dt_ = 100 * usecond
 T = np.linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector for plots (in seconds)
    
 # populations
-N = 100 # 135 # 675
+N = 2000 # 135 # 675
 N_P = int(N*4)  # pyramidal neurons
 N_I = int(N)    # interneurons
 
@@ -128,7 +128,7 @@ tau_rp_P = params_py.get('tau_rp')
 tau_rp_I = params_in.get('tau_rp')
 
 # Synaptic delay
-delay = 0.2 * ms # 1 * ms # 0.5 * ms # 0.5 * ms in Brunel and Wang 2001
+delay = 0.0 * ms # 1 * ms # 0.5 * ms # 0.5 * ms in Brunel and Wang 2001
 
 # Cortical input
 num_inputs = 800                    # Both thalamo-cortical and cortico-cortical 
@@ -136,8 +136,8 @@ num_inputs = 800                    # Both thalamo-cortical and cortico-cortical
 
 # Synaptic efficacies
 # AMPA (excitatory)
-j_AMPA_rec_P = params_py.get('j_AMPA') * 1000/N # * np.sqrt(1000/N)
-j_AMPA_rec_I = params_in.get('j_AMPA') * 1000/N # * np.sqrt(1000/N)
+j_AMPA_rec_P = params_py.get('j_AMPA') * 2000/N # * np.sqrt(1000/N)
+j_AMPA_rec_I = params_in.get('j_AMPA') * 2000/N # * np.sqrt(1000/N)
     
 j_AMPA_cor_P = params_py.get('j_AMPA_ext')
 j_AMPA_cor_I = params_in.get('j_AMPA_ext')
@@ -146,8 +146,8 @@ j_AMPA_tha_P = params_py.get('j_AMPA_tha')
 j_AMPA_tha_I = params_in.get('j_AMPA_tha')
 
 # GABAergic (inhibitory)
-j_GABA_P = params_py.get('j_GABA') * 1000/N # * np.sqrt(1000/N)
-j_GABA_I = params_in.get('j_GABA') * 1000/N # * np.sqrt(1000/N)
+j_GABA_P = params_py.get('j_GABA') * 2000/N # * np.sqrt(1000/N)
+j_GABA_I = params_in.get('j_GABA') * 2000/N # * np.sqrt(1000/N)
 
 # Weight constants. Amplitude of the synaptic input
 # Pyramidal 
@@ -270,9 +270,11 @@ input1 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[0] * 
 if np.size(input_spike_rate) > 1:
     input2 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[1] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
     input3 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[2] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
+    input4 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[3] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
     input1.active = False
     input2.active = False
     input3.active = False
+    input4.active = False
 # Poisson input (Cortico-cortical) input to inhibitory interneurons. Controlled by INHIBIT_INPUT
 C_Cor_I = PoissonInput(In_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[0]*1000/num_inputs) * Hz, increment_AMPA_ext_I)
 C_Cor_I.active = INHIBIT_INPUT # Innactive cortico-cortical -> interneuron
@@ -310,13 +312,6 @@ In_monitor = StateMonitor(In_Pop, ['v', 'v_ip'], record = True)
 #%% simulate  -----------------------------------------------------------------
 net = Network(collect())
 
-# temporal = I_injected_I
-# I_injected_I = 0 * pA
-# net.run(simulation_time, report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
-
-# I_injected_I = temporal
-# net.run(simulation_time/2, report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
-
 input1.active = True
 net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
 
@@ -324,11 +319,18 @@ if np.size(input_spike_rate) > 1:
     input1.active = False
     input2.active = True
     net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
-    
+
+if np.size(input_spike_rate) > 2:    
     input2.active = False
     input3.active = True
     net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+       
+if np.size(input_spike_rate) > 3:
+    input3.active = False
+    input4.active = True
+    net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
     
+   
 #%% analysis ------------------------------------------------------------------
 # spike rates
 window_size = 10.1 * ms # Size of the window for the smooth spike rate # 100.1 instead of 100 to avoid an annoying warning at the end of the simulation
@@ -501,9 +503,9 @@ if SAVE:
     save_dictionary={'LFP': lfp_,
                     'LFP_V': lfp_v,
                     'lfp_dt' : dt_,
-		    'alpha1': alpha_1,
-                    'alpha2': alpha_2,
                     'v_rest': V_leak,
+                    'v_p': mean(Py_monitor.v,0),
+                    'v_i': mean(In_monitor.v,0),
                     'v_pi': mean(Py_monitor.v_pi,0),
                     'v_ip': mean(In_monitor.v_ip,0),
                     'p_PP': p_PP,
@@ -516,7 +518,7 @@ if SAVE:
                     'ACTIVE_INTERNEURONS': ACTIVE_INTERNEURONS,
                     'input_spike_rate': input_spike_rate,
                     'input_spike_rate_thalamic': input_spike_rate_thalamic,
-                    'input_current': input_current}  
+                    'input_current': input_current} 
     
     # Save as lfp_last
     scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/lfp_last.mat',
