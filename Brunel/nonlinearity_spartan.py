@@ -535,11 +535,11 @@ def brunel(corriente = 0):
     
         save_str = format('sweep/lfp_current_%s.png' %(corriente))
         scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/nonlinearity_disconnected/lfp_current_%s.mat' %(corriente),
-                         mdict = save_dictionary)        
-
-	save_dictionary = None
-	I_in = None
-	I_py = None
+                         mdict = save_dictionary)
+        
+        save_dictionary = None
+        I_in = None
+        I_py = None
         
     else:
         print('Attention! Results of simulation were not saved. SAVE = False')
