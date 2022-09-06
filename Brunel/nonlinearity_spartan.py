@@ -64,7 +64,7 @@ def brunel(corriente = 0):
     input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
     
     input_spike_rate = [0]#[0, 1, 3, 5] #[u] #[15] # [0, 5, 10] # spikes/ms/cell (driving input)
-    input_spike_rate_thalamic = 0 # 1.5 # spikes/ms/cell (spontaneous activity)
+    input_spike_rate_thalamic = 1.5 # spikes/ms/cell (spontaneous activity)
     
     #%% parameters  --------------------------------------------------------------
     simulation_time = 2 * second
@@ -532,7 +532,7 @@ def brunel(corriente = 0):
        #                  mdict = save_dictionary)
     
         save_str = format('sweep/lfp_current_%s.png' %(corriente))
-        scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/nonlinearity_disconnected_noTha/lfp_current_%s.mat' %(corriente),
+        scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/nonlinearity_disconnected/lfp_current_%s.mat' %(corriente),
                          mdict = save_dictionary)
         
         save_dictionary = None

@@ -62,7 +62,7 @@ corriente = 0
 input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 
-input_spike_rate = [5]#[0, 1, 3, 5] #[u] #[15] # [0, 5, 10] # spikes/ms/cell (driving input)
+input_spike_rate = [0, 1, 3, 5] #[u] #[15] # [0, 5, 10] # spikes/ms/cell (driving input)
 input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
 
 #%% parameters  --------------------------------------------------------------
@@ -534,15 +534,15 @@ if SAVE:
     scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/lfp_last.mat',
                      mdict = save_dictionary)
     
-   # i = 0
-   # while os.path.exists('/data/gpfs/projects/punim0643/artemios/simulations/lfp_%s.mat' % i):
-   #     i += 1
-   # save_str = format('lfp_%s.png' %(i))
-   # scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/lfp_%s.mat' %(i),
-   #                  mdict = save_dictionary)
+    i = 0
+    while os.path.exists('/data/gpfs/projects/punim0643/artemios/simulations/lfp_%s.mat' % i):
+        i += 1
+    save_str = format('lfp_%s.png' %(i))
+    scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/lfp_%s.mat' %(i),
+                     mdict = save_dictionary)
 
-    save_str = format('sweep/lfp_u%s_ii%s.png' %(u,alpha_ii))
-    scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/sweep/Aug26/lfp_u%s_ii%s.mat' %(u,alpha_ii),
+    #save_str = format('sweep/lfp_u%s_ii%s.png' %(u,alpha_ii))
+    #scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/sweep/Aug26/lfp_u%s_ii%s.mat' %(u,alpha_ii),
                      mdict = save_dictionary)        
     
 else:
