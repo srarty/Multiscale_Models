@@ -17,7 +17,7 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     end
     
     N = 2000; % Number of samples: 1 sample = 1 milisecond
-    u = 1.5; %20; % 1.5;
+    u = 5; %20; % 1.5;
 
     params = set_parameters('recursive', u);
     
@@ -93,9 +93,9 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
         ];
     
     [t,x,y] = ode45(@(t,x) ode(t,x,params,dt), [min(t) max(t)], x0);
-%     [t,x,y] = ode23(@(t,x) ode(t,x,params,dt), [min(t) max(t)], x0);
-%     [t,x,y] = ode113(@(t,x) ode(t,x,params,dt), [min(t) max(t)], x0);
-    % Try stochastic solver instead. euler murayama
+    %     [t,x,y] = ode23(@(t,x) ode(t,x,params,dt), [min(t) max(t)], x0);
+    %     [t,x,y] = ode113(@(t,x) ode(t,x,params,dt), [min(t) max(t)], x0);
+    
     for i = 1:size(x,1)
         y(i) = x(i,1) + x(i,9) + x(i,5);
     end
@@ -187,12 +187,6 @@ function dx = ode(t,x,params,dt)
     % External input u->P
     dx(9) = x(10) - x(9)/tau_mp;
     dx(10) = - x(10)/tau_sp + AmplitudeU * u; % -x(9) + u + (params.options.ADD_NOISE * (sqrt(u).*randn(1,1))); % Random number % 1.1; % <- steady increase of 1.1 spike/ms/cell/s
-%     % External input Tha->P
-%     dx(11) = x(12) - x(11)/tau_mp;
-%     dx(12) = - x(12)/tau_sp + AmplitudeU * 10 * 1.5;
-%     % External input Tha->I
-%     dx(13) = x(14) - x(13)/tau_mp;
-%     dx(14) = - x(14)/tau_sp + AmplitudeU * 10 * 1.5;
     % Parameters:
     dx(11) = 0; % alpha_i
     dx(12) = 0; % alpha_e
@@ -200,6 +194,14 @@ function dx = ode(t,x,params,dt)
     dx(14) = 0; % alpha_ri
     dx(15) = 0; % alpha_u
 
+    
+    %     % External input Tha->P
+    %     dx(11) = x(12) - x(11)/tau_mp;
+    %     dx(12) = - x(12)/tau_sp + AmplitudeU * 10 * 1.5;
+    %     % External input Tha->I
+    %     dx(13) = x(14) - x(13)/tau_mp;
+    %     dx(14) = - x(14)/tau_sp + AmplitudeU * 10 * 1.5;
+    
 end
 
 function do_plot(x,t, Vm, f_e, f_i)    
