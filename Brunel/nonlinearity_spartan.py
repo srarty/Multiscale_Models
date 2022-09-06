@@ -532,7 +532,7 @@ def brunel(corriente = 0):
        #                  mdict = save_dictionary)
     
         save_str = format('sweep/lfp_current_%s.png' %(corriente))
-        scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulation/nonlinearity_disconnected_noTha/lfp_current_%s.mat' %(corriente),
+        scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/nonlinearity_disconnected_noTha/lfp_current_%s.mat' %(corriente),
                          mdict = save_dictionary)
         
         save_dictionary = None
