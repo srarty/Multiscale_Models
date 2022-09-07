@@ -543,7 +543,7 @@ if SAVE:
 
     #save_str = format('sweep/lfp_u%s_ii%s.png' %(u,alpha_ii))
     #scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/sweep/Aug26/lfp_u%s_ii%s.mat' %(u,alpha_ii),
-                     mdict = save_dictionary)        
+    #                 mdict = save_dictionary)        
     
 else:
     print('Attention! Results of simulation were not saved. SAVE = False')
