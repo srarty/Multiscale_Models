@@ -14,8 +14,8 @@ end
 
 switch mode
     case 'recursive'
-        params.e0 =  30; %1.5;%120;% 10; %120;%30;%10;%30; %15; % max firing rate
-        params.e0i = 30; %20;%250;% 30; %250;%35;%40;%35; % max firing rate
+        params.e0 =  9.194; % max firing rate
+        params.e0i = 9.585; % max firing rate
         
         params.v0 = 19.72; % Firing Threshold (a)
         params.r = 34.34; % Sigmoid slope (b)
@@ -24,21 +24,21 @@ switch mode
         params.r_p = 10; %8; % Sigmoid slope (b)
         
         params.gompertz.a = 1;
-        params.gompertz.b = 3.824;
-        params.gompertz.c = -9.142;
-        params.gompertz.d = 0.03179;
+        params.gompertz.b = 9.825;
+        params.gompertz.c = 1.087;
+        params.gompertz.d = 0.3042;
         
         params.gompertzi.a = 1;
-        params.gompertzi.b = 4;%3;
-        params.gompertzi.c = 0.2;%1;
-        params.gompertzi.d = 0.15;%0.15;
+        params.gompertzi.b = 1.034;
+        params.gompertzi.c = 1.19;
+        params.gompertzi.d = 0.3328;
         
         % time constants
-        params.tau_mp = 0.009738; % Membrane time constant - Pyramidal (decay)
-        params.tau_sp = 0.001472; % Synaptic time constant - AMPA on Py (rising)
+        params.tau_mi = 0.009738; % Membrane time constant - Interneurons (decay)
+        params.tau_si = 0.001472; % Synaptic time constant - Py->In
         
-        params.tau_mi = 0.01966;  % Decay tau Interneurons
-        params.tau_si = 0.005608; % Rising tau Inhibitory
+        params.tau_mp = 0.01966;  % Decay tau (membrane time constant) - Pyramidal
+        params.tau_sp = 0.005608; % Rising tau Pyramidal - In -> Py
         
         params.tau_mrp = 0.01975;  % Decay tau recursive excitation
         params.tau_srp = 0.002665; % Rising tau recursive excitation

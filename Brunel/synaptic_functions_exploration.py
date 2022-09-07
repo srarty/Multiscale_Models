@@ -121,7 +121,7 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     I_input = -300 * pA
     
     # Synaptic efficacies
-    # AMPA (external on inhibitory interneurons)
+    # AMPA (external)
     if synaptic_type == 'AMPA':
         if external:
             j =  params["j_AMPA_ext"]
@@ -133,9 +133,6 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
         j =  params["j_GABA"]
         alpha_weight = params["alpha_weight_GABA"]
     
-    
-    single_exp_weight = 8.2 # params["single_exp_weight"] # Inverse: 1/1.52 = 0.6578947368421053
-    # delayed_exp_weight = 0 # 6.13 # params["delayed_exp_weight"] # Inverse 1.52/6.0995 = 0.24920075416017706
     
     # Alpha function's parameter (and double exponential) to fix the units in ds/dt
     k = 1 / ms # Dimmensionless?, check Nicola and Campbell 2013
@@ -198,9 +195,7 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
                                                     ''',refractory=tau_rp, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
     Pyramidal.v = V_leak
     
-    # Input1 = PoissonInput(Pyramidal, 's_AMPA1', num_inputs, input_spike_rate * Hz, single_exp_weight)
-    # Input2 = PoissonInput(Pyramidal, 'x2', num_inputs, input_spike_rate * Hz, alpha_weight)
-    
+  
     if num_inputs > 1:
         Input = PoissonGroup(num_inputs, rates=input_spike_rate * Hz, dt=dt_)
     else:
@@ -233,9 +228,9 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
         axs[0].set_title('Neuron type: {} | Synapses: {} | j: {} pA'.format(neuron_type, synaptic_type, j/pA))
         axs[0].set_ylabel('PSP (mV)')
         axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v1) * 1e3), lw=1, label='v1 (single exp)')
-        axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v6) * 1e3), lw=1, label='v6 (alpha)', linestyle='dashed')
-        axs[0].plot(T * 1e3, ((np.transpose(Py_monitor.v) - V_leak) * 1e3), lw=1, label='Vm', linestyle='solid')
-        axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v1 + Py_monitor.v6) * 1e3), lw=1, label='Sum', linestyle='dashed')
+        # axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v6) * 1e3), lw=1, label='v6 (alpha)', linestyle='dashed')
+        # axs[0].plot(T * 1e3, ((np.transpose(Py_monitor.v) - V_leak) * 1e3), lw=1, label='Vm', linestyle='solid')
+        # axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v1 + Py_monitor.v6) * 1e3), lw=1, label='Sum', linestyle='dashed')
         # if external:
             # axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v1) * 1e3), lw=1, label='single exp')
         axs[0].legend()
@@ -243,8 +238,8 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
         axs[1].set_xlabel('Time (ms)')
         axs[1].set_ylabel('PSC (pA)')
         axs[1].plot(T * 1e3, np.transpose(Py_monitor.I_AMPA1), lw=1)
-        axs[1].plot(T * 1e3, np.transpose(Py_monitor.I_AMPA6), lw=1, linestyle='dashed')
-        axs[1].plot(T * 1e3, np.transpose(Py_monitor.I_tot), lw=1)
+        # axs[1].plot(T * 1e3, np.transpose(Py_monitor.I_AMPA6), lw=1, linestyle='dashed')
+        # axs[1].plot(T * 1e3, np.transpose(Py_monitor.I_tot), lw=1)
         # if external:
             # axs[1].plot(T * 1e3, (np.transpose(Py_monitor.s_AMPA1)*j/pA), lw=1)
         
@@ -253,3 +248,5 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
         plt.show()
     
     return Py_monitor
+
+Py_monitor = synaptic_functions_exploration()

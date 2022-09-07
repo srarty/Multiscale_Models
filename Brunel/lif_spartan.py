@@ -66,7 +66,7 @@ input_spike_rate = [0, 1, 3, 5] #[u] #[15] # [0, 5, 10] # spikes/ms/cell (drivin
 input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
 
 #%% parameters  --------------------------------------------------------------
-simulation_time = 4 * second
+simulation_time = 2 * second
 dt_ = 100 * usecond
 T = linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector for plots (in seconds)
 # T_u = linspace(0, simulation_time, round(simulation_time/u_dt)) # Time vector for u for plots (in seconds)
@@ -534,16 +534,16 @@ if SAVE:
     scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/lfp_last.mat',
                      mdict = save_dictionary)
     
-   # i = 0
-   # while os.path.exists('/data/gpfs/projects/punim0643/artemios/simulations/lfp_%s.mat' % i):
-   #     i += 1
-   # save_str = format('lfp_%s.png' %(i))
-   # scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/lfp_%s.mat' %(i),
-   #                  mdict = save_dictionary)
+    i = 0
+    while os.path.exists('/data/gpfs/projects/punim0643/artemios/simulations/lfp_%s.mat' % i):
+        i += 1
+    save_str = format('lfp_%s.png' %(i))
+    scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/lfp_%s.mat' %(i),
+                     mdict = save_dictionary)
 
-    save_str = format('sweep/lfp_u%s_ii%s.png' %(u,alpha_ii))
-    scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/sweep/Aug26/lfp_u%s_ii%s.mat' %(u,alpha_ii),
-                     mdict = save_dictionary)        
+    #save_str = format('sweep/lfp_u%s_ii%s.png' %(u,alpha_ii))
+    #scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/sweep/Aug26/lfp_u%s_ii%s.mat' %(u,alpha_ii),
+    #                 mdict = save_dictionary)        
     
 else:
     print('Attention! Results of simulation were not saved. SAVE = False')

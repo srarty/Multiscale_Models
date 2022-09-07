@@ -6,8 +6,10 @@
 % load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_ipsp.mat'); psp = -ipsp; % Inhibitory (GABA) on pyramidal
 % load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_epsp.mat'); psp = epsp; % Excitatory (AMPA) on inhibitory interneurons
 % load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_epsp.mat'); psp = epsp; % Excitatory (AMPA) on pyramidal (recursive)
-% load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_ipsp.mat'); psp = -ipsp; % Inhibitory (GABA) on inhibitory interneurons (recursive)
-load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_externalEPSP.mat'); psp = epsp; % Excitatory (AMPA_ext) on pyramidal (external input)
+load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_ipsp.mat'); psp = -ipsp; % Inhibitory (GABA) on inhibitory interneurons (recursive)
+% load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_externalEPSP.mat'); psp = epsp; % Excitatory (AMPA_ext) on pyramidal (external input)
+% load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_thalamicEPSP.mat'); psp = epsp; % Excitatory (AMPA_tha) on pyramidal (external input)
+% load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_thalamicEPSP.mat'); psp = epsp; % Excitatory (AMPA_tha) on inhibitory (external input)
 
 % load('C:\Users\artemios\Documents\Multiscale_Models_Data\taus_fit\inhibitory_ipsp_-8.2.mat'); psp = ipsp;
 
