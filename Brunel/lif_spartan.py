@@ -502,6 +502,7 @@ if SAVE:
                     'v_rest': V_leak,
                     'v_p': mean(Py_monitor.v,0),
                     'v_i': mean(In_monitor.v,0),
+                    'v_pe': mean(Py_monitor.v_pe,0),
                     'v_pi': mean(Py_monitor.v_pi,0),
                     'v_ip': mean(In_monitor.v_ip,0),
                     'p_PP': p_PP,
