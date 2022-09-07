@@ -55,7 +55,7 @@ corriente = 0
 input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 
-input_spike_rate = [0] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
+input_spike_rate = [1] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
 input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
 
 #%% parameters  --------------------------------------------------------------
@@ -64,7 +64,7 @@ dt_ = 100 * usecond
 T = np.linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector for plots (in seconds)
    
 # populations
-N = 2000 # 135 # 675
+N = 100 # 135 # 675
 N_P = int(N*4)  # pyramidal neurons
 N_I = int(N)    # interneurons
 
@@ -290,12 +290,12 @@ C_Tha_I = PoissonInput(In_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thala
 # C_Cor_I.connect(p = 1)    
 
 #%% monitors  -----------------------------------------------------------------
-N_activity_plot = 30 # How many neurons in the raster plots (too large takes longer to monitor and plot)
-sp_P = SpikeMonitor(Py_Pop[:]) #N_activity_plot])
-sp_I = SpikeMonitor(In_Pop[:]) #N_activity_plot])
+N_activity_plot = 50 # How many neurons in the raster plots (too large takes longer to monitor and plot)
+sp_P = SpikeMonitor(Py_Pop[:N_activity_plot])
+sp_I = SpikeMonitor(In_Pop[:N_activity_plot])
 
 
-r_P = PopulationRateMonitor(Py_Pop) # [0:N_activity_plot])
+r_P = PopulationRateMonitor(Py_Pop)#[0:N_activity_plot])
 r_I = PopulationRateMonitor(In_Pop)
 
 st_AMPA_P = StateMonitor(Py_Pop, ('s_AMPA'), record = 0)

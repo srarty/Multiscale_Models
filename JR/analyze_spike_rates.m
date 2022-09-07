@@ -18,8 +18,8 @@
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_288.mat'; % u=[0, 1, 0, 15], non-smooth
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_289.mat'; 
 
-% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_309.mat'; 
-data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_2.mat'; 
+data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_312.mat'; 
+% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_2.mat'; 
 
 load(data_file);
 tt = lfp_dt:lfp_dt:lfp_dt*length(v_ip);
