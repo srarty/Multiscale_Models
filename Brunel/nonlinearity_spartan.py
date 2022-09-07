@@ -312,8 +312,8 @@ def brunel(corriente = 0):
     st_GABA_I = StateMonitor(In_Pop, 's_GABA', record = 0)
     st_AMPA_cor_I = StateMonitor(In_Pop, 's_AMPA_cor', record = 0)
     
-    Py_monitor = StateMonitor(Py_Pop, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'I_tot', 'v', 'v_pe', 'v_pi'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
-    In_monitor = StateMonitor(In_Pop, ['v', 'v_ip', 'I_tot'], record = True)
+    Py_monitor = StateMonitor(Py_Pop, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'I_tot', 'I_AMPA_tha', 'v', 'v_pe', 'v_pi'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
+    In_monitor = StateMonitor(In_Pop, ['v', 'v_ip', 'I_tot', 'I_AMPA_tha'], record = True)
     
     #%% simulate  -----------------------------------------------------------------
     net = Network(collect())
@@ -366,6 +366,8 @@ def brunel(corriente = 0):
     # Calculate mean I
     I_in = mean(In_monitor.I_tot, 0)
     I_py = mean(Py_monitor.I_tot, 0)
+    I_in_tha = mean(In_monitor.I_AMPA_tha, 0)
+    I_py_tha = mean(Py_monitor.I_AMPA_tha, 0)
 
 
     # Calculate mean PSP (NMM states)
@@ -511,6 +513,8 @@ def brunel(corriente = 0):
                         'R_in_2': r_I_rate_2,
                         'I_in': I_in,
                         'I_py': I_py,
+                        'I_in_tha': I_in_tha,
+                        'I_py_tha': I_py_tha,
                         'RECURRENT_PYRAMIDAL': RECURRENT_PYRAMIDAL,
                         'RECURRENT_INHIBITORY': RECURRENT_INHIBITORY,
                         'INHIBIT_INPUT': INHIBIT_INPUT,
@@ -532,7 +536,7 @@ def brunel(corriente = 0):
        #                  mdict = save_dictionary)
     
         save_str = format('sweep/lfp_current_%s.png' %(corriente))
-        scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/nonlinearity/no_relative_RP_lfp_current_%s.mat' %(corriente),
+        scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/nonlinearity_I_tha/lfp_current_%s.mat' %(corriente),
                          mdict = save_dictionary)
         
         save_dictionary = None
