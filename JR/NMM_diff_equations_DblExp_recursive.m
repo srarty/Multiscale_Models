@@ -16,14 +16,14 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
         value2 = varargin{4};
     end
     
-    N = 4000; % Number of samples: 1 sample = 1 milisecond
-    u = 0.1;
+    N = 2000; % Number of samples: 1 sample = 1 milisecond
+    u = 0;
 
     params = set_parameters('recursive', u);
     
     % Options
     params.options.ADD_NOISE = 0; % External input noise (0 = no noise, 1 = noise)
-    params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Anyother value of CHANGE_U: U changes.
+    params.options.CHANGE_U = 1; % 0: U doesn't change during simulation. Anyother value of CHANGE_U: U changes.
     
     % Parse inputs --------------------------------------------------------
     if exist('option','var')
@@ -128,11 +128,11 @@ function dx = ode(t,x,params,dt)
     % Following lines are meant to change the input mid simulation, comment
     % them to run it with constant input.
     if isfield(params,'options') & isfield(params.options,'CHANGE_U') & params.options.CHANGE_U
-        if t >= 3000 * 1e-3
+        if t >= 1500 * 1e-3
             u = 5;
-        elseif t >= 2000 * 1e-3
-            u = 3;
         elseif t >= 1000 * 1e-3
+            u = 3;
+        elseif t >= 500 * 1e-3
             u = 1;
         end
     end
@@ -166,7 +166,7 @@ function dx = ode(t,x,params,dt)
     AmplitudeE  = c1 * 2 * e_0  * x(12) * Tau_coeff(tau_mi,  tau_si);
     AmplitudeRE = c3 * 2 * e_0  * x(13) * Tau_coeff(tau_mrp, tau_srp);
     AmplitudeRI = c4 * 2 * e_0i * x(14) * Tau_coeff(tau_mri, tau_sri);
-    AmplitudeU  = c5 * x(15) * Tau_coeff(tau_mrp, tau_srp);
+    AmplitudeU  = 1000 * 0.0173 * x(15) * Tau_coeff(tau_mrp, tau_srp);
     
     % Diff equations ------------------------------------------------------
     dx = zeros(15,1);
@@ -186,7 +186,7 @@ function dx = ode(t,x,params,dt)
     dx(8) = - x(8)/tau_sri + AmplitudeRI * S1(x(3) + x(7));    
     % External input u->P
     dx(9) = x(10) - x(9)/tau_mrp;
-    dx(10) = - x(10)/tau_srp + AmplitudeU * u; % + AmplitudeU * 10 * 1.5; % -x(9) + u + (params.options.ADD_NOISE * (sqrt(u).*randn(1,1))); % Random number % 1.1; % <- steady increase of 1.1 spike/ms/cell/s
+    dx(10) = - x(10)/tau_srp + AmplitudeU * (u + (params.options.ADD_NOISE * (sqrt(u).*randn(1,1)))); % + AmplitudeU * 10 * 1.5; % -x(9) + u + (params.options.ADD_NOISE * (sqrt(u).*randn(1,1))); % Random number % 1.1; % <- steady increase of 1.1 spike/ms/cell/s
     % Parameters:
     dx(11) = 0; % alpha_i
     dx(12) = 0; % alpha_e
