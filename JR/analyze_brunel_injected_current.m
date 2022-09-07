@@ -9,7 +9,7 @@
 
 %% Options ----------------------------------------------------------------
 
-POPULATION = 'In'; % 'Py' or 'In'
+POPULATION = 'Py'; % 'Py' or 'In'
 FUNCTION = 'G'; % 'G' (Gompertz) or 'S' (Sigmoid)
 
 % -------------------------------------------------------------------------
@@ -54,11 +54,14 @@ ylabel('Spike rate');
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\nonlinearity\double_exp\';
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\nonlinearity\double_exp_v2\';
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity\';
-folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_disconnected\';
+% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_disconnected\';
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_disconnected_noTha\';
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_connected\';
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_connected_noTha\';
-% 
+folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_I_Tha_disconnected\';
+% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_I_Tha\';
+
+
 d = dir([folder '*.mat']);
 no_files = numel(d);
 
@@ -76,7 +79,7 @@ for ii = 1:no_files
         catch
             membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_P;
         end
-        potential_integral(ii) = -(sum(I_py)/C_P)/1000;
+        potential_integral(ii) = -(sum(I_py - I_py_tha)/C_P)/1000;
         firing_rates(ii) = mean(R_py(0.2*L : 0.8*L));
         
     elseif strcmp(POPULATION, 'In')
@@ -85,7 +88,7 @@ for ii = 1:no_files
         catch
             membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_I;
         end
-        potential_integral(ii) = -(sum(I_in)/C_I)/2000;
+        potential_integral(ii) = -(sum(I_in - I_in_tha)/C_I)/2000;
         firing_rates(ii) = mean(R_in(0.2*L : 0.8*L));
         
     else
@@ -135,14 +138,14 @@ elseif strcmp(FUNCTION, 'G') % Gompertz
         % Gompertz (In)
         opts = fitoptions(ft);
         opts.StartPoint =  [10 1 1 0];
-        opts.Lower =  [max_firing_rate-1 -100 -100 -10];%[1 3.5 0.8 0.1]
-        opts.Upper =  [max_firing_rate+1 100 100 10];%[1 100 100 0.1]
+        opts.Lower =  [max_firing_rate-10 -100 -100 -10];%[1 3.5 0.8 0.1]
+        opts.Upper =  [max_firing_rate+10 100 100 10];%[1 100 100 0.1]
     else
         % Gompertz (Py)
         opts = fitoptions(ft);        
         opts.StartPoint =  [10 1 1 0];
-        opts.Lower =  [max_firing_rate-1 -100 -100 -10];%[1 3.5 0.8 0.1]
-        opts.Upper =  [max_firing_rate+1 100 100 10];%[1 100 100 0.1]
+        opts.Lower =  [max_firing_rate-10 -100 -100 -10];%[1 3.5 0.8 0.1]
+        opts.Upper =  [max_firing_rate+10 100 100 10];%[1 100 100 0.1]
     end    
 else
     error('Wrong POPULATION');
