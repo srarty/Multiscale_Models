@@ -16,8 +16,8 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
         value2 = varargin{4};
     end
     
-    N = 2000; % Number of samples: 1 sample = 1 milisecond
-    u = 5; %20; % 1.5;
+    N = 4000; % Number of samples: 1 sample = 1 milisecond
+    u = 0.1;
 
     params = set_parameters('recursive', u);
     
@@ -101,7 +101,7 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     end
     
     % Calculate firing rate
-    f_i = params.e0i * sigmoid_io(x(:,3) + x(:,7), params.v0, params.r); % gompertz_io(x(:,3) + x(:,7), params.gompertzi.b, params.gompertzi.c, params.gompertzi.d); % 
+    f_i = params.e0i * gompertz_io(x(:,3) + x(:,7), params.gompertzi.b, params.gompertzi.c, params.gompertzi.d); % sigmoid_io(x(:,3) + x(:,7), params.v0, params.r); % 
     f_e = params.e0 * gompertz_io(x(:,1) + x(:,5) + x(:,9), params.gompertz.b, params.gompertz.c, params.gompertz.d); % sigmoid_io(x(:,1) + x(:,5) + x(:,9), params.v0, params.r); % 
     
     if nargin == 0        
@@ -138,11 +138,11 @@ function dx = ode(t,x,params,dt)
     end
     
     % Synaptic functions
-    S1 = @(x) sigmoid_io(x, v0, r); %gompertz_io(x,ib, ic ,id);% 
+    S1 = @(x) gompertz_io(x,ib, ic ,id);% sigmoid_io(x, v0, r); %
     S2 = @(x) gompertz_io(x, b, c, d);  % sigmoid_io(x, v0, r); % 
     Tau_coeff = @(m, s) 1/(m*s);% Nicola Campbell
     
-    c_constant = 2000;%params.c_constant; %1000;
+    c_constant = 1000;%params.c_constant; %1000;
     c1 = 4 * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
     c2 = 1 * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
     c3 = 4 * c_constant * params.P_pyTOpy;
@@ -162,22 +162,22 @@ function dx = ode(t,x,params,dt)
     tau_mri = params.tau_mri;
     
     % Lumped parameters
-    AmplitudeI  = c2 * 2 * e_0i * x(11) * Tau_coeff(tau_mi,  tau_si);
-    AmplitudeE  = c1 * 2 * e_0  * x(12) * Tau_coeff(tau_mp,  tau_sp);
+    AmplitudeI  = c2 * 2 * e_0i * x(11) * Tau_coeff(tau_mp,  tau_sp);
+    AmplitudeE  = c1 * 2 * e_0  * x(12) * Tau_coeff(tau_mi,  tau_si);
     AmplitudeRE = c3 * 2 * e_0  * x(13) * Tau_coeff(tau_mrp, tau_srp);
     AmplitudeRI = c4 * 2 * e_0i * x(14) * Tau_coeff(tau_mri, tau_sri);
-    AmplitudeU  = c5 * x(15) * Tau_coeff(tau_mp, tau_sp);
+    AmplitudeU  = c5 * x(15) * Tau_coeff(tau_mrp, tau_srp);
     
     % Diff equations ------------------------------------------------------
     dx = zeros(15,1);
 
     % Double exponential from Nicola-Campbell (2013):
     % I->P
-    dx(1) = x(2) - x(1)/tau_mi;
-    dx(2) = - x(2)/tau_si + AmplitudeI * S1(x(3) + x(7));
+    dx(1) = x(2) - x(1)/tau_mp;
+    dx(2) = - x(2)/tau_sp + AmplitudeI * S1(x(3) + x(7));
     % P->I
-    dx(3) = x(4) - x(3)/tau_mp;
-    dx(4) = - x(4)/tau_sp + AmplitudeE * S2(x(1) + x(5) + x(9));
+    dx(3) = x(4) - x(3)/tau_mi;
+    dx(4) = - x(4)/tau_si + AmplitudeE * S2(x(1) + x(5) + x(9));
     % Recurrent Pyramidal P->P
     dx(5) = x(6) - x(5)/tau_mrp;
     dx(6) = - x(6)/tau_srp + AmplitudeRE * S2(x(1) + x(5) + x(9));
@@ -185,8 +185,8 @@ function dx = ode(t,x,params,dt)
     dx(7) = x(8) - x(7)/tau_mri;                       
     dx(8) = - x(8)/tau_sri + AmplitudeRI * S1(x(3) + x(7));    
     % External input u->P
-    dx(9) = x(10) - x(9)/tau_mp;
-    dx(10) = - x(10)/tau_sp + AmplitudeU * u; % -x(9) + u + (params.options.ADD_NOISE * (sqrt(u).*randn(1,1))); % Random number % 1.1; % <- steady increase of 1.1 spike/ms/cell/s
+    dx(9) = x(10) - x(9)/tau_mrp;
+    dx(10) = - x(10)/tau_srp + AmplitudeU * u; % + AmplitudeU * 10 * 1.5; % -x(9) + u + (params.options.ADD_NOISE * (sqrt(u).*randn(1,1))); % Random number % 1.1; % <- steady increase of 1.1 spike/ms/cell/s
     % Parameters:
     dx(11) = 0; % alpha_i
     dx(12) = 0; % alpha_e
@@ -230,6 +230,9 @@ function do_plot(x,t, Vm, f_e, f_i)
     plot(t, f_i);
     ylabel('Spike rate (Hz)');
     xlabel('Time (s)');
+    
+    figure
+    plot(t, x(:,9));    
 end
 
 function out = sigmoid_io(x, v0, r)
