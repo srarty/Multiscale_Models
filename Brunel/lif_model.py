@@ -39,7 +39,7 @@ def set_params(type='pyramidal', source='brunel'):
             C = 0.5 * nF # Membrane capacitance
             
             tau_rpa = 2 * ms # Absolute refractory period
-            tau_rpr = 0 * ms #100 * ms # Relative refractory period
+            tau_rpr = 20 * ms #100 * ms # Relative refractory period
             tau_rp = tau_rpa + tau_rpr # Effective refractory period
             tau_m = 20 * ms # Membrane time constant
     
@@ -71,7 +71,7 @@ def set_params(type='pyramidal', source='brunel'):
             C = 0.2 * nF # Membrane capacitance
     
             tau_rpa = 1 * ms # Absolute refractory period
-            tau_rpr = 0 * ms # 100 * ms # Relative refractory period
+            tau_rpr = 12.5 * ms # 100 * ms # Relative refractory period
             tau_rp = tau_rpa + tau_rpr # Effective refractory period
             tau_m = C/g_leak #10 * ms # Membrane time constant
     
