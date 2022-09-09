@@ -10,7 +10,7 @@
 %% Options ----------------------------------------------------------------
 
 POPULATION = 'Py'; % 'Py' or 'In'
-FUNCTION = 'S'; % 'G' (Gompertz) or 'S' (Sigmoid)
+FUNCTION = 'G'; % 'G' (Gompertz) or 'S' (Sigmoid)
 
 % -------------------------------------------------------------------------
 
@@ -79,8 +79,8 @@ for ii = 1:no_files
         catch
             membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_P;
         end        
-        potential_integral(ii) = -(sum(I_py)/C_P)/1000;
-%         potential_integral(ii) = -(sum(I_py - I_py_tha)/C_P)/1000;
+%         potential_integral(ii) = -(sum(I_py)/C_P)/1000;
+        potential_integral(ii) = -(sum(I_py - I_py_tha)/C_P)/1000;
         firing_rates(ii) = mean(R_py(0.2*L : 0.8*L));
         
     elseif strcmp(POPULATION, 'In')
@@ -89,8 +89,8 @@ for ii = 1:no_files
         catch
             membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_I;
         end
-        potential_integral(ii) = -(sum(I_in)/C_I)/2000;
-%         potential_integral(ii) = -(sum(I_in - I_in_tha)/C_I)/2000;
+%         potential_integral(ii) = -(sum(I_in)/C_I)/2000;
+        potential_integral(ii) = -(sum(I_in - I_in_tha)/C_I)/2000;
         firing_rates(ii) = mean(R_in(0.2*L : 0.8*L));
         
     else
@@ -101,6 +101,10 @@ end
 
 % When there's no spike, R_py and R_in are NaN. Fix it:
 firing_rates(isnan(firing_rates)) = 0;
+
+membrane_potentials(firing_rates > 32) = [];
+potential_integral(firing_rates > 32) = [];
+firing_rates(firing_rates > 32) = [];
 
 % Force the sigmoid in the data (dodgy)
 % if strcmp(FUNCTION, 'S')
@@ -140,22 +144,22 @@ elseif strcmp(FUNCTION, 'G') % Gompertz
         % Gompertz (In)
         opts = fitoptions(ft);
         opts.StartPoint =  [10 1 1 0];
-        opts.Lower =  [max_firing_rate-10 -100 -100 -10];%[1 3.5 0.8 0.1]
-        opts.Upper =  [max_firing_rate+10 100 100 10];%[1 100 100 0.1]
+        opts.Lower =  [max_firing_rate-10 -100 -100 -10];
+        opts.Upper =  [max_firing_rate+10 100 100 10];
     else
         % Gompertz (Py)
         opts = fitoptions(ft);        
         opts.StartPoint =  [10 1 1 0];
-        opts.Lower =  [max_firing_rate-10 -100 -100 -10];%[1 3.5 0.8 0.1]
-        opts.Upper =  [max_firing_rate+10 100 100 10];%[1 100 100 0.1]
+        opts.Lower =  [max_firing_rate-10 -100 -100 -10];
+        opts.Upper =  [max_firing_rate+10 100 100 10];
     end    
 else
     error('Wrong POPULATION');
 end
 
-% fitresult_Py = fit(potential_integral', firing_rates', ft, opts) % With options
+fitresult_Py = fit(potential_integral', firing_rates', ft, opts) % With options
 % fitresult_Py = fit(membrane_potentials', firing_rates', ft, opts) % With options
-fitresult_Py = fit(potential_integral', firing_rates', ft) % No options
+% fitresult_Py = fit(potential_integral', firing_rates', ft) % No options
     
 %% Define nonlinear function according to population
 if strcmp(FUNCTION, 'S')
