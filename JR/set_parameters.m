@@ -14,8 +14,8 @@ end
 
 switch mode
     case 'recursive'
-        params.e0 =  40.24; % 9.194; % max firing rate
-        params.e0i = 70; % 9.585; % max firing rate
+        params.e0 =  25.87; % 40.24; % max firing rate
+        params.e0i = 60;% 70; % max firing rate
         
         params.v0 = 19.72; % Firing Threshold (a)
         params.r = 34.34; % Sigmoid slope (b)
@@ -24,14 +24,14 @@ switch mode
         params.r_p = 10; %8; % Sigmoid slope (b)
         
         params.gompertz.a = 1;
-        params.gompertz.b = 1.726;% maxFR=10:=9.825;
-        params.gompertz.c = 1.708;% maxFR=10:=1.087;
-        params.gompertz.d = 0.09952;% maxFR=10:=0.3042;
+        params.gompertz.b = 1.555;% 1.726;% maxFR=10:=9.825;
+        params.gompertz.c = 1.245;% 1.708;% maxFR=10:=1.087;
+        params.gompertz.d = 0.3065;% 0.09952;% maxFR=10:=0.3042;
         
         params.gompertzi.a = 1;
-        params.gompertzi.b = 1.587;% maxFR=10:=1.034;
-        params.gompertzi.c = 1.504;% maxFR=10:=1.19;
-        params.gompertzi.d = 0.1137;% maxFR=10:=0.3328;
+        params.gompertzi.b = 2.208;%1.587;% maxFR=10:=1.034;
+        params.gompertzi.c = 1.667;%1.504;% maxFR=10:=1.19;
+        params.gompertzi.d = 0.209;%0.1137;% maxFR=10:=0.3328;
         
         % time constants
         params.tau_mi = 0.009738; % Membrane time constant - Interneurons (decay)
