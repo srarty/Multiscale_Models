@@ -64,7 +64,7 @@ dt_ = 100 * usecond
 T = np.linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector for plots (in seconds)
    
 # populations
-N = 100 # 135 # 675
+N = 2000 # 135 # 675
 N_P = int(N*4)  # pyramidal neurons
 N_I = int(N)    # interneurons
 
@@ -184,12 +184,14 @@ eqs_I = get_equations('inhibitory')
 Py_Pop = NeuronGroup(N_P, eqs_P, threshold='v > V_thr', reset='''v = V_reset
                                                                 v_pe = V_reset-V_leak
                                                                 v_pi = V_reset-V_leak
+                                                                v_pp = V_reset-V_leak
                                                                 ''', refractory=tau_rp_P, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
 Py_Pop.v = V_leak
 
 
 In_Pop = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='''v = V_reset
                                                                 v_ip = V_reset-V_leak
+                                                                v_ii = V_reset-V_leak
                                                                 ''', refractory=tau_rp_I, method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
 In_Pop.v = V_leak
 
@@ -306,8 +308,8 @@ st_AMPA_I = StateMonitor(In_Pop, 's_AMPA', record = 0)
 st_GABA_I = StateMonitor(In_Pop, 's_GABA', record = 0)
 st_AMPA_cor_I = StateMonitor(In_Pop, 's_AMPA_cor', record = 0)
 
-Py_monitor = StateMonitor(Py_Pop, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'v', 'v_pe', 'v_pi'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
-In_monitor = StateMonitor(In_Pop, ['v', 'v_ip'], record = True)
+Py_monitor = StateMonitor(Py_Pop, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'I_tot', 'v', 'v_pe', 'v_pi', 'v_pp'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
+In_monitor = StateMonitor(In_Pop, ['v', 'v_ip', 'v_ii', 'I_tot'], record = True)
 
 #%% simulate  -----------------------------------------------------------------
 net = Network(collect())
@@ -506,8 +508,11 @@ if SAVE:
                     'v_rest': V_leak,
                     'v_p': mean(Py_monitor.v,0),
                     'v_i': mean(In_monitor.v,0),
+                    'v_pp': mean(Py_monitor.v_pp,0),
+                    'v_pe': mean(Py_monitor.v_pe,0),
                     'v_pi': mean(Py_monitor.v_pi,0),
                     'v_ip': mean(In_monitor.v_ip,0),
+                    'v_ii': mean(In_monitor.v_ii,0),
                     'p_PP': p_PP,
                     'p_II': p_II,
                     'R_py': r_P_rate, # 1/diff(np.array(sp_P.t)).mean(),
