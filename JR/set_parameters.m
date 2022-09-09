@@ -56,14 +56,13 @@ switch mode
         params.alpha_ri = -1.441; % Recursive inhibitory gain
         params.alpha_u = 0.06338; % External excitatory gain into pyramidal (U -> Py)
         
-        params.c_constant = 1000; % Connectivity constant
+        params.c_constant = 1; % Connectivity constant
         
-        params.P_pyTOin = 0.395; %0.1975;%0.395; % Probability of connection between Py -> Interneuron
-        params.P_inTOpy = 0.411;%0.411; % Probability of connection between In -> Pyramidal
-        params.P_pyTOpy = 0.16; %0.16;  % Probability of connection between Py -> Pyramidal
-        params.P_inTOin = 0.451;%0.451;%0.451; %0.250; %0.451; % Probability of connection between In -> Interneuron
+        params.P_pyTOin = 0.395;    % Probability of connection between Py -> Interneuron
+        params.P_inTOpy = 0.411;    % Probability of connection between In -> Pyramidal
+        params.P_pyTOpy = 0.16;     % Probability of connection between Py -> Pyramidal
+        params.P_inTOin = 0.451;    % Probability of connection between In -> Interneuron
         
-
         params.dt = 0.001;     % sampling time step         
         params.scale = 1;%1e2;% 1e-3; % Scale to fix mismatch in state amplitudes. Not to be confused with the scael in analytic_kalman_filter_2
         

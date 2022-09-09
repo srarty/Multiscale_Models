@@ -11,10 +11,10 @@
 % range = [0.002:0.001:0.05]; % tau_m_e
 % range2 = [0.005:0.001:0.055]; % tau_m_i
 
-value = 'e0'; %'e0';%'pII';
-range = [0:1:50 51:5:120]; % P[II] or P[PP]
-value2 = 'e0i';
-range2 = 1*[0:1:50 51:10:250];%[0:0.5:5]; %[0:10]; % P[II] or P[PP]
+value = 'c_constant'; %'e0';%'pII';
+range = logspace(-2,3,100)%[0.1:1:100]; % P[II] or P[PP]
+value2 = 'u';%'e0i';
+range2 = 1;%1*[10:5:100];%[0:0.5:5]; %[0:10]; % P[II] or P[PP]
 
 freqs = [];
 freqs_py = [];

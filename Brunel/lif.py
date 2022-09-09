@@ -42,29 +42,34 @@ plt.close('all')
     
 # Options:
 RECURRENT_PYRAMIDAL = True     # Self excitation 
-RECURRENT_INHIBITORY = True     # Self inhibition
-INHIBIT_INPUT = False            # Excitatory cortical input to inhibitory population
-ACTIVE_INTERNEURONS = True      # Inhibitory population
-PARAMS_SOURCE = 'allen'        # 'brunel' or 'allen'
-SAVE = False                     # Save ground truth data
+RECURRENT_INHIBITORY = True    # Self inhibition
+INHIBIT_INPUT = False           # Excitatory cortical input to inhibitory population
+ACTIVE_INTERNEURONS = True     # Inhibitory population
+PARAMS_SOURCE = 'allen'         # 'brunel' or 'allen'
+SAVE = True                    # Save ground truth data
 PLOT = True                     # Plot results (main Figure)
-PLOT_EXTRA = True              # Plot extra things.
+PLOT_EXTRA = True               # Plot extra things.
+PSP_FR = 0                      # Presynaptic firing rate for TEST_PSP (TEST_PSP needs to be diff to none for this to take effect)                               
+TEST_PSP = 'none'               # Testing the post synaptic potential of given 
+                                # synapses to a specified input firing rate. 
+                                # Options: 'pp', 'pi', 'ii', 'ip', 'none'. To 
+                                # prevent neurons spiking, make V_thr large.
 
 corriente = 0
 # Balanced-rate network (?) with input currents: Py = 500.01 pA, In = 398 pA
 input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 
-input_spike_rate = [1] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
+input_spike_rate = [0, 1, 3, 5] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
 input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
 
 #%% parameters  --------------------------------------------------------------
-simulation_time = 1 * second
+simulation_time = 2 * second
 dt_ = 100 * usecond
 T = np.linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector for plots (in seconds)
    
 # populations
-N = 100 # 135 # 675
+N = 2000 # 135 # 675
 N_P = int(N*4)  # pyramidal neurons
 N_I = int(N)    # interneurons
 
@@ -184,16 +189,26 @@ eqs_I = get_equations('inhibitory')
 Py_Pop = NeuronGroup(N_P, eqs_P, threshold='v > V_thr', reset='''v = V_reset
                                                                 v_pe = V_reset-V_leak
                                                                 v_pi = V_reset-V_leak
+                                                                v_pp = V_reset-V_leak
                                                                 ''', refractory=tau_rp_P, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
 Py_Pop.v = V_leak
 
 
 In_Pop = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='''v = V_reset
                                                                 v_ip = V_reset-V_leak
+                                                                v_ii = V_reset-V_leak
                                                                 ''', refractory=tau_rp_I, method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
 In_Pop.v = V_leak
 
-# Pop_Cor = PoissonGroup(num_inputs, rates = (input_spike_rate*1000/num_inputs)*Hz, dt=dt_) # poisson input
+# Custom Poisson population to test PSP on a given synapse
+if (TEST_PSP == 'ip') | (TEST_PSP == 'pp'):
+    N_PSP_Test = N_P
+elif (TEST_PSP == 'pi') | (TEST_PSP == 'ii'):
+    N_PSP_Test = N_I
+else:
+    N_PSP_Test = 0    
+Pop_PSP_Test = PoissonGroup(N_PSP_Test, rates = PSP_FR * Hz, dt=dt_) # poisson input
+    
 
 # sigma_sq_noise = 0.16 * volt * volt   # Ornstein-Uhlenbeck process (cortico-cortical) units need to be volt^2 for units in the population's equation to be consistent. Makes sense, because sigma should be in volts, hence sigma^2 in volts^2. Check cavalleri 2014
 # tau_noise = 16 * ms                   # Ornstein-Uhlenbeck 
@@ -263,9 +278,8 @@ C_I_P.connect(p = p_IP)
 C_I_P.active = ACTIVE_INTERNEURONS
 
 
-# external input
-# Poisson input (Cortico-cortical)
 # External inputs
+# Poisson input (Cortico-cortical)
 input1 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[0] * 1000/num_inputs) * Hz, increment_AMPA_ext_P)
 if np.size(input_spike_rate) > 1:
     input2 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[1] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
@@ -275,6 +289,7 @@ if np.size(input_spike_rate) > 1:
     input2.active = False
     input3.active = False
     input4.active = False
+    
 # Poisson input (Cortico-cortical) input to inhibitory interneurons. Controlled by INHIBIT_INPUT
 C_Cor_I = PoissonInput(In_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[0]*1000/num_inputs) * Hz, increment_AMPA_ext_I)
 C_Cor_I.active = INHIBIT_INPUT # Innactive cortico-cortical -> interneuron
@@ -289,10 +304,36 @@ C_Tha_I = PoissonInput(In_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thala
 # C_Cor_I = Synapses(Pop_Cor, In_Pop, model=eqs_cor_I, on_pre=eqs_pre_cor_I, method='rk4', dt=dt_, delay=delay, name='synapses_iext')
 # C_Cor_I.connect(p = 1)    
 
+
+
+# Testing PSP on chosen synapses
+ACTIVE_TEST = True
+if (TEST_PSP == 'pi'):
+    C_Test_PSP = Synapses(Pop_PSP_Test, Py_Pop, on_pre=eqs_pre_gaba_P, method='rk4', dt=dt_, delay=delay, name='synapses_pi_test')
+    connection_probability = p_IP
+elif (TEST_PSP == 'pp'):
+    C_Test_PSP = Synapses(Pop_PSP_Test, Py_Pop, on_pre=eqs_pre_glut_P, method='rk4', dt=dt_, delay=delay, name='synapses_pp_test')
+    connection_probability = p_PP
+elif (TEST_PSP == 'ip'):
+    C_Test_PSP = Synapses(Pop_PSP_Test, In_Pop, on_pre=eqs_pre_glut_I, method='rk4', dt=dt_, delay=delay, name='synapses_ip_test')
+    connection_probability = p_PI
+elif (TEST_PSP == 'ii'):
+    C_Test_PSP = Synapses(Pop_PSP_Test, In_Pop, on_pre=eqs_pre_gaba_I, method='rk4', dt=dt_, delay=delay, name='synapses_ii_test')
+    connection_probability = p_II
+else:
+    C_Test_PSP = Synapses(Pop_PSP_Test, Pop_PSP_Test, method='rk4', name='none_synapse') # This won't do anything. It's to prevent runtime errors
+    connection_probability = 1
+    ACTIVE_TEST = False
+
+C_Test_PSP.connect('i != j', p = connection_probability)
+C_Test_PSP.active = ACTIVE_TEST 
+
+
+
 #%% monitors  -----------------------------------------------------------------
-N_activity_plot = 50 # How many neurons in the raster plots (too large takes longer to monitor and plot)
-sp_P = SpikeMonitor(Py_Pop[:N_activity_plot])
-sp_I = SpikeMonitor(In_Pop[:N_activity_plot])
+N_activity_plot = 30 # How many neurons in the raster plots (too large takes longer to monitor and plot)
+sp_P = SpikeMonitor(Py_Pop[:]) #[:N_activity_plot])
+sp_I = SpikeMonitor(In_Pop[:]) #[:N_activity_plot])
 
 
 r_P = PopulationRateMonitor(Py_Pop)#[0:N_activity_plot])
@@ -306,8 +347,8 @@ st_AMPA_I = StateMonitor(In_Pop, 's_AMPA', record = 0)
 st_GABA_I = StateMonitor(In_Pop, 's_GABA', record = 0)
 st_AMPA_cor_I = StateMonitor(In_Pop, 's_AMPA_cor', record = 0)
 
-Py_monitor = StateMonitor(Py_Pop, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'v', 'v_pe', 'v_pi'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
-In_monitor = StateMonitor(In_Pop, ['v', 'v_ip'], record = True)
+Py_monitor = StateMonitor(Py_Pop, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'I_tot', 'v', 'v_pe', 'v_pi', 'v_pp'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
+In_monitor = StateMonitor(In_Pop, ['v', 'v_ip', 'v_ii', 'I_tot'], record = True)
 
 #%% simulate  -----------------------------------------------------------------
 net = Network(collect())
@@ -506,8 +547,11 @@ if SAVE:
                     'v_rest': V_leak,
                     'v_p': mean(Py_monitor.v,0),
                     'v_i': mean(In_monitor.v,0),
+                    'v_pp': mean(Py_monitor.v_pp,0),
+                    'v_pe': mean(Py_monitor.v_pe,0),
                     'v_pi': mean(Py_monitor.v_pi,0),
                     'v_ip': mean(In_monitor.v_ip,0),
+                    'v_ii': mean(In_monitor.v_ii,0),
                     'p_PP': p_PP,
                     'p_II': p_II,
                     'R_py': r_P_rate, # 1/diff(np.array(sp_P.t)).mean(),
@@ -534,76 +578,17 @@ if SAVE:
                      mdict = save_dictionary)
     
     print(colored('Results of simulation saved as: ' + save_str, 'green'))
-    
-    # Save results of input current injection. Run in a loop to calculate nonlinearity:
-    #
-    # i = 0
-    # while os.path.exists('C://Users/artemios/Documents/Multiscale_Models_Data/nonlinearity/lfp_inputCurrent_%s_%s.mat' % (floor(input_current),i)):
-    #     i += 1
-    
-    # scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/nonlinearity/lfp_inputCurrent_%s_%s.mat' % (floor(input_current),i),
-    #                   mdict=save_dictionary)
 
-
-    
-    # # Save at the end to keep all recordings
-    # if RECURRENT_PYRAMIDAL:
-    #     i = 0
-    #     while os.path.exists('simulations/CUBN/recurrent_excitation/inhibitory_input_lfp_inputRate_%s_%s.mat' % (floor(timed_rate.values[0]),i)):
-    #         i += 1
-        
-    #     scipy.io.savemat('simulations/CUBN/recurrent_excitation/inhibitory_input_lfp_inputRate_%s_%s.mat' % (floor(timed_rate.values[0]),i),
-    #                       mdict=save_dictionary)
-        
-    # elif RECURRENT_INHIBITORY:
-    #     i = 0
-    #     while os.path.exists('simulations/CUBN/recurrent_inhibition/inhibitory_input_lfp_inputRate_%s_%s.mat' % (floor(timed_rate.values[0]),i)):
-    #         i += 1
-        
-    #     scipy.io.savemat('simulations/CUBN/recurrent_inhibition/inhibitory_input_lfp_inputRate_%s_%s.mat' % (floor(timed_rate.values[0]),i),
-    #                       mdict=save_dictionary)
-    # elif ACTIVE_INTERNEURONS:
-    #     if INHIBIT_INPUT:
-    #         i = 0
-    #         while os.path.exists('simulations/CUBN/no_recurrent_connections/inhibitory_input/inhibitory_input_lfp_inputRate_%s_%s.mat' % (floor(timed_rate.values[0]),i)):
-    #             i += 1
-            
-    #         scipy.io.savemat('simulations/CUBN/no_recurrent_connections/inhibitory_input/inhibitory_input_lfp_inputRate_%s_%s.mat' % (floor(timed_rate.values[0]),i),
-    #                           mdict=save_dictionary)
-    #     else:                
-    #         i = 0
-    #         while os.path.exists('simulations/CUBN/no_recurrent_connections/iterneurons_lfp_inputRate_%s_%s.mat' % (floor(timed_rate.values[0]), i)):
-    #             i += 1
-            
-    #         scipy.io.savemat('simulations/CUBN/no_recurrent_connections/iterneurons_lfp_inputRate_%s_%s.mat' % (floor(timed_rate.values[0]),i),
-    #                           mdict=save_dictionary)
-    # else:
-    #     i = 0
-    #     while os.path.exists('simulations/CUBN/injected_current/twice_ref/lfp_injected_current_%s_%s.mat' % (floor(input_current),  i)):
-    #         i += 1
-            
-    #     scipy.io.savemat('simulations/CUBN/injected_current/twice_ref/lfp_injected_current_%s_%s.mat' % (floor(input_current), i),
-    #                       mdict=save_dictionary)
-    
 else:
     print(colored('Attention! Results of simulation were not saved. SAVE = False', 'yellow'))
 
 
 
 # Run iteratively. Need to uncomment the def line at the start of the file.
-# e = np.arange(350, 500, 5)
-# f = np.arange(400, 401, 0.05)
 # # a = np.arange(500, 501, 0.05)
 # # b = np.arange(501, 510, 1)
-# # c = np.arange(510, 700, 10)
-# # d = np.arange(0, 1600, 100)
-# # ranges = np.concatenate((e, a, b, c, d))
-# ranges = f
+# # ranges = np.concatenate((a, b))
 # for iterations in ranges:
 #     brunel(corriente=iterations)
 
-# ranges = np.arange(5, 31, 1)
-# for iterations in ranges:
-#     brunel(u = iterations)
-    
 # brunel(input_spike_rate = 3.7, SAVE = False, PLOT = True)

@@ -62,7 +62,7 @@ corriente = 0
 input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 
-input_spike_rate = [0, 1, 3, 5] #[u] #[15] # [0, 5, 10] # spikes/ms/cell (driving input)
+input_spike_rate = [1] #[0, 1, 3, 5] #[u] #[15] # [0, 5, 10] # spikes/ms/cell (driving input)
 input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
 
 #%% parameters  --------------------------------------------------------------
@@ -189,12 +189,14 @@ eqs_I = get_equations('inhibitory')
 Py_Pop = NeuronGroup(N_P, eqs_P, threshold='v > V_thr', reset='''v = V_reset
                                                                 v_pe = V_reset-V_leak
                                                                 v_pi = V_reset-V_leak
+                                                                v_pp = V_reset-V_leak
                                                                 ''', refractory=tau_rp_P, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
 Py_Pop.v = V_leak
 
 
 In_Pop = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='''v = V_reset
                                                                 v_ip = V_reset-V_leak
+                                                                v_ii = V_reset-V_leak
                                                                 ''', refractory=tau_rp_I, method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
 In_Pop.v = V_leak
 
@@ -311,8 +313,8 @@ st_AMPA_I = StateMonitor(In_Pop, 's_AMPA', record = 0)
 st_GABA_I = StateMonitor(In_Pop, 's_GABA', record = 0)
 st_AMPA_cor_I = StateMonitor(In_Pop, 's_AMPA_cor', record = 0)
 
-Py_monitor = StateMonitor(Py_Pop, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'I_tot', 'v', 'v_pe', 'v_pi'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
-In_monitor = StateMonitor(In_Pop, ['v', 'v_ip', 'I_tot'], record = True)
+Py_monitor = StateMonitor(Py_Pop, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'I_tot', 'v', 'v_pe', 'v_pi', 'v_pp'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
+In_monitor = StateMonitor(In_Pop, ['v', 'v_ip', 'v_ii', 'I_tot'], record = True)
 
 #%% simulate  -----------------------------------------------------------------
 net = Network(collect())
@@ -502,8 +504,11 @@ if SAVE:
                     'v_rest': V_leak,
                     'v_p': mean(Py_monitor.v,0),
                     'v_i': mean(In_monitor.v,0),
+                    'v_pp': mean(Py_monitor.v_pp,0),
+                    'v_pe': mean(Py_monitor.v_pe,0),
                     'v_pi': mean(Py_monitor.v_pi,0),
                     'v_ip': mean(In_monitor.v_ip,0),
+                    'v_ii': mean(In_monitor.v_ii,0),
                     'sp_P_t': sp_P.t,
                     'sp_I_t': sp_I.t,
                     'sp_P_i': sp_P.i,

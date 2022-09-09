@@ -22,7 +22,7 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     params = set_parameters('recursive', u);
     
     % Options
-    params.options.ADD_NOISE = 0; % External input noise (0 = no noise, 1 = noise)
+    params.options.ADD_NOISE = 1; % External input noise (0 = no noise, 1 = noise)
     params.options.CHANGE_U = 1; % 0: U doesn't change during simulation. Anyother value of CHANGE_U: U changes.
     
     % Parse inputs --------------------------------------------------------
@@ -53,27 +53,27 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     alpha_u = params.alpha_u; 
 
     % Equilibrium point (calculated with matcont, u=0)
-    eq =   [-0.016e3;
-            -0.8013e3;
-            0.0366e3;
-            3.6719e3;
-            0.0051e3;
-            0.2553e3;
-            -0.0459e3;
-            -4.8864e3;
-            0;
-            0;];
+%     eq =   [-0.016e3;
+%             -0.8013e3;
+%             0.0366e3;
+%             3.6719e3;
+%             0.0051e3;
+%             0.2553e3;
+%             -0.0459e3;
+%             -4.8864e3;
+%             0;
+%             0;];
         
-%     eq =[0;
-%          0;
-%          0;
-%          0;
-%          0;
-%          0;
-%          0;
-%          0;
-%          0;
-%          0;];
+    eq =[0;
+         0;
+         0;
+         0;
+         0;
+         0;
+         0;
+         0;
+         0;
+         0;];
         
     x0 =[eq(1);
         eq(2);
@@ -143,11 +143,11 @@ function dx = ode(t,x,params,dt)
     Tau_coeff = @(m, s) 1/(m*s);% Nicola Campbell
     
     c_constant = params.c_constant;
-    c1 = 4 * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
-    c2 = 1 * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
-    c3 = 4 * c_constant * params.P_pyTOpy;
-    c4 = 1 * c_constant * params.P_inTOin; 
-    c5 = 1 * c_constant; % External excitatory synapses into pyramidal population
+    c1 = 1.6491 * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
+    c2 = 0.3956 * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
+    c3 = 3.4021 * c_constant * params.P_pyTOpy;
+    c4 = 0.0908 * c_constant * params.P_inTOin; 
+    c5 = 17.3 * c_constant; % External excitatory synapses into pyramidal population
     
     tau_sp = params.tau_sp;
     tau_mp = params.tau_mp;
@@ -162,11 +162,11 @@ function dx = ode(t,x,params,dt)
     tau_mri = params.tau_mri;
     
     % Lumped parameters
-    AmplitudeI  = c2 * 2 * e_0i * x(11) * Tau_coeff(tau_mp,  tau_sp);
-    AmplitudeE  = c1 * 2 * e_0  * x(12) * Tau_coeff(tau_mi,  tau_si);
-    AmplitudeRE = c3 * 2 * e_0  * x(13) * Tau_coeff(tau_mrp, tau_srp);
-    AmplitudeRI = c4 * 2 * e_0i * x(14) * Tau_coeff(tau_mri, tau_sri);
-    AmplitudeU  = 1000 * 0.0173 * x(15) * Tau_coeff(tau_mrp, tau_srp);
+    AmplitudeI  = c2 * e_0i * x(11) * Tau_coeff(tau_mp,  tau_sp); % 1000 * 8.1299e-05 * 2
+    AmplitudeE  = c1 * e_0  * x(12) * Tau_coeff(tau_mi,  tau_si); % 1000 * 3.2569e-04 * 2
+    AmplitudeRE = c3 * e_0  * x(13) * Tau_coeff(tau_mrp, tau_srp); % 1000 * 2.7217e-04 * 2
+    AmplitudeRI = c4 * e_0i * x(14) * Tau_coeff(tau_mri, tau_sri); % 1000 * 2.0483e-05 * 2
+    AmplitudeU  = c5 * x(15) * Tau_coeff(tau_mrp, tau_srp);% 1000 * 0.0173
     
     % Diff equations ------------------------------------------------------
     dx = zeros(15,1);
@@ -186,7 +186,7 @@ function dx = ode(t,x,params,dt)
     dx(8) = - x(8)/tau_sri + AmplitudeRI * S1(x(3) + x(7));    
     % External input u->P
     dx(9) = x(10) - x(9)/tau_mrp;
-    dx(10) = - x(10)/tau_srp + AmplitudeU * (u + (params.options.ADD_NOISE * (sqrt(u).*randn(1,1)))); % + AmplitudeU * 10 * 1.5; % -x(9) + u + (params.options.ADD_NOISE * (sqrt(u).*randn(1,1))); % Random number % 1.1; % <- steady increase of 1.1 spike/ms/cell/s
+    dx(10) = - x(10)/tau_srp + AmplitudeU * u;
     % Parameters:
     dx(11) = 0; % alpha_i
     dx(12) = 0; % alpha_e
@@ -194,14 +194,6 @@ function dx = ode(t,x,params,dt)
     dx(14) = 0; % alpha_ri
     dx(15) = 0; % alpha_u
 
-    
-    %     % External input Tha->P
-    %     dx(11) = x(12) - x(11)/tau_mp;
-    %     dx(12) = - x(12)/tau_sp + AmplitudeU * 10 * 1.5;
-    %     % External input Tha->I
-    %     dx(13) = x(14) - x(13)/tau_mp;
-    %     dx(14) = - x(14)/tau_sp + AmplitudeU * 10 * 1.5;
-    
 end
 
 function do_plot(x,t, Vm, f_e, f_i)    
