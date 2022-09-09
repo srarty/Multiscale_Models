@@ -56,7 +56,7 @@ switch mode
         params.alpha_ri = -1.441; % Recursive inhibitory gain
         params.alpha_u = 0.06338; % External excitatory gain into pyramidal (U -> Py)
         
-        params.c_constant = 1000; % Connectivity constant
+        params.c_constant = 80; %1000; % Connectivity constant
         
         params.P_pyTOin = 0.395; %0.1975;%0.395; % Probability of connection between Py -> Interneuron
         params.P_inTOpy = 0.411;%0.411; % Probability of connection between In -> Pyramidal

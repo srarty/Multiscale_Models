@@ -186,7 +186,7 @@ function dx = ode(t,x,params,dt)
     dx(8) = - x(8)/tau_sri + AmplitudeRI * S1(x(3) + x(7));    
     % External input u->P
     dx(9) = x(10) - x(9)/tau_mrp;
-    dx(10) = - x(10)/tau_srp + AmplitudeU * (u + (params.options.ADD_NOISE * (sqrt(u).*randn(1,1)))); % + AmplitudeU * 10 * 1.5; % -x(9) + u + (params.options.ADD_NOISE * (sqrt(u).*randn(1,1))); % Random number % 1.1; % <- steady increase of 1.1 spike/ms/cell/s
+    dx(10) = - x(10)/tau_srp + AmplitudeU * u;
     % Parameters:
     dx(11) = 0; % alpha_i
     dx(12) = 0; % alpha_e
@@ -194,14 +194,6 @@ function dx = ode(t,x,params,dt)
     dx(14) = 0; % alpha_ri
     dx(15) = 0; % alpha_u
 
-    
-    %     % External input Tha->P
-    %     dx(11) = x(12) - x(11)/tau_mp;
-    %     dx(12) = - x(12)/tau_sp + AmplitudeU * 10 * 1.5;
-    %     % External input Tha->I
-    %     dx(13) = x(14) - x(13)/tau_mp;
-    %     dx(14) = - x(14)/tau_sp + AmplitudeU * 10 * 1.5;
-    
 end
 
 function do_plot(x,t, Vm, f_e, f_i)    

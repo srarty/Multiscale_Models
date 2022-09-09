@@ -10,7 +10,7 @@
 %% Options ----------------------------------------------------------------
 
 POPULATION = 'Py'; % 'Py' or 'In'
-FUNCTION = 'G'; % 'G' (Gompertz) or 'S' (Sigmoid)
+FUNCTION = 'S'; % 'G' (Gompertz) or 'S' (Sigmoid)
 
 % -------------------------------------------------------------------------
 
@@ -78,8 +78,9 @@ for ii = 1:no_files
             membrane_potentials(ii) = 1000*Vm;
         catch
             membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_P;
-        end
-        potential_integral(ii) = -(sum(I_py - I_py_tha)/C_P)/1000;
+        end        
+        potential_integral(ii) = -(sum(I_py)/C_P)/1000;
+%         potential_integral(ii) = -(sum(I_py - I_py_tha)/C_P)/1000;
         firing_rates(ii) = mean(R_py(0.2*L : 0.8*L));
         
     elseif strcmp(POPULATION, 'In')
@@ -88,7 +89,8 @@ for ii = 1:no_files
         catch
             membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_I;
         end
-        potential_integral(ii) = -(sum(I_in - I_in_tha)/C_I)/2000;
+        potential_integral(ii) = -(sum(I_in)/C_I)/2000;
+%         potential_integral(ii) = -(sum(I_in - I_in_tha)/C_I)/2000;
         firing_rates(ii) = mean(R_in(0.2*L : 0.8*L));
         
     else
@@ -114,8 +116,8 @@ ylabel('Firing rate');
 
 %% Fit
 if strcmp(FUNCTION, 'S') % Sigmoid
-    % ft = fittype( '2.^-(a.^-(x-b))', 'independent', 'x', 'dependent', 'y' );                          % Double exponential sigmoid
-    % ft = fittype( 'c/(1+exp(-a*(x-b)))+d', 'independent', 'x', 'dependent','y' );                     % sigmoid
+%     ft = fittype( '2.^-(a.^-(x-b))', 'independent', 'x', 'dependent', 'y' );                          % Double exponential sigmoid
+%     ft = fittype( 'c/(1+exp(-a*(x-b)))+d', 'independent', 'x', 'dependent','y' );                     % sigmoid
     ft = fittype( 'alpha*(0.5*erf((x - v0) / (sqrt(2) * r)) + 0.5)', 'independent', 'x', 'dependent', 'y' ); % Error function | a = v0 | b = r
     if strcmp(POPULATION, 'In')
         % Error (In)
@@ -151,9 +153,9 @@ else
     error('Wrong POPULATION');
 end
 
-fitresult_Py = fit(potential_integral', firing_rates', ft, opts) % With options
+% fitresult_Py = fit(potential_integral', firing_rates', ft, opts) % With options
 % fitresult_Py = fit(membrane_potentials', firing_rates', ft, opts) % With options
-% fitresult_Py = fit(membrane_potentials', firing_rates', ft) % No options
+fitresult_Py = fit(potential_integral', firing_rates', ft) % No options
     
 %% Define nonlinear function according to population
 if strcmp(FUNCTION, 'S')
@@ -167,7 +169,7 @@ elseif strcmp(FUNCTION, 'G')
     f_nonlinearity = @(x) gompertz(x, params);
 end
 
-%%
+% %%
 figure(fig);
 yyaxis right
 hold
