@@ -49,10 +49,10 @@ def brunel(corriente = 0):
     # u = float(sys.argv[1])
     	    
     # Options:
-    RECURRENT_PYRAMIDAL = True     # Self excitation 
-    RECURRENT_INHIBITORY = True     # Self inhibition
+    RECURRENT_PYRAMIDAL = False     # Self excitation 
+    RECURRENT_INHIBITORY = False     # Self inhibition
     INHIBIT_INPUT = False            # Excitatory cortical input to inhibitory population
-    ACTIVE_INTERNEURONS = True      # Inhibitory population
+    ACTIVE_INTERNEURONS = False      # Inhibitory population
     PARAMS_SOURCE = 'allen'        # 'brunel' or 'allen'
     SAVE = True                     # Save ground truth data
     PLOT = False                     # Plot results (main Figure)
@@ -536,7 +536,7 @@ def brunel(corriente = 0):
        #                  mdict = save_dictionary)
     
         save_str = format('sweep/lfp_current_%s.png' %(corriente))
-        scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/nonlinearity_I_tha/lfp_current_%s.mat' %(corriente),
+        scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/nonlinearity_I_tha_disconnected/lfp_current_%s.mat' %(corriente),
                          mdict = save_dictionary)
         
         save_dictionary = None
