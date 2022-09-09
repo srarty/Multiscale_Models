@@ -102,9 +102,10 @@ end
 % When there's no spike, R_py and R_in are NaN. Fix it:
 firing_rates(isnan(firing_rates)) = 0;
 
-membrane_potentials(firing_rates > 32) = [];
-potential_integral(firing_rates > 32) = [];
-firing_rates(firing_rates > 32) = [];
+warning('Remove the following three dodgy lines')
+membrane_potentials(firing_rates > 20) = [];
+potential_integral(firing_rates > 20) = [];
+firing_rates(firing_rates > 20) = [];
 
 % Force the sigmoid in the data (dodgy)
 % if strcmp(FUNCTION, 'S')

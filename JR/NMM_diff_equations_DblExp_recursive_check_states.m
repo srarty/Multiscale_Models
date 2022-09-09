@@ -5,7 +5,7 @@
 %
 % Machine learning to find ideal parameters for NMM taht match the LIF.
 % Having one NMM for each different LIF.
-function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
+function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive_check_states(varargin)
     clear option option2
     if nargin >= 2
         option = varargin{1};
@@ -17,7 +17,7 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     end
     
     N = 2000; % Number of samples: 1 sample = 1 milisecond
-    u = 0;
+    u = 0; % input rate
 
     params = set_parameters('recursive', u);
     
@@ -101,8 +101,8 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     end
     
     % Calculate firing rate
-    f_i = params.e0i * gompertz_io(x(:,3) + x(:,7), params.gompertzi.b, params.gompertzi.c, params.gompertzi.d); % sigmoid_io(x(:,3) + x(:,7), params.v0, params.r); % 
-    f_e = params.e0 * gompertz_io(x(:,1) + x(:,5) + x(:,9), params.gompertz.b, params.gompertz.c, params.gompertz.d); % sigmoid_io(x(:,1) + x(:,5) + x(:,9), params.v0, params.r); % 
+    f_i = gompertz_io(x(:,3) + x(:,7), params.e0i, params.gompertzi.b, params.gompertzi.c, params.gompertzi.d); % sigmoid_io(x(:,3) + x(:,7), params.v0, params.r); % 
+    f_e = gompertz_io(x(:,1) + x(:,5) + x(:,9), params.e0, params.gompertz.b, params.gompertz.c, params.gompertz.d); % sigmoid_io(x(:,1) + x(:,5) + x(:,9), params.v0, params.r); % 
     
     if nargin == 0        
         close all
@@ -138,16 +138,16 @@ function dx = ode(t,x,params,dt)
     end
     
     % Synaptic functions
-    S1 = @(x) gompertz_io(x,ib, ic ,id);% sigmoid_io(x, v0, r); %
-    S2 = @(x) gompertz_io(x, b, c, d);  % sigmoid_io(x, v0, r); % 
+    S1 = @(x) gompertz_io(x, e_0i, ib, ic ,id);% sigmoid_io(x, v0, r); %
+    S2 = @(x) gompertz_io(x, e_0, b, c, d);  % sigmoid_io(x, v0, r); % 
     Tau_coeff = @(m, s) 1/(m*s);% Nicola Campbell
     
     c_constant = params.c_constant;
-    c1 = 1.6491 * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
-    c2 = 0.3956 * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
-    c3 = 3.4021 * c_constant * params.P_pyTOpy;
-    c4 = 0.0908 * c_constant * params.P_inTOin; 
-    c5 = 17.3 * c_constant; % External excitatory synapses into pyramidal population
+    c1 = 66.3598    * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
+    c2 = 27.6920    * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
+    c3 = 136.9005   * c_constant * params.P_pyTOpy;
+    c4 = 6.3560     * c_constant * params.P_inTOin; 
+    c5 = 17.3       * c_constant; % External excitatory synapses into pyramidal population
     
     tau_sp = params.tau_sp;
     tau_mp = params.tau_mp;
@@ -162,10 +162,10 @@ function dx = ode(t,x,params,dt)
     tau_mri = params.tau_mri;
     
     % Lumped parameters
-    AmplitudeI  = c2 * e_0i * x(11) * Tau_coeff(tau_mp,  tau_sp); % 1000 * 8.1299e-05 * 2
-    AmplitudeE  = c1 * e_0  * x(12) * Tau_coeff(tau_mi,  tau_si); % 1000 * 3.2569e-04 * 2
-    AmplitudeRE = c3 * e_0  * x(13) * Tau_coeff(tau_mrp, tau_srp); % 1000 * 2.7217e-04 * 2
-    AmplitudeRI = c4 * e_0i * x(14) * Tau_coeff(tau_mri, tau_sri); % 1000 * 2.0483e-05 * 2
+    AmplitudeI  = c2 * x(11) * Tau_coeff(tau_mp,  tau_sp); % 1000 * 8.1299e-05 * 2
+    AmplitudeE  = c1 * x(12) * Tau_coeff(tau_mi,  tau_si); % 1000 * 3.2569e-04 * 2
+    AmplitudeRE = c3 * x(13) * Tau_coeff(tau_mrp, tau_srp); % 1000 * 2.7217e-04 * 2
+    AmplitudeRI = c4 * x(14) * Tau_coeff(tau_mri, tau_sri); % 1000 * 2.0483e-05 * 2
     AmplitudeU  = c5 * x(15) * Tau_coeff(tau_mrp, tau_srp);% 1000 * 0.0173
     
     % Diff equations ------------------------------------------------------
@@ -227,10 +227,10 @@ function do_plot(x,t, Vm, f_e, f_i)
     plot(t, x(:,9));    
 end
 
-function out = sigmoid_io(x, v0, r)
-    out = 0.5 * erf((x - v0) / (sqrt(2)*r)) + 0.5;
+function out = sigmoid_io(x, a, v0, r)
+    out = a * (0.5 * erf((x - v0) / (sqrt(2)*r)) + 0.5);
 end
 
-function out = gompertz_io(x, b, c, d)
-    out = exp(-b*exp(-d*(x-c)));
+function out = gompertz_io(x, a, b, c, d)
+    out = a * exp(-b*exp(-d*(x-c)));
 end
