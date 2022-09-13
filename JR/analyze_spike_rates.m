@@ -13,6 +13,7 @@ close all;
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_19.mat'; % u=[20]
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_20.mat'; % u=[0 0.5 1 1.5]
 data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_39.mat'; % u=[0, 0.25, 0.75, 0.5]
+% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_40.mat';
 
 load(data_file);
 tt = lfp_dt:lfp_dt:lfp_dt*length(v_ip);

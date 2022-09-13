@@ -16,14 +16,14 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
         value2 = varargin{4};
     end
     
-    N = 2000; % Number of samples: 1 sample = 1 milisecond
-    u = 0;
+    N = 1000; % Number of samples: 1 sample = 1 milisecond
+    u = 5;
 
     params = set_parameters('recursive', u);
     
     % Options
-    params.options.ADD_NOISE = 0; % External input noise (0 = no noise, 1 = noise)
-    params.options.CHANGE_U = 1; % 0: U doesn't change during simulation. Anyother value of CHANGE_U: U changes.
+    params.options.ADD_NOISE = 1; % External input noise (0 = no noise, 1 = noise)
+    params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Anyother value of CHANGE_U: U changes.
     
     % Parse inputs --------------------------------------------------------
     if exist('option','var')
