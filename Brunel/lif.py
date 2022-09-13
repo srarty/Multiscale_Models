@@ -60,16 +60,16 @@ corriente = 0
 input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 
-input_spike_rate = [0, 1, 3, 5] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
+input_spike_rate = [5]#[0, 1, 3, 5] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
 input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
 
 #%% parameters  --------------------------------------------------------------
-simulation_time = 2 * second
+simulation_time = 1 * second
 dt_ = 100 * usecond
 T = np.linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector for plots (in seconds)
    
 # populations
-N = 2000 # 135 # 675
+N = 1000 # 135 # 675
 N_P = int(N*4)  # pyramidal neurons
 N_I = int(N)    # interneurons
 
@@ -347,8 +347,8 @@ st_AMPA_I = StateMonitor(In_Pop, 's_AMPA', record = 0)
 st_GABA_I = StateMonitor(In_Pop, 's_GABA', record = 0)
 st_AMPA_cor_I = StateMonitor(In_Pop, 's_AMPA_cor', record = 0)
 
-Py_monitor = StateMonitor(Py_Pop, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'I_tot', 'v', 'v_pe', 'v_pi', 'v_pp'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
-In_monitor = StateMonitor(In_Pop, ['v', 'v_ip', 'v_ii', 'I_tot'], record = True)
+Py_monitor = StateMonitor(Py_Pop, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'v', 'v_pi'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
+In_monitor = StateMonitor(In_Pop, ['v', 'v_ip'], record = True)
 
 #%% simulate  -----------------------------------------------------------------
 net = Network(collect())
@@ -374,7 +374,8 @@ if np.size(input_spike_rate) > 3:
    
 #%% analysis ------------------------------------------------------------------
 # spike rates
-window_size = 10.1 * ms # Size of the window for the smooth spike rate # 100.1 instead of 100 to avoid an annoying warning at the end of the simulation
+window_size = 100.1*ms # Size of the window for the smooth spike rate # 100.1 instead of 100 to avoid an annoying warning at the end of the simulation
+# window_size2 = 0.1*ms
 
 r_P_rate = r_P.smooth_rate(window='gaussian', width=window_size)
 if shape(r_P_rate) != shape(r_P.t):
@@ -383,6 +384,14 @@ if shape(r_P_rate) != shape(r_P.t):
 r_I_rate = r_I.smooth_rate(window='gaussian', width=window_size)
 if shape(r_I_rate) != shape(r_I.t):
     r_I_rate = r_I_rate[5:]
+
+# r_P_rate2 = r_P.smooth_rate(window='flat', width=window_size2)
+# if shape(r_P_rate2) != shape(r_P.t):
+#     r_P_rate2 = r_P_rate2[5:]
+
+# r_I_rate2 = r_I.smooth_rate(window='flat', width=window_size2)
+# if shape(r_I_rate2) != shape(r_I.t):
+#     r_I_rate2 = r_I_rate2[5:]
     
 # r_Cor_rate = r_Cor.smooth_rate(width = window_size)
 # if shape(r_Cor_rate) != shape(r_Cor.t):
@@ -547,14 +556,11 @@ if SAVE:
                     'v_rest': V_leak,
                     'v_p': mean(Py_monitor.v,0),
                     'v_i': mean(In_monitor.v,0),
-                    'v_pp': mean(Py_monitor.v_pp,0),
-                    'v_pe': mean(Py_monitor.v_pe,0),
                     'v_pi': mean(Py_monitor.v_pi,0),
                     'v_ip': mean(In_monitor.v_ip,0),
-                    'v_ii': mean(In_monitor.v_ii,0),
                     'p_PP': p_PP,
                     'p_II': p_II,
-                    'R_py': r_P_rate, # 1/diff(np.array(sp_P.t)).mean(),
+                    'R_py': r_P_rate,
                     'R_in': r_I_rate,
                     'RECURRENT_PYRAMIDAL': RECURRENT_PYRAMIDAL,
                     'RECURRENT_INHIBITORY': RECURRENT_INHIBITORY,
@@ -563,6 +569,12 @@ if SAVE:
                     'input_spike_rate': input_spike_rate,
                     'input_spike_rate_thalamic': input_spike_rate_thalamic,
                     'input_current': input_current} 
+    
+                    # 'v_pp': mean(Py_monitor.v_pp,0),
+                    # 'v_pe': mean(Py_monitor.v_pe,0),
+                    # 'v_ii': mean(In_monitor.v_ii,0),
+                    # 'R_py2': r_P_rate2,
+                    # 'R_in2': r_I_rate2,
     
     # Save as lfp_last
     scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/lfp_last.mat',

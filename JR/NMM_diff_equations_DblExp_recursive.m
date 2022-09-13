@@ -46,21 +46,21 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     dt = params.dt;
     t = 0:dt:(N-1)*dt;
 
-    alpha_i = params.alpha_ie;
-    alpha_e = params.alpha_ei; 
+    alpha_i = params.alpha_i;
+    alpha_e = params.alpha_e; 
     alpha_re = params.alpha_re; 
     alpha_ri = params.alpha_ri; 
     alpha_u = params.alpha_u; 
 
-    % Equilibrium point (calculated with matcont, u=0)
-    eq =   [-0.016e3;
-            -0.8013e3;
-            0.0366e3;
-            3.6719e3;
-            0.0051e3;
-            0.2553e3;
-            -0.0459e3;
-            -4.8864e3;
+    % Steady state
+    eq =   [-3.8824;
+            -197.4781;
+            0.7247;
+            74.4335;
+            0.2090;
+            10.5810;
+            -2.5466;
+            -275.9404;
             0;
             0;];
         
@@ -101,11 +101,11 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     end
     
     % Calculate firing rate
-    f_i = params.e0i * gompertz_io(x(:,3) + x(:,7), params.gompertzi.b, params.gompertzi.c, params.gompertzi.d); % sigmoid_io(x(:,3) + x(:,7), params.v0, params.r); % 
-    f_e = params.e0 * gompertz_io(x(:,1) + x(:,5) + x(:,9), params.gompertz.b, params.gompertz.c, params.gompertz.d); % sigmoid_io(x(:,1) + x(:,5) + x(:,9), params.v0, params.r); % 
+    f_i = gompertz_io(x(:,3) + x(:,7), params.e0i, params.gompertzi.b, params.gompertzi.c, params.gompertzi.d); % sigmoid_io(x(:,3) + x(:,7), params.v0, params.r); % 
+    f_e = gompertz_io(x(:,1) + x(:,5) + x(:,9), params.e0, params.gompertz.b, params.gompertz.c, params.gompertz.d); % sigmoid_io(x(:,1) + x(:,5) + x(:,9), params.v0, params.r); % 
     
     if nargin == 0        
-        close all
+%         close all
         do_plot(x,t,y, f_e, f_i);
     end
 end
@@ -128,26 +128,26 @@ function dx = ode(t,x,params,dt)
     % Following lines are meant to change the input mid simulation, comment
     % them to run it with constant input.
     if isfield(params,'options') & isfield(params.options,'CHANGE_U') & params.options.CHANGE_U
-        if t >= 1500 * 1e-3
-            u = 5;
-        elseif t >= 1000 * 1e-3
-            u = 3;
-        elseif t >= 500 * 1e-3
-            u = 1;
+        if t >= 1.5
+            u = 5;%0.5;
+        elseif t >= 1
+            u = 3;%0.75;
+        elseif t >= 0.5
+            u = 1;%0.5;
         end
     end
     
     % Synaptic functions
-    S1 = @(x) gompertz_io(x,ib, ic ,id);% sigmoid_io(x, v0, r); %
-    S2 = @(x) gompertz_io(x, b, c, d);  % sigmoid_io(x, v0, r); % 
+    S1 = @(x) gompertz_io(x, e_0i, ib, ic ,id);% sigmoid_io(x, e_0i, v0, r); %
+    S2 = @(x) gompertz_io(x, e_0, b, c, d);  % sigmoid_io(x, e_0, v0, r); % 
     Tau_coeff = @(m, s) 1/(m*s);% Nicola Campbell
     
     c_constant = params.c_constant;
-    c1 = 4 * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
-    c2 = 1 * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
-    c3 = 4 * c_constant * params.P_pyTOpy;
-    c4 = 1 * c_constant * params.P_inTOin; 
-    c5 = 1 * c_constant; % External excitatory synapses into pyramidal population
+    c1 = 66.3598    * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
+    c2 = 27.6920    * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
+    c3 = 136.9005   * c_constant * params.P_pyTOpy; % Recursive excitation to pyramidal cells
+    c4 = 6.3560     * c_constant * params.P_inTOin; % Recursive inhibition to inhibitory cells
+    c5 = 17.3       * c_constant;                   % External excitatory synapses into pyramidal population
     
     tau_sp = params.tau_sp;
     tau_mp = params.tau_mp;
@@ -161,12 +161,12 @@ function dx = ode(t,x,params,dt)
     tau_sri = params.tau_sri;
     tau_mri = params.tau_mri;
     
-    % Lumped parameters
-    AmplitudeI  = c2 * 2 * e_0i * x(11) * Tau_coeff(tau_mp,  tau_sp);
-    AmplitudeE  = c1 * 2 * e_0  * x(12) * Tau_coeff(tau_mi,  tau_si);
-    AmplitudeRE = c3 * 2 * e_0  * x(13) * Tau_coeff(tau_mrp, tau_srp);
-    AmplitudeRI = c4 * 2 * e_0i * x(14) * Tau_coeff(tau_mri, tau_sri);
-    AmplitudeU  = 1000 * 0.0173 * x(15) * Tau_coeff(tau_mrp, tau_srp);
+    % Lumped gain parameters
+    AmplitudeI  = c2 * x(11) * Tau_coeff(tau_mp,  tau_sp);
+    AmplitudeE  = c1 * x(12) * Tau_coeff(tau_mi,  tau_si);
+    AmplitudeRE = c3 * x(13) * Tau_coeff(tau_mrp, tau_srp);
+    AmplitudeRI = c4 * x(14) * Tau_coeff(tau_mri, tau_sri);
+    AmplitudeU  = c5 * x(15) * Tau_coeff(tau_mrp, tau_srp);
     
     % Diff equations ------------------------------------------------------
     dx = zeros(15,1);
@@ -186,7 +186,7 @@ function dx = ode(t,x,params,dt)
     dx(8) = - x(8)/tau_sri + AmplitudeRI * S1(x(3) + x(7));    
     % External input u->P
     dx(9) = x(10) - x(9)/tau_mrp;
-    dx(10) = - x(10)/tau_srp + AmplitudeU * (u + (params.options.ADD_NOISE * (sqrt(u).*randn(1,1)))); % + AmplitudeU * 10 * 1.5; % -x(9) + u + (params.options.ADD_NOISE * (sqrt(u).*randn(1,1))); % Random number % 1.1; % <- steady increase of 1.1 spike/ms/cell/s
+    dx(10) = - x(10)/tau_srp + AmplitudeU * (u + (params.options.ADD_NOISE * (sqrt(u).*randn(1,1))));
     % Parameters:
     dx(11) = 0; % alpha_i
     dx(12) = 0; % alpha_e
@@ -194,14 +194,6 @@ function dx = ode(t,x,params,dt)
     dx(14) = 0; % alpha_ri
     dx(15) = 0; % alpha_u
 
-    
-    %     % External input Tha->P
-    %     dx(11) = x(12) - x(11)/tau_mp;
-    %     dx(12) = - x(12)/tau_sp + AmplitudeU * 10 * 1.5;
-    %     % External input Tha->I
-    %     dx(13) = x(14) - x(13)/tau_mp;
-    %     dx(14) = - x(14)/tau_sp + AmplitudeU * 10 * 1.5;
-    
 end
 
 function do_plot(x,t, Vm, f_e, f_i)    
@@ -233,12 +225,18 @@ function do_plot(x,t, Vm, f_e, f_i)
     
     figure
     plot(t, x(:,9));    
+    
+    figure
+    subplot(1,2,1)
+    plot(x(:,1), x(:,3));
+    subplot(1,2,2)
+    plot(x(:,1), x(:,2));
 end
 
-function out = sigmoid_io(x, v0, r)
-    out = 0.5 * erf((x - v0) / (sqrt(2)*r)) + 0.5;
+function out = sigmoid_io(x, e0, v0, r)
+    out = e0 * (0.5 * erf((x - v0) / (sqrt(2)*r)) + 0.5);
 end
 
-function out = gompertz_io(x, b, c, d)
-    out = exp(-b*exp(-d*(x-c)));
+function out = gompertz_io(x, a, b, c, d)
+    out = a * exp(-b*exp(-d*(x-c)));
 end

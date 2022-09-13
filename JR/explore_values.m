@@ -11,10 +11,10 @@
 % range = [0.002:0.001:0.05]; % tau_m_e
 % range2 = [0.005:0.001:0.055]; % tau_m_i
 
-value = 'c_constant'; %'e0';%'pII';
-range = logspace(-2,3,100)%[0.1:1:100]; % P[II] or P[PP]
-value2 = 'u';%'e0i';
-range2 = 1;%1*[10:5:100];%[0:0.5:5]; %[0:10]; % P[II] or P[PP]
+value = 'u';
+range = [0:0.1:2];
+value2 = 'alpha_i';
+range2 = -1*[0:0.1:5];
 
 freqs = [];
 freqs_py = [];
@@ -87,8 +87,8 @@ zlabel('Firing rate (Py)');
 c = colorbar;
 
 c.Label.String = 'Mean firing rate (Hz)';
-caxis([0 1.5]);
-c.Limits = [0 1.5];
+caxis([0 2]);
+c.Limits = [0 2];
 % zlim([0 1.5]);
 title('Pyramidal')
 %xlim([0 5])
@@ -103,8 +103,8 @@ title('Inhibitory');
 colormap jet
 c = colorbar;
 c.Label.String = 'Mean firing rate (Hz)';
-caxis([0 3.5]);
-c.Limits = [0 3.5];
+caxis([0 2]);
+c.Limits = [0 2];
 % zlim([0 1.5]);
 % xlim([0 5])
 ax.View = (angle);

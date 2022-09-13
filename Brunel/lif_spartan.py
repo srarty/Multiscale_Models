@@ -66,7 +66,7 @@ input_spike_rate = [1] #[0, 1, 3, 5] #[u] #[15] # [0, 5, 10] # spikes/ms/cell (d
 input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
 
 #%% parameters  --------------------------------------------------------------
-simulation_time = 2 * second
+simulation_time = 4 * second
 dt_ = 100 * usecond
 T = linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector for plots (in seconds)
 # T_u = linspace(0, simulation_time, round(simulation_time/u_dt)) # Time vector for u for plots (in seconds)

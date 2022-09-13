@@ -40,12 +40,15 @@ function varargout = spectrum(x, y, t, varargin)
 %     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_u[15].mat';
 %     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/spartan/lfp_298.mat';
 
-    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_17.mat';
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_17.mat';
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_24.mat';
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_25.mat'; % P[P->I] = 0.2
+    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_39.mat';
 
     if nargin > 3, PLOT = varargin{1}; else, PLOT = true; end
     if nargin > 4, data_file = varargin{2}; end
 
-    signal = 'vip'; % Options: 'vpi', 'vip', 'lfp'
+    signal = 'lfp'; % Options: 'vpi', 'vip', 'lfp'
     
     [x_nmm, x_lif, t_nmm, t_lif, v_pi, v_ip, u_lif, lfp_dt] = get_data(signal, x, y, t, data_file);
     
@@ -229,7 +232,8 @@ function plot_lif_results(v_pi, v_ip, dt)
     t = 0:dt:(size(v_pi,2)-1) * dt;
 
     x1 = mean(v_pi,1);
-    x1_ = [0 mean(diff(v_pi,[],2))];
+%     x1_ = [0 mean(diff(v_pi,[],2))];
+    x1_ = [0 diff(v_pi,[],2)];
     x3 = mean(v_ip,1);
     x3_ = [0 mean(diff(v_ip,[],2))];
     
