@@ -23,9 +23,9 @@ T = linspace(0,0.3,length(psp));
 ft = fittype( 'c*(exp(-t/a)-exp(-t/b))', 'independent', 't', 'dependent', 'y');
 
 opts = fitoptions(ft);
-opts.StartPoint = [0.008339 0.01001 1];
-opts.Lower = [0.0001 0.0001 0];     % opts.Lower = [0.0001 0.006031 0]; 
-opts.Upper = [0.5 1 10];    % opts.Upper = [0.1 0.006031 10];    
+opts.StartPoint = [0.01 0.01001 1];
+opts.Lower = [0.01 0.00525 0];     % opts.Lower = [0.0001 0.006031 0]; 
+opts.Upper = [0.01 0.00525 10];    % opts.Upper = [0.1 0.006031 10];    
 opts.Robust = 'Off';
 fitresult = fit(T', psp', ft, opts) % With options
 % fitresult = fit(T', psp', ft) % No options

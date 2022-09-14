@@ -9,11 +9,12 @@
 
 %% Options ----------------------------------------------------------------
 
-POPULATION = 'Py'; % 'Py' or 'In'
+POPULATION = 'In'; % 'Py' or 'In'
 FUNCTION = 'G'; % 'G' (Gompertz) or 'S' (Sigmoid)
 
 % -------------------------------------------------------------------------
 
+% LIF parameters
 g_m_P = 25e-9;
 g_m_I = 20e-9;
 
@@ -134,8 +135,8 @@ if strcmp(FUNCTION, 'S') % Sigmoid
         % Error (Py)
         opts = fitoptions(ft);
         opts.StartPoint =  [max_firing_rate 10 5];
-        opts.Lower =   [1 1 0];
-        opts.Upper =  [30 30 100];    
+        opts.Lower =   [25.87 1 0];
+        opts.Upper =  [25.87 30 100];    
     end
         
 elseif strcmp(FUNCTION, 'G') % Gompertz
@@ -166,15 +167,10 @@ fitresult_Py = fit(potential_integral', firing_rates', ft, opts) % With options
 if strcmp(FUNCTION, 'S')
     f_nonlinearity = @(x) fitresult_Py.alpha * non_linear_sigmoid(x, fitresult_Py.r, fitresult_Py.v0);
 elseif strcmp(FUNCTION, 'G')
-    params.gompertz.a = fitresult_Py.a;
-    params.gompertz.b = fitresult_Py.b;
-    params.gompertz.c = fitresult_Py.c;
-    params.gompertz.d = fitresult_Py.d;
-    
-    f_nonlinearity = @(x) gompertz(x, params);
+    f_nonlinearity = @(x) gompertz(x, fitresult_Py.a, fitresult_Py.b, fitresult_Py.c, fitresult_Py.d);
 end
 
-% %%
+%%
 figure(fig);
 yyaxis right
 hold
@@ -188,3 +184,6 @@ ylabel('Firing rate (spikes/s)');
 ylim([0 max_firing_rate]);
 yyaxis left
 ylim([0 max_firing_rate]);
+% ylim([0 40]);
+% yyaxis left
+% ylim([0 40]);
