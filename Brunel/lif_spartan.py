@@ -62,7 +62,7 @@ corriente = 0
 input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 
-input_spike_rate = [1] #[0, 1, 3, 5] #[u] #[15] # [0, 5, 10] # spikes/ms/cell (driving input)
+input_spike_rate = [20] #[0, 1, 3, 5] #[u] #[15] # [0, 5, 10] # spikes/ms/cell (driving input)
 input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
 
 #%% parameters  --------------------------------------------------------------
@@ -313,8 +313,8 @@ st_AMPA_I = StateMonitor(In_Pop, 's_AMPA', record = 0)
 st_GABA_I = StateMonitor(In_Pop, 's_GABA', record = 0)
 st_AMPA_cor_I = StateMonitor(In_Pop, 's_AMPA_cor', record = 0)
 
-Py_monitor = StateMonitor(Py_Pop, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'I_tot', 'v', 'v_pe', 'v_pi', 'v_pp'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
-In_monitor = StateMonitor(In_Pop, ['v', 'v_ip', 'v_ii', 'I_tot'], record = True)
+Py_monitor = StateMonitor(Py_Pop, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'v', 'v_pe', 'v_pi'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
+In_monitor = StateMonitor(In_Pop, ['v', 'v_ip', 'v_ii'], record = True)
 
 #%% simulate  -----------------------------------------------------------------
 net = Network(collect())
@@ -365,8 +365,8 @@ if shape(r_I_rate_2) != shape(r_I.t):
 #     r_Cor_rate = r_Cor_rate[1:]
 
 # Calculate mean I
-I_in = mean(In_monitor.I_tot, 0)
-I_py = mean(Py_monitor.I_tot, 0)
+#I_in = mean(In_monitor.I_tot, 0)
+#I_py = mean(Py_monitor.I_tot, 0)
 
 
 # Calculate mean PSP (NMM states)
@@ -384,119 +384,30 @@ lfp_ = sum(lfp,0) / g_m_P # Sum across all Pyramidal neurons and divide by the l
 mean_v_Py = np.transpose(mean(Py_monitor.v,0) - V_leak) * 1e3
 lfp_v = mean_v_Py/volt
        
-#%% plotting  -----------------------------------------------------------------
-if PLOT:
-    f, axs = plt.subplots(4, 1, sharex=True, figsize=(10, 6.25)) # New figure with two subplots
-    
-    # colors
-    c_inter = 'C6'  # pink
-    c_py = 'C9'     # light blue
-    c_ex = 'C0'    # blue
-    c_Cor = 'C1'    # orange
-    c_gray = '#e0e0e0' # grey
-    
-    # raster
-    axs[0].set_title('Raster ({} neurons/pop) N = {}, u = {} spikes/ms'.format(N_activity_plot, N, input_spike_rate))
-    axs[0].set_ylabel('Neuron')
-    axs[0].set_yticks([])
-    axs[0].spines["top"].set_visible(False)
-    axs[0].spines["right"].set_visible(False)
-    
-    axs[0].plot(sp_P.t / ms, sp_P.i + 1 * N_I, '.', markersize=2, label='Pyramidal', c=c_py)
-    axs[0].plot(sp_I.t / ms, sp_I.i, '.', markersize=2, label='Inhibitory', c=c_inter)
-    axs[0].legend(loc=1)
-            
-    axs[1].set_title('Population rates, moving average')
-    axs[1].set_ylabel('Spike rate (Hz)')
-    axs[1].spines["top"].set_visible(False)
-    axs[1].spines["right"].set_visible(False)   
-        
-    axs[1].plot(r_P.t / ms, r_P_rate / Hz, label='Pyramidal', c=c_py)
-    axs[1].plot(r_I.t / ms, r_I_rate / Hz, label='Interneuron', c=c_inter)
-    axs[1].legend(loc=1)
-    
-    # synaptic currents
-    axs[2].set_title('Synaptic currents')
-    axs[2].set_ylabel('Amplitude (unitless)')
-    axs[2].set_xlabel('Time (ms)')
-    axs[2].spines["top"].set_visible(False)
-    axs[2].spines["right"].set_visible(False)
-    # Others
-    axs[2].plot(T*1000, np.array(st_GABA_I.s_GABA).transpose(), lw=0.5, c=c_gray) # , label='GABA (Inter)'
-    axs[2].plot(T*1000, np.array(st_AMPA_P.s_AMPA).transpose(), lw=0.5, c=c_gray) # , label='AMPA (Py)'
-    axs[2].plot(T*1000, np.array(st_AMPA_cor_I.s_AMPA_cor).transpose(), lw=0.5, c=c_gray) # , label='AMPA_cor (Inter)'
-    # alphas
-    axs[2].plot(T*1000, np.array(st_GABA_P.s_GABA).transpose(), label='GABA (Py)', c=c_py)
-    axs[2].plot(T*1000, np.array(st_AMPA_I.s_AMPA).transpose(), label='AMPA (In)', c=c_inter)
-    axs[2].plot(T*1000, np.array(st_AMPA_cor_P.s_AMPA_cor).transpose(), lw=0.5, c=c_Cor , label='AMPA_cor (Cortical)')
-    axs[2].legend(loc=1)
-    
-    # LFP
-    axs[3].set_title('LFP')
-    axs[3].set_xlabel('Time (ms)')
-    axs[3].set_ylabel('mV')
-    axs[3].spines["top"].set_visible(False)
-    axs[3].spines["right"].set_visible(False)
-    axs[3].plot(T*1000, np.transpose(lfp_v), lw=0.5, label='LFP_V')
-    axs[3].plot(T*1000, np.transpose(lfp_), lw=0.5, label='LFP_I')
-    axs[3].legend(loc=1)
-
-    f.tight_layout() # Fixes the positions of subplots and labels
-
-if PLOT_EXTRA:
-    # Second figure. PSP
-    f2, axs = plt.subplots(2, 1, sharex=True, figsize=(10, 6.25)) # New figure with two subplots
-    
-    axs[0].set_title('Pyramidal population (v_pi)')
-    axs[0].set_xlabel('Time (ms)')
-    axs[0].set_ylabel('IPSP (mV)')
-    axs[0].plot(T*1000, np.transpose(v_pi)*1000)
-    
-    axs[1].set_title('Inhibitory population (v_ip)')
-    axs[1].set_xlabel('Time (ms)')
-    axs[1].set_ylabel('EPSP (mV)')
-    axs[1].plot(T*1000, np.transpose(v_ip)*1000)
-
-    
-    # Third figure. Membrane potential
-    f3, axs = plt.subplots(2, 1, sharex=True, figsize=(10, 6.25)) # New figure with two subplots
-    
-    axs[0].set_title('Pyramidal Vm (selected cells)')
-    axs[0].set_xlabel('Time (ms)')
-    axs[0].set_ylabel('mV')
-    axs[0].plot(T*1000, np.transpose(Py_monitor.v[0:5])*1e3, lw=0.5, c=c_py)
-
-    axs[1].set_title('Interneurons Vm (selected cells)')
-    axs[1].set_xlabel('Time (ms)')
-    axs[1].set_ylabel('mV')
-    axs[1].plot(T*1000, np.transpose(In_monitor.v[0:5])*1e3, lw=0.5, c=c_inter)
-    
-    f3.tight_layout()
-    plt.show()
-    
+   
 #%% Find Coefficient of Variation of ISI
-isi_P = np.zeros(N_activity_plot)
-isi_I = np.zeros(N_activity_plot)
-isis_P = np.zeros(N_activity_plot)
-isis_I = np.zeros(N_activity_plot)
-
-for i in range(N_activity_plot):
-    isi_P[i] = mean(diff(sp_P.t[sp_P.i[sp_P.t/second >= 0.5] == i]/second))
-    isis_P[i] = std(diff(sp_P.t[sp_P.i[sp_P.t/second >= 0.5] == i]/second))
-    
-    isi_I[i] = mean(diff(sp_I.t[sp_I.i[sp_I.t/second >= 0.5] == i]/second))
-    isis_I[i] = std(diff(sp_I.t[sp_I.i[sp_I.t/second >= 0.5] == i]/second))
-    
+#isi_P = np.zeros(N_activity_plot)
+#isi_I = np.zeros(N_activity_plot)
+#isis_P = np.zeros(N_activity_plot)
+#isis_I = np.zeros(N_activity_plot)
+#
+#for i in range(N_activity_plot):
+#    isi_P[i] = mean(diff(sp_P.t[sp_P.i[sp_P.t/second >= 0.5] == i]/second))
+#    isis_P[i] = std(diff(sp_P.t[sp_P.i[sp_P.t/second >= 0.5] == i]/second))
+#    
+#    isi_I[i] = mean(diff(sp_I.t[sp_I.i[sp_I.t/second >= 0.5] == i]/second))
+#    isis_I[i] = std(diff(sp_I.t[sp_I.i[sp_I.t/second >= 0.5] == i]/second))
+#    
     
 #%% Save simulation  ------------------------------------------------------------
 if SAVE:    
-    P_ = np.array(list(sp_P.spike_trains().values()))
-    I_ = np.array(list(sp_I.spike_trains().values()))
-    for i in range(0,shape(P_)[0]):
-        P_[i] = P_[i]/second
-        
-    for i in range(0,shape(I_)[0]):
-        I_[i] = I_[i]/second
+#    P_ = np.array(list(sp_P.spike_trains().values()))
+#    I_ = np.array(list(sp_I.spike_trains().values()))
+#    for i in range(0,shape(P_)[0]):
+#        P_[i] = P_[i]/second
+#        
+#    for i in range(0,shape(I_)[0]):
+#        I_[i] = I_[i]/second
     
     save_dictionary={'LFP': lfp_,
                     'LFP_V': lfp_v,
@@ -504,15 +415,9 @@ if SAVE:
                     'v_rest': V_leak,
                     'v_p': mean(Py_monitor.v,0),
                     'v_i': mean(In_monitor.v,0),
-                    'v_pp': mean(Py_monitor.v_pp,0),
                     'v_pe': mean(Py_monitor.v_pe,0),
                     'v_pi': mean(Py_monitor.v_pi,0),
                     'v_ip': mean(In_monitor.v_ip,0),
-                    'v_ii': mean(In_monitor.v_ii,0),
-                    'sp_P_t': sp_P.t,
-                    'sp_I_t': sp_I.t,
-                    'sp_P_i': sp_P.i,
-                    'sp_I_i': sp_I.i,
                     'p_PP': p_PP,
                     'p_II': p_II,
                     'R_py': r_P_rate, # 1/diff(np.array(sp_P.t)).mean(),
