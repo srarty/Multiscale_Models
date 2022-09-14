@@ -60,7 +60,7 @@ corriente = 0
 input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 
-input_spike_rate = [0, 1, 3, 5]#[0, 1, 3, 5] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
+input_spike_rate = [0]#[0, 1, 3, 5] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
 input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
 
 #%% parameters  --------------------------------------------------------------
@@ -69,7 +69,7 @@ dt_ = 100 * usecond
 T = np.linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector for plots (in seconds)
    
 # populations
-N = 2000 # 135 # 675
+N = 1000 # 135 # 675
 N_P = int(N*4)  # pyramidal neurons
 N_I = int(N)    # interneurons
 

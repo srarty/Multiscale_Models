@@ -16,15 +16,17 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
         value2 = varargin{4};
     end
     
-    N = 1000; % Number of samples: 1 sample = 1 milisecond
-    u = 5;
+    N = 2000; % Number of samples: 1 sample = 1 milisecond
+    u = 0;
 
     params = set_parameters('recursive', u);
     
     % Options
-    params.options.ADD_NOISE = 1; % External input noise (0 = no noise, 1 = noise)
+    params.options.ADD_NOISE = 0; % External input noise (0 = no noise, 1 = noise)
     params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Anyother value of CHANGE_U: U changes.
     
+    params.options.INPUT_CURRENT_PY = 1000 * 0e-12 / params.g_m_P;
+    params.options.INPUT_CURRENT_IN = 1000 * 0e-12 / params.g_m_I;
     % Parse inputs --------------------------------------------------------
     if exist('option','var')
         try
@@ -101,8 +103,8 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     end
     
     % Calculate firing rate
-    f_i = gompertz_io(x(:,3) + x(:,7), params.e0i, params.gompertzi.b, params.gompertzi.c, params.gompertzi.d); % sigmoid_io(x(:,3) + x(:,7), params.v0, params.r); % 
-    f_e = gompertz_io(x(:,1) + x(:,5) + x(:,9), params.e0, params.gompertz.b, params.gompertz.c, params.gompertz.d); % sigmoid_io(x(:,1) + x(:,5) + x(:,9), params.v0, params.r); % 
+    f_i = gompertz_io(x(:,3) + x(:,7)  + params.options.INPUT_CURRENT_IN, params.e0i, params.gompertzi.b, params.gompertzi.c, params.gompertzi.d); % sigmoid_io(x(:,3) + x(:,7), params.v0, params.r); % 
+    f_e = gompertz_io(x(:,1) + x(:,5) + x(:,9)  + params.options.INPUT_CURRENT_PY, params.e0, params.gompertz.b, params.gompertz.c, params.gompertz.d); % sigmoid_io(x(:,1) + x(:,5) + x(:,9), params.v0, params.r); % 
     
     if nargin == 0        
 %         close all
@@ -125,29 +127,32 @@ function dx = ode(t,x,params,dt)
     e_0i = params.e0i; 
     u = params.u;
     
+    input_current_py = params.options.INPUT_CURRENT_PY;
+    input_current_in = params.options.INPUT_CURRENT_IN;
+    
     % Following lines are meant to change the input mid simulation, comment
     % them to run it with constant input.
     if isfield(params,'options') & isfield(params.options,'CHANGE_U') & params.options.CHANGE_U
         if t >= 1.5
-            u = 5;%0.5;
+            u = 5;
         elseif t >= 1
-            u = 3;%0.75;
+            u = 3;
         elseif t >= 0.5
-            u = 1;%0.5;
+            u = 1;
         end
     end
     
     % Synaptic functions
-    S1 = @(x) gompertz_io(x, e_0i, ib, ic ,id);% sigmoid_io(x, e_0i, v0, r); %
-    S2 = @(x) gompertz_io(x, e_0, b, c, d);  % sigmoid_io(x, e_0, v0, r); % 
+    S1 = @(x) gompertz_io(x + input_current_in, e_0i, ib, ic ,id);% sigmoid_io(x, e_0i, v0, r); %
+    S2 = @(x) gompertz_io(x + input_current_py, e_0, b, c, d);  % sigmoid_io(x, e_0, v0, r); % 
     Tau_coeff = @(m, s) 1/(m*s);% Nicola Campbell
     
     c_constant = params.c_constant;
-    c1 = 66.3598    * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
-    c2 = 27.6920    * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
-    c3 = 136.9005   * c_constant * params.P_pyTOpy; % Recursive excitation to pyramidal cells
-    c4 = 6.3560     * c_constant * params.P_inTOin; % Recursive inhibition to inhibitory cells
-    c5 = 17.3       * c_constant;                   % External excitatory synapses into pyramidal population
+    c1 = 70.6992    * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
+    c2 = 29.0791    * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
+    c3 = 141.1007   * c_constant * params.P_pyTOpy; % Recursive excitation to pyramidal cells
+    c4 = 9.4442     * c_constant * params.P_inTOin; % Recursive inhibition to inhibitory cells
+    c5 = 17.8288    * c_constant;                   % External excitatory synapses into pyramidal population
     
     tau_sp = params.tau_sp;
     tau_mp = params.tau_mp;
