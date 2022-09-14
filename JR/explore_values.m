@@ -14,7 +14,7 @@
 value = 'u';
 range = [0:0.1:2];
 value2 = 'alpha_i';
-range2 = -1*[0:0.1:5];
+range2 = -1*[0:0.25:5];
 
 freqs = [];
 freqs_py = [];
@@ -87,9 +87,9 @@ zlabel('Firing rate (Py)');
 c = colorbar;
 
 c.Label.String = 'Mean firing rate (Hz)';
-caxis([0 2]);
-c.Limits = [0 2];
-% zlim([0 1.5]);
+caxis([0 0.2]);
+c.Limits = [0 0.2];
+zlim([0 0.2]);
 title('Pyramidal')
 %xlim([0 5])
 ax.View = (angle);
@@ -105,7 +105,7 @@ c = colorbar;
 c.Label.String = 'Mean firing rate (Hz)';
 caxis([0 2]);
 c.Limits = [0 2];
-% zlim([0 1.5]);
+zlim([0 2]);
 % xlim([0 5])
 ax.View = (angle);
 
