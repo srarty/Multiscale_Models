@@ -42,7 +42,7 @@ from lif_model import set_params, get_equations
 #def brunel(p_II = 0.125):
 #def brunel(p_PP = 0.16, p_II = 0.125):
 #def brunel(p_PP = 0.16, p_II = 0.451, u = 20):
-def brunel(alpha_ii=0, u=0):
+def brunel(alpha_pp=0, u=0):
     
     # Options:
     RECURRENT_PYRAMIDAL = True     # Self excitation 
@@ -139,7 +139,7 @@ def brunel(alpha_ii=0, u=0):
     
     # Synaptic efficacies
     # AMPA (excitatory)
-    j_AMPA_rec_P = params_py.get('j_AMPA') * 2000/N # * np.sqrt(1000/N)
+    j_AMPA_rec_P = alpha_pp * pA * 2000/N # params_py.get('j_AMPA') * 2000/N # * np.sqrt(1000/N)
     j_AMPA_rec_I = params_in.get('j_AMPA') * 2000/N # * np.sqrt(1000/N)
         
     j_AMPA_cor_P = params_py.get('j_AMPA_ext')
@@ -150,7 +150,7 @@ def brunel(alpha_ii=0, u=0):
     
     # GABAergic (inhibitory)
     j_GABA_P = params_py.get('j_GABA') * 2000/N # * np.sqrt(1000/N)
-    j_GABA_I = alpha_ii * pA * 2000/N # params_in.get('j_GABA') * 2000/N # * np.sqrt(1000/N)
+    j_GABA_I = params_in.get('j_GABA') * 2000/N # alpha_ii * pA * 2000/N # * np.sqrt(1000/N)
     
     # Weight constants. Amplitude of the synaptic input
     # Pyramidal 
@@ -501,15 +501,8 @@ def brunel(alpha_ii=0, u=0):
                         'v_rest': V_leak,
                         'v_p': mean(Py_monitor.v,0),
                         'v_i': mean(In_monitor.v,0),
-                        'v_pp': mean(Py_monitor.v_pp,0),
-                        'v_pe': mean(Py_monitor.v_pe,0),
                         'v_pi': mean(Py_monitor.v_pi,0),
                         'v_ip': mean(In_monitor.v_ip,0),
-                        'v_ii': mean(In_monitor.v_ii,0),
-                        'sp_P_t': sp_P.t,
-                        'sp_I_t': sp_I.t,
-                        'sp_P_i': sp_P.i,
-                        'sp_I_i': sp_I.i,
                         'p_PP': p_PP,
                         'p_II': p_II,
                         'R_py': r_P_rate, # 1/diff(np.array(sp_P.t)).mean(),
@@ -541,10 +534,10 @@ def brunel(alpha_ii=0, u=0):
                          mdict = save_dictionary)
         
         i = 0
-        while os.path.exists('/data/gpfs/projects/punim0643/artemios/simulations/sweep2/u_%s_ii_%s.mat' % (u,alpha_ii)):
+        while os.path.exists('/data/gpfs/projects/punim0643/artemios/simulations/sweep2/u_%s_pp_%s.mat' % (u,alpha_pp)):
             i += 1
         save_str = format('lfp_%s.png' %(i))
-        scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/sweep2/u_%s_ii_%s.mat' % (u,alpha_ii),
+        scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/sweep2/u_%s_pp_%s.mat' % (u,alpha_pp),
                          mdict = save_dictionary)
     
         #save_str = format('sweep/lfp_u%s_ii%s.png' %(u,alpha_ii))
@@ -617,8 +610,9 @@ def brunel(alpha_ii=0, u=0):
     print('Results saved as:' + save_str)
     plt.close('all')
 
-ranges = np.arange(0, 5.1, 0.1)
-ranges2 = np.arange(0, 90.5, 4.3) # alpha_ii, 21 elements
+ranges = np.arange(0, 2.1, 0.1)
+ranges2 = np.arange(-916.7, 0.1, 43.65) # alpha_pp, 21 elements
+#ranges2 = np.arange(0, 90.5, 4.3) # alpha_ii, 21 elements
 for iterations in ranges:
     for iterations2 in ranges2:
-        brunel(u = iterations, alpha_ii=iterations2)
+        brunel(u = iterations, alpha_pp=iterations2)
