@@ -9,8 +9,8 @@
 
 %% Options ----------------------------------------------------------------
 
-POPULATION = 'In'; % 'Py' or 'In'
-FUNCTION = 'G'; % 'G' (Gompertz) or 'S' (Sigmoid)
+POPULATION = 'Py'; % 'Py' or 'In'
+FUNCTION = 'G'; % 'G' (Gompertz) or 'S' (Sigmoid) or 'Ga' (Gaussian)
 
 % -------------------------------------------------------------------------
 
@@ -44,11 +44,6 @@ xlabel('Membrane potential (mV)');
 ylabel('Spike rate');
 
 %% Load the data
-% folder = 'C:\Users\artemios\Documents\GitHub2\mycroeeg\simulations\CUBN\injected_current\twice_ref\';
-% folder = 'C:\Users\artemios\Documents\GitHub2\mycroeeg\simulations\CUBN\recurrent_connections\no_inhibitory_input\';
-% folder = 'C:\Users\artemios\Documents\GitHub2\mycroeeg\simulations\CUBN\recurrent_connections\inhibitory_input\';
-% folder = 'C:\Users\artemios\Documents\GitHub2\mycroeeg\simulations\CUBN\recurrent_inhibition\';
-% folder = 'C:\Users\artemios\Documents\GitHub2\mycroeeg\simulations\CUBN\recurrent_excitation\';
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\nonlinearity\';
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\nonlinearity background activity (external input for baseline)\';
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\nonlinearity\tau_e_13ms\';
@@ -104,9 +99,9 @@ end
 firing_rates(isnan(firing_rates)) = 0;
 
 warning('Remove the following three dodgy lines')
-membrane_potentials(firing_rates > 20) = [];
-potential_integral(firing_rates > 20) = [];
-firing_rates(firing_rates > 20) = [];
+membrane_potentials(firing_rates > 25) = [];
+potential_integral(firing_rates > 25) = [];
+firing_rates(firing_rates > 25) = [];
 
 % Force the sigmoid in the data (dodgy)
 % if strcmp(FUNCTION, 'S')
@@ -140,14 +135,14 @@ if strcmp(FUNCTION, 'S') % Sigmoid
     end
         
 elseif strcmp(FUNCTION, 'G') % Gompertz
-    ft = fittype( 'a*exp(-b*exp(-d*(x-c)))', 'independent', 'x', 'dependent', 'y' );                  % Gompertz sigmoid
+    ft = fittype( 'a*exp(-b*exp(-d*(x-c)))', 'independent', 'x', 'dependent', 'y' ); % Gompertz sigmoid
     
     if strcmp(POPULATION, 'In')
         % Gompertz (In)
         opts = fitoptions(ft);
         opts.StartPoint =  [10 1 1 0];
-        opts.Lower =  [max_firing_rate-10 -100 -100 -10];
-        opts.Upper =  [max_firing_rate+10 100 100 10];
+        opts.Lower =  [max_firing_rate -100 -100 -10];
+        opts.Upper =  [max_firing_rate 100 100 10];
     else
         % Gompertz (Py)
         opts = fitoptions(ft);        
@@ -155,6 +150,8 @@ elseif strcmp(FUNCTION, 'G') % Gompertz
         opts.Lower =  [max_firing_rate-10 -100 -100 -10];
         opts.Upper =  [max_firing_rate+10 100 100 10];
     end    
+elseif strcmp(FUNCTION, 'GA')% Gaussian
+    % TODO
 else
     error('Wrong POPULATION');
 end

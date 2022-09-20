@@ -25,8 +25,8 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     params.options.ADD_NOISE = 0; % External input noise (0 = no noise, 1 = noise)
     params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Anyother value of CHANGE_U: U changes.
     
-    params.options.INPUT_CURRENT_PY = 1000 * 0e-12 / params.g_m_P;
-    params.options.INPUT_CURRENT_IN = 1000 * 0e-12 / params.g_m_I;
+    INPUT_CURRENT_PY = 1000 * 0e-12 / params.g_m_P;
+    INPUT_CURRENT_IN = 1000 * 0e-12 / params.g_m_I;
     % Parse inputs --------------------------------------------------------
     if exist('option','var')
         try
@@ -45,6 +45,24 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     end
     % --------------------------------------------------- End input parsing
     
+    % Phi (nonlinearity) functions 
+    b = params.gompertz.b;
+    c = params.gompertz.c;
+    d = params.gompertz.d;
+    
+    ib = params.gompertzi.b;
+    ic = params.gompertzi.c;
+    id = params.gompertzi.d;
+    
+    v0 = params.v0;
+    r = params.r;
+    e_0 = params.e0; 
+    e_0i = params.e0i;
+    
+    % Synaptic functions
+    S1 = @(x) gompertz_io(x + INPUT_CURRENT_IN, e_0i, ib, ic ,id);% sigmoid_io(x, e_0i, v0, r); %
+    S2 = @(x) gompertz_io(x + INPUT_CURRENT_PY, e_0, b, c, d);  % sigmoid_io(x, e_0, v0, r); % 
+        
     dt = params.dt;
     t = 0:dt:(N-1)*dt;
 
@@ -94,17 +112,17 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
         alpha_u;
         ];
     
-    [t,x,y] = ode45(@(t,x) ode(t,x,params,dt), [min(t) max(t)], x0);
+    [t,x,y] = ode45(@(t,x) ode(t,x,params,dt, S1, S2), t, x0); % use "t", instead of "[min(t) max(t)]" fix the output time vector
     %     [t,x,y] = ode23(@(t,x) ode(t,x,params,dt), [min(t) max(t)], x0);
     %     [t,x,y] = ode113(@(t,x) ode(t,x,params,dt), [min(t) max(t)], x0);
     
     for i = 1:size(x,1)
-        y(i) = x(i,1) + x(i,9) + x(i,5);
+        y(i) = x(i,1) + x(i,9) + x(i,5) + INPUT_CURRENT_PY;
     end
     
     % Calculate firing rate
-    f_i = gompertz_io(x(:,3) + x(:,7)  + params.options.INPUT_CURRENT_IN, params.e0i, params.gompertzi.b, params.gompertzi.c, params.gompertzi.d); % sigmoid_io(x(:,3) + x(:,7), params.v0, params.r); % 
-    f_e = gompertz_io(x(:,1) + x(:,5) + x(:,9)  + params.options.INPUT_CURRENT_PY, params.e0, params.gompertz.b, params.gompertz.c, params.gompertz.d); % sigmoid_io(x(:,1) + x(:,5) + x(:,9), params.v0, params.r); % 
+    f_i = S1(x(:,3) + x(:,7)); 
+    f_e = S2(x(:,1) + x(:,5) + x(:,9));
     
     if nargin == 0        
 %         close all
@@ -112,46 +130,29 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     end
 end
 
-function dx = ode(t,x,params,dt)
-    b = params.gompertz.b;
-    c = params.gompertz.c;
-    d = params.gompertz.d;
+function dx = ode(t,x,params,dt, S1, S2)
     
-    ib = params.gompertzi.b;
-    ic = params.gompertzi.c;
-    id = params.gompertzi.d;
-    
-    v0 = params.v0;
-    r = params.r;
-    e_0 = params.e0; 
-    e_0i = params.e0i; 
     u = params.u;
-    
-    input_current_py = params.options.INPUT_CURRENT_PY;
-    input_current_in = params.options.INPUT_CURRENT_IN;
     
     % Following lines are meant to change the input mid simulation, comment
     % them to run it with constant input.
     if isfield(params,'options') & isfield(params.options,'CHANGE_U') & params.options.CHANGE_U
         if t >= 1.5
-            u = 5;
+            u = 0.5;
         elseif t >= 1
-            u = 3;
+            u = 0.75;
         elseif t >= 0.5
-            u = 1;
+            u = 0.25;
         end
     end
-    
-    % Synaptic functions
-    S1 = @(x) gompertz_io(x + input_current_in, e_0i, ib, ic ,id);% sigmoid_io(x, e_0i, v0, r); %
-    S2 = @(x) gompertz_io(x + input_current_py, e_0, b, c, d);  % sigmoid_io(x, e_0, v0, r); % 
+
     Tau_coeff = @(m, s) 1/(m*s);% Nicola Campbell
     
     c_constant = params.c_constant;
-    c1 = 70.6992    * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
-    c2 = 29.0791    * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
+    c1 = 70.5575    * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
+    c2 = 29.7217    * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
     c3 = 141.1007   * c_constant * params.P_pyTOpy; % Recursive excitation to pyramidal cells
-    c4 = 9.4442     * c_constant * params.P_inTOin; % Recursive inhibition to inhibitory cells
+    c4 = 9.5339     * c_constant * params.P_inTOin; % Recursive inhibition to inhibitory cells
     c5 = 17.8288    * c_constant;                   % External excitatory synapses into pyramidal population
     
     tau_sp = params.tau_sp;
