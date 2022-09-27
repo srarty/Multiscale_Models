@@ -16,13 +16,13 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
         value2 = varargin{4};
     end
     
-    N = 2000; % Number of samples: 1 sample = 1 milisecond
-    u = 0;
+    N = 1000; % Number of samples: 1 sample = 1 milisecond
+    u = 1;
 
     params = set_parameters('recursive', u);
     
     % Options
-    params.options.ADD_NOISE = 0; % External input noise (0 = no noise, 1 = noise)
+    params.options.ADD_NOISE = 1; % External input noise (0 = no noise, 1 = noise)
     params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Anyother value of CHANGE_U: U changes.
     
     INPUT_CURRENT_PY = 1000 * 0e-12 / params.g_m_P;
@@ -60,8 +60,8 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     e_0i = params.e0i;
     
     % Synaptic functions
-    S1 = @(x) gompertz_io(x + INPUT_CURRENT_IN, e_0i, ib, ic ,id);% sigmoid_io(x, e_0i, v0, r); %
-    S2 = @(x) gompertz_io(x + INPUT_CURRENT_PY, e_0, b, c, d);  % sigmoid_io(x, e_0, v0, r); % 
+    S1 = @(x) gompertz_io(x + INPUT_CURRENT_IN, e_0i, ib, ic ,id);% sigmoid_io(x, e_0i, v0, r); %gaussian_io(x, params.gaussiani.a, params.gaussiani.b, params.gaussiani.c, params.gaussiani.d);% 
+    S2 = @(x) gompertz_io(x + INPUT_CURRENT_PY, e_0, b, c, d);  % sigmoid_io(x, e_0, v0, r); % gaussian_io(x, params.gaussian.a, params.gaussian.b, params.gaussian.c, params.gaussian.d);% 
         
     dt = params.dt;
     t = 0:dt:(N-1)*dt;
@@ -125,7 +125,7 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     f_e = S2(x(:,1) + x(:,5) + x(:,9));
     
     if nargin == 0        
-%         close all
+        close all
         do_plot(x,t,y, f_e, f_i);
     end
 end
@@ -245,4 +245,8 @@ end
 
 function out = gompertz_io(x, a, b, c, d)
     out = a * exp(-b*exp(-d*(x-c)));
+end
+
+function out = gaussian_io(x, a, b, c, d)
+    out = a*exp(-((x-b)/c).^2);
 end

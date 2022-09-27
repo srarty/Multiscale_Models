@@ -190,13 +190,13 @@ def brunel(corriente = 0):
     Py_Pop = NeuronGroup(N_P, eqs_P, threshold='v > V_thr', reset='''v = V_reset
                                                                     v_pe = V_reset-V_leak
                                                                     v_pi = V_reset-V_leak
-                                                                    ''', refractory=tau_rp_P, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
+                                                                    ''', refractory='5*ms + (tau_rp_P * rand())', method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
     Py_Pop.v = V_leak
     
     
     In_Pop = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='''v = V_reset
                                                                     v_ip = V_reset-V_leak
-                                                                    ''', refractory=tau_rp_I, method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
+                                                                    ''', refractory='5*ms + (tau_rp_I * rand())', method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
     In_Pop.v = V_leak
     
     # Pop_Cor = PoissonGroup(num_inputs, rates = (input_spike_rate*1000/num_inputs)*Hz, dt=dt_) # poisson input
@@ -525,8 +525,8 @@ def brunel(corriente = 0):
     	               
      
         # Save as lfp_last
-        scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/lfp_last.mat',
-                         mdict = save_dictionary)
+        # scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/lfp_last.mat',
+        #                  mdict = save_dictionary)
         
        # i = 0
        # while os.path.exists('/data/gpfs/projects/punim0643/artemios/simulations/lfp_%s.mat' % i):
@@ -536,7 +536,7 @@ def brunel(corriente = 0):
        #                  mdict = save_dictionary)
     
         save_str = format('sweep/lfp_current_%s.png' %(corriente))
-        scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/nonlinearity_I_tha_disconnected/lfp_current_%s.mat' %(corriente),
+        scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/nonlinearity_distribution/lfp_current_%s.mat' %(corriente),
                          mdict = save_dictionary)
         
         save_dictionary = None

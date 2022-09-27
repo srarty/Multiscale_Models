@@ -44,7 +44,8 @@ function varargout = spectrum(x, y, t, varargin)
 %     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_24.mat';
 %     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_25.mat'; % P[P->I] = 0.2
 %     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_40.mat';
-    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_45.mat';
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_45.mat';
+    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_16.mat';
 
     if nargin > 3, PLOT = varargin{1}; else, PLOT = true; end
     if nargin > 4, data_file = varargin{2}; end
@@ -113,11 +114,11 @@ function [x_nmm, x_lif, t_nmm, t_lif, v_pi, v_ip, input_spike_rate, dt] = get_da
     load(data_file);
     
     trim = 2500; % Samples to remove from the beginning of the LFP_V vector
-    LFP_V = LFP_V(trim:end);
+    LFP_ = LFP_V(trim:end); % LFP(trim:end);
     
     if exist('lfp_dt','var'), dt = lfp_dt; else, dt = 1e-4; end
     
-    T = (trim + length(LFP_V)) * dt;
+    T = (trim + length(LFP_)) * dt;
     t_lif = linspace(trim*dt,T,(T/dt)-trim);
     
     switch signal
@@ -134,7 +135,7 @@ function [x_nmm, x_lif, t_nmm, t_lif, v_pi, v_ip, input_spike_rate, dt] = get_da
                 x_lif = v_ip(trim:end); % State 1? % LIF
             end
         case 'lfp'
-            x_lif = LFP_V; % LIF
+            x_lif = LFP_; % LIF
         otherwise
             error('Wrong options (signal)');
     end

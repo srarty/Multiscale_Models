@@ -12,9 +12,9 @@
 % range2 = [0.005:0.001:0.055]; % tau_m_i
 
 value = 'u';
-range = [0:0.1:2];
-value2 = 'alpha_re';
-range2 = 1*[0:0.25:5];
+range = [0:0.5:5];
+value2 = 'alpha_i';
+range2 = -1*[0:0.25:5];%[0:0.05:1];%
 
 freqs = [];
 freqs_py = [];
