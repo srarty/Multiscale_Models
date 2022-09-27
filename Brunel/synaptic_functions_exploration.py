@@ -49,8 +49,8 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     
     source          = 'allen'       # brunel or allen
     synaptic_type   = 'GABA'        # AMPA (excitatory) or GABA (inhibitory)
-    neuron_type     = 'inhibitory'  # pyramidal, inhibitory or spiny
-    external        = False         # When AMPA, synapsis can be external or recurrent (local)
+    neuron_type     = 'pyramidal'  # pyramidal, inhibitory or spiny
+    external        = True         # When AMPA, synapsis can be external or recurrent (local)
     input_spike_rate = 0            # spikes/ms/cell 
     simulation_time = 0.3 * second
     

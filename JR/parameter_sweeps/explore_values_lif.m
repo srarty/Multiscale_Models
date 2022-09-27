@@ -6,7 +6,7 @@
 %
 % Artemio - August 2022
 % function explore_values_lif(TYPE)
-TYPE = 'ii'; % type = {'ee', 'ii', 'ie', 'ei'} % xy, x=pre-synaptic, y=post-synaptic
+TYPE = 'pp'; % type = {'ee', 'ii', 'ie', 'ei'} % xy, x=pre-synaptic, y=post-synaptic
 
 root = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\sweep\';
 d = dir([root '*_' TYPE '*.mat']);
@@ -19,12 +19,12 @@ for i = 1:length(d)
     n = d(i).name;
     
     % Find the positino of u and alpha in the file name
-    u_idx = strfind(n,'_u') + 2;
-    alpha_idx = strfind(n, strcat('_', TYPE)) + length(TYPE) + 1;
+    u_idx = strfind(n,'u') + 2;
+    alpha_idx = strfind(n, strcat('_', TYPE)) + length(TYPE) + 2;
     end_idx = strfind(n, '.mat') - 1;
     
     % Retrieve u and alpha
-    u(i) = str2double(n(u_idx : alpha_idx -(length(TYPE) + 2)));
+    u(i) = str2double(n(u_idx : (alpha_idx - length(TYPE) - 3)));
     alpha(i) = str2double(n(alpha_idx : end_idx));
     
 end
@@ -42,26 +42,27 @@ for i = 1:length(d)
 end
 %% Plot spike rates mesh
 % Set label and View
-if TYPE(1)=='e', angle=([0 -90]); else, angle=([0 90]); end
+if (TYPE(1)=='e'||TYPE(1)=='p'), angle=([0 -90]); else, angle=([0 90]); end
     
 figure('Position', [325 404 1112 364]);
 ax = subplot(1,2,1);
 
-mesh(u_unique, -1*alpha_unique, f_py', 'FaceColor', 'flat', 'EdgeColor', 'none')
+mesh(u_unique, 1*alpha_unique, f_py', 'FaceColor', 'flat', 'EdgeColor', 'none')
 xlabel('u');%('Input rate');
 ylabel(['j_{' TYPE '}']);
 zlabel('Firing rate (Py)');
 c = colorbar;
 c.Label.String = 'Mean firing rate (Hz)';
-caxis([0 1.5]);
-c.Limits = [0 1.5];
-xlim([0 5]);
+caxis([0 2]);
+c.Limits = [0 2];
+% xlim([0 5]);
+ylim([min(alpha_unique) 0]);
 % zlim([0 1.5]);
 % title('Pyramidal')
 ax.View = (angle);
 %%
 ax = subplot(1,2,2);
-mesh(u_unique, -1*alpha_unique, f_in', 'FaceColor', 'flat', 'EdgeColor', 'none')
+mesh(u_unique, 1*alpha_unique, f_in', 'FaceColor', 'flat', 'EdgeColor', 'none')
 xlabel('u');%('Input rate');
 ylabel(['j_{' TYPE '}']);
 zlabel('Firing rate (In)');
@@ -69,7 +70,9 @@ zlabel('Firing rate (In)');
 colormap jet
 c = colorbar;
 c.Label.String = 'Mean firing rate (Hz)';
-caxis([0 3.5]);
-c.Limits = [0 3.5];
-xlim([0 5])
+caxis([0 2]);
+c.Limits = [0 2];
+% xlim([0 2])
+% ylim([0 max(alpha_unique)]);
+ylim([min(alpha_unique) 0]);
 ax.View = (angle);

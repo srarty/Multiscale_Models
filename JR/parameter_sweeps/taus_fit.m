@@ -8,7 +8,7 @@
 %
 % Artemio - August 2022
 
-PRE = 'i'; % PRE = {'i', 'e'} % 'i'=inhibitory, 'e'=excitatory
+PRE = 'e'; % PRE = {'i', 'e'} % 'i'=inhibitory, 'e'=excitatory
 POST = 'p'; % POST = {'i', 'p'} % 'i'=interneuron, 'p'=pyramidal 
 
 root = 'C:\Users\artemios\Documents\Multiscale_Models_Data\taus_fit\';

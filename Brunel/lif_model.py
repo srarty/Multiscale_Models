@@ -84,7 +84,7 @@ def set_params(type='pyramidal', source='brunel'):
             tau_l = 1 * ms # Latency
     
             # Synaptic efficacies
-            j_GABA  = 17.55 * pA # 35.1 * pA # Default = 35.1*pA # NMM(5.008) = LIF(61*pA)
+            j_GABA  = 45.24 * pA #17.55 * pA # 35.1 * pA # Default = 35.1*pA # NMM(5.008) = LIF(61*pA)
             j_AMPA  = -165 * pA # -330 * pA # Default = -330*pA # NMM(5.009) = LIF(-690*pA)
             j_AMPA_ext = -1.9 * pA
             j_AMPA_tha = -19 * pA
@@ -228,6 +228,9 @@ def get_equations(type = 'pyramidal'):
             
             I_AMPA_spi = j_AMPA_rec_P * s_AMPA_spi : amp
             ds_AMPA_spi / dt = -s_AMPA_spi / tau_s_AMPA_P : 1
+            
+            ref : second
+            th : volt
         '''
    
         
@@ -251,6 +254,8 @@ def get_equations(type = 'pyramidal'):
             
             I_AMPA_rec = j_AMPA_rec_I * s_AMPA : amp
             ds_AMPA / dt = -s_AMPA / tau_s_AMPA_I : 1
+            
+            ref : second
         '''
     else:
         raise ValueError(format('The option type = %s is not a valid one.' %(type)))

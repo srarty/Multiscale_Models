@@ -46,30 +46,28 @@ RECURRENT_INHIBITORY = True    # Self inhibition
 INHIBIT_INPUT = False           # Excitatory cortical input to inhibitory population
 ACTIVE_INTERNEURONS = True     # Inhibitory population
 PARAMS_SOURCE = 'allen'         # 'brunel' or 'allen'
+GAUSSIAN_REFRACTORY = False     # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
 SAVE = True                    # Save ground truth data
 PLOT = True                     # Plot results (main Figure)
 PLOT_EXTRA = True               # Plot extra things.
 PSP_FR = 0                      # Presynaptic firing rate for TEST_PSP (TEST_PSP needs to be diff to none for this to take effect)                               
-TEST_PSP = 'none'               # Testing the post synaptic potential of given 
-                                # synapses to a specified input firing rate. 
-                                # Options: 'pp', 'pi', 'ii', 'ip', 'none'. To 
-                                # prevent neurons spiking, make V_thr large.
+TEST_PSP = 'none'               # Testing the post synaptic potential of given synapses to a specified input firing rate. Options: 'pp', 'pi', 'ii', 'ip', 'none'. To prevent neurons spiking, make V_thr large.
 
 corriente = 0
 # Balanced-rate network (?) with input currents: Py = 500.01 pA, In = 398 pA
 input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 
-input_spike_rate = [0]#[0, 1, 3, 5] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
+input_spike_rate = [1]#[0, 0.25, 0.75, 0.5]#[0, 1, 3, 5] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
 input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
 
 #%% parameters  --------------------------------------------------------------
-simulation_time = 2 * second
+simulation_time = 1 * second
 dt_ = 100 * usecond
 T = np.linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector for plots (in seconds)
    
 # populations
-N = 1000 # 135 # 675
+N = 2000 # 135 # 675
 N_P = int(N*4)  # pyramidal neurons
 N_I = int(N)    # interneurons
 
@@ -86,7 +84,7 @@ p_II = params_py.get('p_II') # * np.sqrt(1000/N)  #0.2 #* 100/N # recurrent inhi
 # voltage
 V_leak = -70. * mV      # Resting membrane potential
 V_thr = -50 * mV        # Threshold
-V_reset = -59 * mV # -59 * mV      # Reset voltage. Equal to V_leak-> To use Burkitt's, 2006 Eq. (12)
+V_reset = -59 * mV #    # Reset voltage. Equal to V_leak-> To use Burkitt's, 2006 Eq. (12)
 
 # membrane capacitance
 C_m_P = params_py.get('C')
@@ -186,19 +184,28 @@ eqs_I = get_equations('inhibitory')
 
 
 # Neuron groups
-Py_Pop = NeuronGroup(N_P, eqs_P, threshold='v > V_thr', reset='''v = V_reset
+Py_Pop = NeuronGroup(N_P, eqs_P, threshold='th', reset='''v = V_reset
                                                                 v_pe = V_reset-V_leak
                                                                 v_pi = V_reset-V_leak
                                                                 v_pp = V_reset-V_leak
-                                                                ''', refractory=tau_rp_P, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
+                                                                ''', refractory='ref', method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
 Py_Pop.v = V_leak
+# Py_Pop.th='v > V_thr + (10*mV * randn(N_P))' <- doesn't work
 
 
 In_Pop = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='''v = V_reset
                                                                 v_ip = V_reset-V_leak
                                                                 v_ii = V_reset-V_leak
-                                                                ''', refractory=tau_rp_I, method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
+                                                                ''', refractory='ref', method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
 In_Pop.v = V_leak
+
+# Refractoriness
+if GAUSSIAN_REFRACTORY:
+    Py_Pop.ref = tau_rp_P + (3*ms * randn(N_P,))
+    In_Pop.ref = tau_rp_I + (3*ms * randn(N_I,))
+else:
+    Py_Pop.ref = tau_rp_P
+    In_Pop.ref = tau_rp_I
 
 # Custom Poisson population to test PSP on a given synapse
 if (TEST_PSP == 'ip') | (TEST_PSP == 'pp'):
@@ -405,8 +412,11 @@ v_ip = mean(In_monitor.v_ip, 0)
 # current based
 # lfp = abs(Py_monitor.I_AMPA_cor) + abs(Py_monitor.I_AMPA_rec) + abs(Py_monitor.I_GABA_rec) # Absolute sum of currents
 # lfp = (Py_monitor.I_GABA_rec) - (Py_monitor.I_AMPA_cor + Py_monitor.I_AMPA_rec + Py_monitor.I_AMPA_spi + I_injected) # Difference of currents
-lfp = (Py_monitor.I_GABA_rec) - (Py_monitor.I_AMPA_cor + Py_monitor.I_AMPA_rec + Py_monitor.I_AMPA_spi) # Difference of currents
-lfp_ = sum(lfp,0) / g_m_P # Sum across all Pyramidal neurons and divide by the leak conductance to get volts
+
+#lfp = (Py_monitor.I_GABA_rec) - (Py_monitor.I_AMPA_cor + Py_monitor.I_AMPA_rec + Py_monitor.I_AMPA_spi) # Difference of currents
+# lfp_ = sum(lfp,0) / g_m_P # Sum across all Pyramidal neurons and divide by the leak conductance to get volts
+lfp = sum(Py_monitor.I_GABA_rec,0) - sum((Py_monitor.I_AMPA_cor + Py_monitor.I_AMPA_rec + Py_monitor.I_AMPA_spi),0) # Difference of currents
+lfp_ = lfp / g_m_P # Sum across all Pyramidal neurons and divide by the leak conductance to get volts
 
 # voltage based
 mean_v_Py = np.transpose(mean(Py_monitor.v,0) - V_leak) * 1e3

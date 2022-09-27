@@ -29,4 +29,4 @@
 % Artemio - February 2022
 
 function out = gompertz(x, a, b, c, d)    
-    out = a*exp(-b*exp(-d*(x-c)));
+    out = a * exp(-b*exp(-d*(x-c)));

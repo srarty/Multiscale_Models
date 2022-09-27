@@ -15,7 +15,7 @@ end
 switch mode
     case 'recursive'
         % Maximum firing rates
-        params.e0 =  25.87; % Pyramidal
+        params.e0 =  27.81; %25.87; % Pyramidal
         params.e0i = 60;%58.85; % % Inhibitory interneurons
         
         % Sigmoid error function params
@@ -26,15 +26,27 @@ switch mode
         params.v0 = 6.011; % Firing Threshold (a)
         params.r = 3.443; % Sigmoid slope (b)
         
+        % Gaussian nonlinearity params
+        % Pyramidal
+        params.gaussian.a = 26.2;
+        params.gaussian.b = 10;
+        params.gaussian.c = 6;
+        params.gaussian.d = 10;
+        % Inhibitory
+        params.gaussiani.a = 50;
+        params.gaussiani.b = 12.37;
+        params.gaussiani.c = 7.329;
+        params.gaussiani.d = 12.4;
+        
         % Gompertz nonlinearity params:
         % Pyramidal:
-        params.gompertz.b = 1.555;
-        params.gompertz.c = 1.245;
-        params.gompertz.d = 0.3065;
+        params.gompertz.b = 1.512; %1.555;
+        params.gompertz.c = 1.508; %1.245;
+        params.gompertz.d = 0.2805; %0.3065;
         % Interneurons:
-        params.gompertzi.b = 2.208; %2.291; %
-        params.gompertzi.c = 1.667; %1.551; %
-        params.gompertzi.d = 0.209; %0.2315; %
+        params.gompertzi.b = 2.124; % 2.208; %2.291; %
+        params.gompertzi.c = 1.738; % 1.667; %1.551; %
+        params.gompertzi.d = 0.1964; % 0.209; %0.2315; %
         
         % time constants
         params.tau_mi = 0.01; %0.009738; % Membrane time constant - Interneurons (decay)
@@ -47,11 +59,11 @@ switch mode
         params.tau_sri = 0.00525; %0.006031; % Rising tau recursive inhibition
                 
         % Gains
-        params.alpha_i = -0.5269; %-0.5533; %Inhibitory gain into pyramidal (Interneuron -> Py)
-        params.alpha_e = 1.124; %1.1975; % Excitatory gain into interneuron (Py -> Interneuron) (bifurcation: alpha_ei > 392.6)
-        params.alpha_re = 0.4009; %0.4132; % Recursive excitatory gain (bifuration: alpha_re > 4.7)
-        params.alpha_ri = -0.9698; %-1.441; % Recursive inhibitory gain
-        params.alpha_u = 0.0615; %0.06338; % External excitatory gain into pyramidal (U -> Py)
+        params.alpha_i = -0.5269;       %Inhibitory gain into pyramidal (Interneuron -> Py)
+        params.alpha_e = 1.124;         % Excitatory gain into interneuron (Py -> Interneuron) (bifurcation: alpha_ei > 392.6)
+        params.alpha_re = 0.4009;       % Recursive excitatory gain (bifuration: alpha_re > 4.7)
+        params.alpha_ri = -2.5;%-0.9698;% Recursive inhibitory gain, -2.5 increases Py resting membrane potential
+        params.alpha_u = 0.0615;        % External excitatory gain into pyramidal (U -> Py)
         
         % Connectivity parameters:
         params.c_constant = 1; % Connectivity constant
