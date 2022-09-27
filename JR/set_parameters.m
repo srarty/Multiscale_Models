@@ -26,6 +26,18 @@ switch mode
         params.v0 = 6.011; % Firing Threshold (a)
         params.r = 3.443; % Sigmoid slope (b)
         
+        % Gaussian nonlinearity params
+        % Pyramidal
+        params.gaussian.a = 26.2;
+        params.gaussian.b = 10;
+        params.gaussian.c = 6;
+        params.gaussian.d = 10;
+        % Inhibitory
+        params.gaussiani.a = 50;
+        params.gaussiani.b = 12.37;
+        params.gaussiani.c = 7.329;
+        params.gaussiani.d = 12.4;
+        
         % Gompertz nonlinearity params:
         % Pyramidal:
         params.gompertz.b = 1.512; %1.555;
@@ -50,7 +62,7 @@ switch mode
         params.alpha_i = -0.5269;       %Inhibitory gain into pyramidal (Interneuron -> Py)
         params.alpha_e = 1.124;         % Excitatory gain into interneuron (Py -> Interneuron) (bifurcation: alpha_ei > 392.6)
         params.alpha_re = 0.4009;       % Recursive excitatory gain (bifuration: alpha_re > 4.7)
-        params.alpha_ri = -0.9698;%-2.5;% Recursive inhibitory gain, -2.5 increases Py resting membrane potential
+        params.alpha_ri = -2.5;%-0.9698;% Recursive inhibitory gain, -2.5 increases Py resting membrane potential
         params.alpha_u = 0.0615;        % External excitatory gain into pyramidal (U -> Py)
         
         % Connectivity parameters:

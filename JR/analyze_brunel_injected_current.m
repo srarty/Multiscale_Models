@@ -9,8 +9,8 @@
 
 %% Options ----------------------------------------------------------------
 
-POPULATION = 'Py'; % 'Py' or 'In'
-FUNCTION = 'G'; % 'G' (Gompertz) or 'S' (Sigmoid) or 'Ga' (Gaussian)
+POPULATION = 'In'; % 'Py' or 'In'
+FUNCTION = 'B'; % 'G' (Gompertz) or 'S' (Sigmoid) or 'Ga' (Gaussian) or 'B' (Bas-Jan Zandt 2014)
 
 % -------------------------------------------------------------------------
 
@@ -98,15 +98,24 @@ end
 % When there's no spike, R_py and R_in are NaN. Fix it:
 firing_rates(isnan(firing_rates)) = 0;
 
+% Ignore higher values to find a reasonable max_firing_rate (dodgy)
 warning('Remove the following three dodgy lines')
-membrane_potentials(firing_rates > 25) = [];
-potential_integral(firing_rates > 25) = [];
-firing_rates(firing_rates > 25) = [];
+membrane_potentials(firing_rates > 45) = [];
+potential_integral(firing_rates > 45) = [];
+firing_rates(firing_rates > 45) = [];
 
-% Force the sigmoid in the data (dodgy)
-% if strcmp(FUNCTION, 'S')
-%     firing_rates(firing_rates > max_firing_rate) = max_firing_rate;
-% end
+% Sort values
+[potential_integral, idx] = sort(potential_integral);
+membrane_potentials = membrane_potentials(idx);
+firing_rates = firing_rates(idx);
+
+% For Gaussian, concatenate a flipped firing_rate vector
+if strcmp(FUNCTION, 'Ga')
+    firing_rates = [firing_rates flip(firing_rates(1:end-1))];
+    potential_integral = [potential_integral potential_integral(1:end-1)+1+(max(potential_integral)-min(potential_integral))];
+    membrane_potentials = [membrane_potentials membrane_potentials(1:end-1)+1+(max(membrane_potentials)-min(membrane_potentials))];
+end
+
 
 %%
 fig = figure;
@@ -131,7 +140,7 @@ if strcmp(FUNCTION, 'S') % Sigmoid
         opts = fitoptions(ft);
         opts.StartPoint =  [max_firing_rate 10 5];
         opts.Lower =   [25.87 1 0];
-        opts.Upper =  [25.87 30 100];    
+        opts.Upper =  [25.87 30 100];
     end
         
 elseif strcmp(FUNCTION, 'G') % Gompertz
@@ -150,21 +159,57 @@ elseif strcmp(FUNCTION, 'G') % Gompertz
         opts.Lower =  [max_firing_rate-10 -100 -100 -10];
         opts.Upper =  [max_firing_rate+10 100 100 10];
     end    
-elseif strcmp(FUNCTION, 'GA')% Gaussian
-    % TODO
+    
+elseif strcmp(FUNCTION, 'Ga')% Gaussian
+    ft = fittype( 'a*exp(-((x-b)/c).^2)', 'independent', 'x', 'dependent', 'y' ); % Gompertz sigmoid
+    
+    if strcmp(POPULATION, 'In')
+        % Gompertz (In)
+        opts = fitoptions(ft);
+        opts.StartPoint =  [24 10 7];
+        opts.Lower =  [max_firing_rate-10 -100 -10];
+        opts.Upper =  [max_firing_rate+10 100 100 10];
+    else
+        % Gompertz (Py)
+        opts = fitoptions(ft);        
+        opts.StartPoint =  [24 10 7];
+        opts.Lower =  [max_firing_rate-10 10 6];
+        opts.Upper =  [max_firing_rate+10 10 6];
+    end    
+
+elseif strcmp(FUNCTION, 'B')    % Bas-Jan Zandt et al 2014
+    ft = fittype( '( 1/(s*sqrt(2*pi)) ) * exp( -0.5*((x-m)/s)^2 )', 'independent', 'x', 'dependent', 'y' ); % Gompertz sigmoid
+    
+    if strcmp(POPULATION, 'In')
+        % Bas-Jan Zandt (In)
+        opts = fitoptions(ft);
+        opts.StartPoint =  [0 0];
+        opts.Lower =  [0 0];
+        opts.Upper =  [0 0];
+    else
+        % Bas-Jan Zandt (In)
+        opts = fitoptions(ft);        
+        opts.StartPoint =  [0 0];
+        opts.Lower =  [0 0];
+        opts.Upper =  [0 0];
+    end    
 else
     error('Wrong POPULATION');
 end
 
-fitresult_Py = fit(potential_integral', firing_rates', ft, opts) % With options
 % fitresult_Py = fit(membrane_potentials', firing_rates', ft, opts) % With options
-% fitresult_Py = fit(potential_integral', firing_rates', ft) % No options
+% fitresult_Py = fit(potential_integral', firing_rates', ft, opts) % With options
+fitresult_Py = fit(potential_integral', firing_rates', ft) % No options
     
 %% Define nonlinear function according to population
 if strcmp(FUNCTION, 'S')
     f_nonlinearity = @(x) fitresult_Py.alpha * non_linear_sigmoid(x, fitresult_Py.r, fitresult_Py.v0);
 elseif strcmp(FUNCTION, 'G')
     f_nonlinearity = @(x) gompertz(x, fitresult_Py.a, fitresult_Py.b, fitresult_Py.c, fitresult_Py.d);
+elseif strcmp(FUNCTION, 'Ga')
+    f_nonlinearity = @(x) fitresult_Py.a*exp(-((x-fitresult_Py.b)/fitresult_Py.c).^2);
+elseif strcmp(FUNCTION, 'B')
+    f_nonlinearity = @(x) ( 1/(fitresult_Py.s*sqrt(2*pi)) ) * exp( -0.5*((x-fitresult_Py.m)/fitresult_Py.s)^2 );
 end
 
 %%
