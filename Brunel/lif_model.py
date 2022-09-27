@@ -230,6 +230,7 @@ def get_equations(type = 'pyramidal'):
             ds_AMPA_spi / dt = -s_AMPA_spi / tau_s_AMPA_P : 1
             
             ref : second
+            th : volt
         '''
    
         

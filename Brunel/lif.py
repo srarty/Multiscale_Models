@@ -46,14 +46,12 @@ RECURRENT_INHIBITORY = True    # Self inhibition
 INHIBIT_INPUT = False           # Excitatory cortical input to inhibitory population
 ACTIVE_INTERNEURONS = True     # Inhibitory population
 PARAMS_SOURCE = 'allen'         # 'brunel' or 'allen'
+GAUSSIAN_REFRACTORY = False     # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
 SAVE = True                    # Save ground truth data
 PLOT = True                     # Plot results (main Figure)
 PLOT_EXTRA = True               # Plot extra things.
 PSP_FR = 0                      # Presynaptic firing rate for TEST_PSP (TEST_PSP needs to be diff to none for this to take effect)                               
-TEST_PSP = 'none'               # Testing the post synaptic potential of given 
-                                # synapses to a specified input firing rate. 
-                                # Options: 'pp', 'pi', 'ii', 'ip', 'none'. To 
-                                # prevent neurons spiking, make V_thr large.
+TEST_PSP = 'none'               # Testing the post synaptic potential of given synapses to a specified input firing rate. Options: 'pp', 'pi', 'ii', 'ip', 'none'. To prevent neurons spiking, make V_thr large.
 
 corriente = 0
 # Balanced-rate network (?) with input currents: Py = 500.01 pA, In = 398 pA
@@ -186,13 +184,13 @@ eqs_I = get_equations('inhibitory')
 
 
 # Neuron groups
-Py_Pop = NeuronGroup(N_P, eqs_P, threshold='v > V_thr', reset='''v = V_reset
+Py_Pop = NeuronGroup(N_P, eqs_P, threshold='th', reset='''v = V_reset
                                                                 v_pe = V_reset-V_leak
                                                                 v_pi = V_reset-V_leak
                                                                 v_pp = V_reset-V_leak
                                                                 ''', refractory='ref', method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
 Py_Pop.v = V_leak
-Py_Pop.ref = tau_rp_P + (3*ms * randn(N_P,));
+# Py_Pop.th='v > V_thr + (10*mV * randn(N_P))' <- doesn't work
 
 
 In_Pop = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='''v = V_reset
@@ -200,7 +198,14 @@ In_Pop = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='''v = V_reset
                                                                 v_ii = V_reset-V_leak
                                                                 ''', refractory='ref', method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
 In_Pop.v = V_leak
-In_Pop.ref = tau_rp_I + (3*ms * randn(N_I,));
+
+# Refractoriness
+if GAUSSIAN_REFRACTORY:
+    Py_Pop.ref = tau_rp_P + (3*ms * randn(N_P,))
+    In_Pop.ref = tau_rp_I + (3*ms * randn(N_I,))
+else:
+    Py_Pop.ref = tau_rp_P
+    In_Pop.ref = tau_rp_I
 
 # Custom Poisson population to test PSP on a given synapse
 if (TEST_PSP == 'ip') | (TEST_PSP == 'pp'):
