@@ -190,15 +190,17 @@ Py_Pop = NeuronGroup(N_P, eqs_P, threshold='v > V_thr', reset='''v = V_reset
                                                                 v_pe = V_reset-V_leak
                                                                 v_pi = V_reset-V_leak
                                                                 v_pp = V_reset-V_leak
-                                                                ''', refractory='5*ms + (tau_rp_P * rand())', method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
+                                                                ''', refractory='ref', method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
 Py_Pop.v = V_leak
+Py_Pop.ref = tau_rp_P + (3*ms * randn(N_P,));
 
 
 In_Pop = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='''v = V_reset
                                                                 v_ip = V_reset-V_leak
                                                                 v_ii = V_reset-V_leak
-                                                                ''', refractory='5*ms + (tau_rp_I * rand())', method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
+                                                                ''', refractory='ref', method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
 In_Pop.v = V_leak
+In_Pop.ref = tau_rp_I + (3*ms * randn(N_I,));
 
 # Custom Poisson population to test PSP on a given synapse
 if (TEST_PSP == 'ip') | (TEST_PSP == 'pp'):

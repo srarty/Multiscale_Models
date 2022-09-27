@@ -228,6 +228,8 @@ def get_equations(type = 'pyramidal'):
             
             I_AMPA_spi = j_AMPA_rec_P * s_AMPA_spi : amp
             ds_AMPA_spi / dt = -s_AMPA_spi / tau_s_AMPA_P : 1
+            
+            ref : second
         '''
    
         
@@ -251,6 +253,8 @@ def get_equations(type = 'pyramidal'):
             
             I_AMPA_rec = j_AMPA_rec_I * s_AMPA : amp
             ds_AMPA / dt = -s_AMPA / tau_s_AMPA_I : 1
+            
+            ref : second
         '''
     else:
         raise ValueError(format('The option type = %s is not a valid one.' %(type)))
