@@ -50,6 +50,7 @@ def brunel(alpha_pi=0, u=0):
     INHIBIT_INPUT = False            # Excitatory cortical input to inhibitory population
     ACTIVE_INTERNEURONS = True      # Inhibitory population
     PARAMS_SOURCE = 'allen'        # 'brunel' or 'allen'
+    GAUSSIAN_REFRACTORY = False     # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
     SAVE = True                     # Save ground truth data
     PLOT = False                     # Plot results (main Figure)
     PLOT_EXTRA = False              # Plot extra things.
@@ -183,19 +184,28 @@ def brunel(alpha_pi=0, u=0):
     
     
     # Neuron groups
-    Py_Pop = NeuronGroup(N_P, eqs_P, threshold='v > V_thr', reset='''v = V_reset
+    Py_Pop = NeuronGroup(N_P, eqs_P, threshold='v > v_th', reset='''v = V_reset
                                                                     v_pe = V_reset-V_leak
                                                                     v_pi = V_reset-V_leak
-                                                                    v_pp = V_reset-V_leak
-                                                                    ''', refractory=tau_rp_P, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
+                                                                    ''', refractory='ref', method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
     Py_Pop.v = V_leak
+    Py_Pop.v_th = V_thr + (3*mV * randn(N_P,))
+    
     
     
     In_Pop = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='''v = V_reset
                                                                     v_ip = V_reset-V_leak
-                                                                    v_ii = V_reset-V_leak
-                                                                    ''', refractory=tau_rp_I, method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
+                                                                    ''', refractory='ref', method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
     In_Pop.v = V_leak
+    In_Pop.v_th = V_thr + (3*mV * randn(N_I,))
+    
+    # Refractoriness
+    if GAUSSIAN_REFRACTORY:
+        Py_Pop.ref = tau_rp_P + (3*ms * randn(N_P,))
+        In_Pop.ref = tau_rp_I + (3*ms * randn(N_I,))
+    else:
+        Py_Pop.ref = tau_rp_P
+        In_Pop.ref = tau_rp_I
     
     # Pop_Cor = PoissonGroup(num_inputs, rates = (input_spike_rate*1000/num_inputs)*Hz, dt=dt_) # poisson input
     
