@@ -230,9 +230,9 @@ def get_equations(type = 'pyramidal'):
             ds_AMPA_spi / dt = -s_AMPA_spi / tau_s_AMPA_P : 1
             
             ref : second
-            th : volt
+            v_th : volt
         '''
-   
+        
         
     elif type == 'inhibitory':
         eqs = '''
@@ -256,7 +256,26 @@ def get_equations(type = 'pyramidal'):
             ds_AMPA / dt = -s_AMPA / tau_s_AMPA_I : 1
             
             ref : second
+            v_th : volt
         '''
+        
+        
+    elif type == 'inhibitory_b':
+        eqs = '''
+            dv / dt = (-v + V_leak - (I_tot/g_m_I)) / tau_m_I : volt (unless refractory)
+            
+            I_tot = I_AMPA_cor + I_AMPA_tha + I_AMPA_rec + I_GABA_rec + I_injected_I : amp
+            
+            I_AMPA_tha = j_AMPA_tha_I * s_AMPA_tha : amp
+            ds_AMPA_tha / dt = - s_AMPA_tha / tau_s_AMPA_I_ext : 1
+            
+            I_AMPA_rec = j_AMPA_rec_I * s_AMPA : amp
+            ds_AMPA / dt = -s_AMPA / tau_s_AMPA_I : 1
+            
+            ref : second
+        '''
+        
+        
     else:
         raise ValueError(format('The option type = %s is not a valid one.' %(type)))
     return eqs

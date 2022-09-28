@@ -46,7 +46,7 @@ RECURRENT_INHIBITORY = True    # Self inhibition
 INHIBIT_INPUT = False           # Excitatory cortical input to inhibitory population
 ACTIVE_INTERNEURONS = True     # Inhibitory population
 PARAMS_SOURCE = 'allen'         # 'brunel' or 'allen'
-GAUSSIAN_REFRACTORY = False     # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
+GAUSSIAN_REFRACTORY = True     # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
 SAVE = True                    # Save ground truth data
 PLOT = True                     # Plot results (main Figure)
 PLOT_EXTRA = True               # Plot extra things.
@@ -184,13 +184,14 @@ eqs_I = get_equations('inhibitory')
 
 
 # Neuron groups
-Py_Pop = NeuronGroup(N_P, eqs_P, threshold='th', reset='''v = V_reset
+Py_Pop = NeuronGroup(N_P, eqs_P, threshold='v > v_th', reset='''v = V_reset
                                                                 v_pe = V_reset-V_leak
                                                                 v_pi = V_reset-V_leak
                                                                 v_pp = V_reset-V_leak
                                                                 ''', refractory='ref', method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
 Py_Pop.v = V_leak
-# Py_Pop.th='v > V_thr + (10*mV * randn(N_P))' <- doesn't work
+Py_Pop.v_th = V_thr + (3*mV * randn(N_P,))
+
 
 
 In_Pop = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='''v = V_reset
@@ -198,6 +199,7 @@ In_Pop = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='''v = V_reset
                                                                 v_ii = V_reset-V_leak
                                                                 ''', refractory='ref', method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
 In_Pop.v = V_leak
+In_Pop.v_th = V_thr + (3*mV * randn(N_I,))
 
 # Refractoriness
 if GAUSSIAN_REFRACTORY:
