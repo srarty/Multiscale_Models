@@ -5,10 +5,10 @@ j_pi = 37;
 j_pp = -73.5;
 j_pu = -11.275; % -1.375 * 8.2 = -11.275 (check lif_model.py)
 j_ip = -165;
-j_ii = 17.55;
+j_ii = 45.24;% 17.55; % 17.55_lif = 0.9_nmm % 45.24_lif = 2.5_nmm
 
 %% Alpha parameters
-p = set_parameters('recursive');
+p = set_parameters('default');
 
 ratio_pi = j_pi / p.alpha_i;
 ratio_pp = j_pp / p.alpha_re;

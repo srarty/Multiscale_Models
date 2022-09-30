@@ -18,7 +18,10 @@ close all;
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_45.mat'; % injected_py=[300]
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_46.mat'; % injected_in=[300]
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_0.mat'; % u=[0, 0.25, 0.75, 0.5]
-data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_15.mat'; % u=[0, 0.25, 0.75, 0.5], j_ii = 45.24, alpha_ii = -2.5
+
+% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_61.mat'; % u=[0, 0.25, 0.5, 1], j_ii = 45.24, alpha_ii = -2.5
+data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_63.mat'; % impulse response, j_ii = 45.24, alpha_ii = -2.5
+% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_64.mat'; % impulse response, j_pi = 18.2577, alpha_i = -0.26
 
 load(data_file);
 tt = lfp_dt:lfp_dt:lfp_dt*length(v_ip);

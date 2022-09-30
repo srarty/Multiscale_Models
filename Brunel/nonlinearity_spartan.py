@@ -159,14 +159,14 @@ def brunel(corriente = 0):
     
     # Weight constants. Amplitude of the synaptic input
     # Pyramidal 
-    increment_AMPA_P =  params_py.get('alpha_weight_AMPA') #* np.sqrt(1000/N)
-    increment_AMPA_ext_P = params_py.get('single_exp') #* np.sqrt(1000/N)
-    increment_GABA_P = params_py.get('alpha_weight_GABA') #* np.sqrt(1000/N)
+    increment_AMPA_P =  params_py.get('weight')
+    increment_AMPA_ext_P = params_py.get('external_input_weight')
+    increment_GABA_P = params_py.get('weight')
     
     # Inhibitory interneurons
-    increment_AMPA_I = params_in.get('alpha_weight_AMPA') #* np.sqrt(1000/N)
-    increment_AMPA_ext_I = params_in.get('single_exp') #* np.sqrt(1000/N)
-    increment_GABA_I = params_in.get('alpha_weight_GABA') #* np.sqrt(1000/N)
+    increment_AMPA_I = params_in.get('weight')
+    increment_AMPA_ext_I = params_in.get('external_input_weight')
+    increment_GABA_I = params_in.get('weight')
     
     # Alpha function's parameter (and double exponential) to fix the units in ds/dt
     k = 1 / ms # 0.62 / ms # Dimmensionless?, check Nicola and Campbell 2013

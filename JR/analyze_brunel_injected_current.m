@@ -9,8 +9,8 @@
 
 %% Options ----------------------------------------------------------------
 
-POPULATION = 'Py'; % 'Py' or 'In'
-FUNCTION = 'B'; % 'G' (Gompertz) or 'S' (Sigmoid) or 'Ga' (Gaussian) or 'B' (Bas-Jan Zandt 2014)
+POPULATION = 'In'; % 'Py' or 'In'
+FUNCTION = 'G'; % 'G' (Gompertz) or 'S' (Sigmoid) or 'Ga' (Gaussian) or 'B' (Bas-Jan Zandt 2014)
 
 % -------------------------------------------------------------------------
 
@@ -101,9 +101,9 @@ firing_rates(isnan(firing_rates)) = 0;
 
 % Ignore higher values to find a reasonable max_firing_rate (dodgy)
 % warning('Remove the following three dodgy lines')
-% membrane_potentials(firing_rates > 45) = [];
-% potential_integral(firing_rates > 45) = [];
-% firing_rates(firing_rates > 45) = [];
+% membrane_potentials(firing_rates > 55) = [];
+% potential_integral(firing_rates > 55) = [];
+% firing_rates(firing_rates > 55) = [];
 
 % Sort values
 [potential_integral, idx] = sort(potential_integral);
@@ -151,8 +151,8 @@ elseif strcmp(FUNCTION, 'G') % Gompertz
         % Gompertz (In)
         opts = fitoptions(ft);
         opts.StartPoint =  [10 1 1 0];
-        opts.Lower =  [max_firing_rate -100 -100 -10];
-        opts.Upper =  [max_firing_rate 100 100 10];
+        opts.Lower =  [max_firing_rate-20 -100 -100 -10];
+        opts.Upper =  [max_firing_rate+20 100 100 10];
     else
         % Gompertz (Py)
         opts = fitoptions(ft);        
@@ -199,8 +199,8 @@ else
 end
 
 % fitresult_Py = fit(membrane_potentials', firing_rates', ft, opts) % With options
-% fitresult_Py = fit(potential_integral', firing_rates', ft, opts) % With options
-fitresult_Py = fit(potential_integral', firing_rates', ft) % No options
+fitresult_Py = fit(potential_integral', firing_rates', ft, opts) % With options
+% fitresult_Py = fit(potential_integral', firing_rates', ft) % No options
     
 %% Define nonlinear function according to population
 if strcmp(FUNCTION, 'S')
