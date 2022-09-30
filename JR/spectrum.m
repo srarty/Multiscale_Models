@@ -45,7 +45,10 @@ function varargout = spectrum(x, y, t, varargin)
 %     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_25.mat'; % P[P->I] = 0.2
 %     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_40.mat';
 %     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_45.mat';
-    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_16.mat';
+
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_61.mat'; % u=[0 0.25 0.5 1]
+    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_63.mat'; % step response (normal parametesr)
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_64.mat'; % step response (j_pi = 18)
 
     if nargin > 3, PLOT = varargin{1}; else, PLOT = true; end
     if nargin > 4, data_file = varargin{2}; end

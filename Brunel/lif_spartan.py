@@ -50,6 +50,7 @@ def brunel(alpha_pp=0, u=0):
     INHIBIT_INPUT = False            # Excitatory cortical input to inhibitory population
     ACTIVE_INTERNEURONS = True      # Inhibitory population
     PARAMS_SOURCE = 'allen'        # 'brunel' or 'allen'
+    GAUSSIAN_REFRACTORY = False     # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
     SAVE = True                     # Save ground truth data
     PLOT = False                     # Plot results (main Figure)
     PLOT_EXTRA = False              # Plot extra things.
@@ -154,14 +155,14 @@ def brunel(alpha_pp=0, u=0):
     
     # Weight constants. Amplitude of the synaptic input
     # Pyramidal 
-    increment_AMPA_P =  params_py.get('alpha_weight_AMPA') #* np.sqrt(1000/N)
-    increment_AMPA_ext_P = params_py.get('single_exp') #* np.sqrt(1000/N)
-    increment_GABA_P = params_py.get('alpha_weight_GABA') #* np.sqrt(1000/N)
+    increment_AMPA_P =  params_py.get('weight')
+    increment_AMPA_ext_P = params_py.get('external_input_weight')
+    increment_GABA_P = params_py.get('weight')
     
     # Inhibitory interneurons
-    increment_AMPA_I = params_in.get('alpha_weight_AMPA') #* np.sqrt(1000/N)
-    increment_AMPA_ext_I = params_in.get('single_exp') #* np.sqrt(1000/N)
-    increment_GABA_I = params_in.get('alpha_weight_GABA') #* np.sqrt(1000/N)
+    increment_AMPA_I = params_in.get('weight')
+    increment_AMPA_ext_I = params_in.get('external_input_weight')
+    increment_GABA_I = params_in.get('weight')
     
     # Alpha function's parameter (and double exponential) to fix the units in ds/dt
     k = 1 / ms # 0.62 / ms # Dimmensionless?, check Nicola and Campbell 2013
@@ -183,19 +184,28 @@ def brunel(alpha_pp=0, u=0):
     
     
     # Neuron groups
-    Py_Pop = NeuronGroup(N_P, eqs_P, threshold='v > V_thr', reset='''v = V_reset
+    Py_Pop = NeuronGroup(N_P, eqs_P, threshold='v > v_th', reset='''v = V_reset
                                                                     v_pe = V_reset-V_leak
                                                                     v_pi = V_reset-V_leak
-                                                                    v_pp = V_reset-V_leak
-                                                                    ''', refractory=tau_rp_P, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
+                                                                    ''', refractory='ref', method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
     Py_Pop.v = V_leak
+    Py_Pop.v_th = V_thr + (3*mV * randn(N_P,))
+    
     
     
     In_Pop = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='''v = V_reset
                                                                     v_ip = V_reset-V_leak
-                                                                    v_ii = V_reset-V_leak
-                                                                    ''', refractory=tau_rp_I, method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
+                                                                    ''', refractory='ref', method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
     In_Pop.v = V_leak
+    In_Pop.v_th = V_thr + (3*mV * randn(N_I,))
+    
+    # Refractoriness
+    if GAUSSIAN_REFRACTORY:
+        Py_Pop.ref = tau_rp_P + (3*ms * randn(N_P,))
+        In_Pop.ref = tau_rp_I + (3*ms * randn(N_I,))
+    else:
+        Py_Pop.ref = tau_rp_P
+        In_Pop.ref = tau_rp_I
     
     # Pop_Cor = PoissonGroup(num_inputs, rates = (input_spike_rate*1000/num_inputs)*Hz, dt=dt_) # poisson input
     

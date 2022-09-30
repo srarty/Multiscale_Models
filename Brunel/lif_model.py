@@ -52,18 +52,16 @@ def set_params(type='pyramidal', source='brunel'):
             tau_l = 1 * ms # Latency
     
             # Synaptic efficacies
-            j_GABA  = 37 * pA # 74 * pA # NMM(5.01) = LIF(335*pA)
-            j_AMPA  = -73.5 * pA #-147 * pA # NMM(5.003) = LIF(-890*pA)
+            j_GABA  = 37 * pA # 37 * pA <- (normal parameters) # 18.3 * pA <- corresponds to alpha_i=0.26
+            j_AMPA  = -73.5 * pA
             j_AMPA_ext = -1.375 * pA
             j_AMPA_tha = -13.75 * pA
             
             # Delta function weight (increment with each input spike)
             # Defined experimentally with 'synaptic_functions.py'. Based on the 
             # unitary increment of the single exponential.
-            alpha_simple_weight_AMPA = 1
-            alpha_simple_weight_GABA = 1
-            alpha_simple_weight_AMPA_ext = 12.5
-            single_exponential_weight = 8.2
+            weight = 1
+            external_input_weight = 8.2
             
         elif type == 'inhibitory':            
             #%% Inhibitory. Allen
@@ -84,16 +82,42 @@ def set_params(type='pyramidal', source='brunel'):
             tau_l = 1 * ms # Latency
     
             # Synaptic efficacies
-            j_GABA  = 45.24 * pA #17.55 * pA # 35.1 * pA # Default = 35.1*pA # NMM(5.008) = LIF(61*pA)
+            j_GABA  = 45.24 * pA 
+            j_AMPA  = -165 * pA 
+            j_AMPA_ext = -1.9 * pA
+            j_AMPA_tha = -19 * pA
+            
+            # Delta function weight (increment with each input spike)
+            weight = 1
+            external_input_weight = 8.2
+            
+        elif type == 'gabab':            
+            #%% GABAb. Allen
+            g_leak = 20 * nS # Leak conductance
+            C = 0.2 * nF # Membrane capacitance
+    
+            tau_rpa = 1 * ms # Absolute refractory period
+            tau_rpr = 12.5 * ms # 100 * ms # Relative refractory period
+            tau_rp = tau_rpa + tau_rpr # Effective refractory period
+            tau_m = C/g_leak #10 * ms # Membrane time constant
+    
+            tau_GABA_r = 0.25 * ms
+            tau_GABA_d = 5 * ms
+            tau_AMPA_r = 0.2 * ms # 3 * ms  # <- bifurcation # 0.2 * ms
+            tau_AMPA_d = 1 * ms # 15 * ms # <- bifurcation # 1 * ms
+            tau_AMPA_r_ext = 0.2*ms 
+            tau_AMPA_d_ext = 1*ms 
+            tau_l = 1 * ms # Latency
+    
+            # Synaptic efficacies
+            j_GABA  = 17.55 * pA # 35.1 * pA # Default = 35.1*pA # NMM(5.008) = LIF(61*pA)
             j_AMPA  = -165 * pA # -330 * pA # Default = -330*pA # NMM(5.009) = LIF(-690*pA)
             j_AMPA_ext = -1.9 * pA
             j_AMPA_tha = -19 * pA
             
             # Delta function weight (increment with each input spike)
-            alpha_simple_weight_AMPA = 1
-            alpha_simple_weight_GABA = 1
-            alpha_simple_weight_AMPA_ext = 23
-            single_exponential_weight = 8.2
+            weight = 1
+            external_input_weight = 8.2
             
         else:
             return 0
@@ -194,10 +218,8 @@ def set_params(type='pyramidal', source='brunel'):
         "p_PI":         p_PI,
         "p_PP":         p_PP,
         "p_II":         p_II,
-        "alpha_weight_AMPA":        alpha_simple_weight_AMPA,
-        "alpha_weight_AMPA_ext":    alpha_simple_weight_AMPA_ext,
-        "alpha_weight_GABA":        alpha_simple_weight_GABA,
-        "single_exp":               single_exponential_weight
+        "weight":       weight,
+        "external_input_weight":               external_input_weight
     }
     
     return params
@@ -230,9 +252,9 @@ def get_equations(type = 'pyramidal'):
             ds_AMPA_spi / dt = -s_AMPA_spi / tau_s_AMPA_P : 1
             
             ref : second
-            th : volt
+            v_th : volt
         '''
-   
+        
         
     elif type == 'inhibitory':
         eqs = '''
@@ -256,7 +278,26 @@ def get_equations(type = 'pyramidal'):
             ds_AMPA / dt = -s_AMPA / tau_s_AMPA_I : 1
             
             ref : second
+            v_th : volt
         '''
+        
+        
+    elif type == 'inhibitory_b':
+        eqs = '''
+            dv / dt = (-v + V_leak - (I_tot/g_m_I)) / tau_m_I : volt (unless refractory)
+            
+            I_tot = I_AMPA_cor + I_AMPA_tha + I_AMPA_rec + I_GABA_rec + I_injected_I : amp
+            
+            I_AMPA_tha = j_AMPA_tha_I * s_AMPA_tha : amp
+            ds_AMPA_tha / dt = - s_AMPA_tha / tau_s_AMPA_I_ext : 1
+            
+            I_AMPA_rec = j_AMPA_rec_I * s_AMPA : amp
+            ds_AMPA / dt = -s_AMPA / tau_s_AMPA_I : 1
+            
+            ref : second
+        '''
+        
+        
     else:
         raise ValueError(format('The option type = %s is not a valid one.' %(type)))
     return eqs
