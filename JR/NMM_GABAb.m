@@ -1,11 +1,7 @@
-% Same as NMM_GABAb.m but with recursive connections in the
-% Pyramidal and Ihibitory populations.
+% NMM_GABAb.m It is the NMM with 3 populations (1 pyramidal and 2
+% inhibitory: fast (GABA_A) and slow (GABA_B)).
 %
-% Spike train synchrony (Alex): pubmed.ncbi.nlm.nih.gov/17628690/
-%
-% Machine learning to find ideal parameters for NMM taht match the LIF.
-% Having one NMM for each different LIF.
-function [x, y, t, f_e, f_i] = NMM_GABAb(varargin)
+function [x, y, t, f_e, f_i, params] = NMM_GABAb(varargin)
     clear option option2
     if nargin >= 2
         option = varargin{1};
@@ -17,8 +13,9 @@ function [x, y, t, f_e, f_i] = NMM_GABAb(varargin)
     end
     
     N = 1000; % Number of samples: 1 sample = 1 milisecond
-    u = 1;
+    u = 0;
 
+%     params = set_parameters('seizure', u);
     params = set_parameters('gabab', u);
     
     % Options  ------------------------------------------------------------
@@ -140,7 +137,7 @@ function [x, y, t, f_e, f_i] = NMM_GABAb(varargin)
     f_b = S1(x(:,18) + x(:,20)); 
     
     if nargin == 0        
-%         close all
+        close all
         do_plot(x,t,y, f_e, f_i, f_b);
     end
 end
@@ -176,11 +173,11 @@ function dx = ode(t,x,params,dt, S1, S2)
     Tau_coeff = @(m, s) 1/(m*s);% Nicola Campbell
     
     c_constant = params.c_constant;
-    c1 = 70.5575    * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
+    c1 = 70.5575  * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
     c2 = 29.7217  * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
-    c3 = 141.1007   * c_constant * params.P_pyTOpy; % Recursive excitation to pyramidal cells
+    c3 = 141.1007 * c_constant * params.P_pyTOpy; % Recursive excitation to pyramidal cells
     c4 = 9.5339   * c_constant * params.P_inTOin; % Recursive inhibition to inhibitory cells
-    c5 = 17.8288    * c_constant;                   % External excitatory synapses into pyramidal population
+    c5 = 17.8288  * c_constant;                   % External excitatory synapses into pyramidal population
     
     tau_sp = params.tau_sp;
     tau_mp = params.tau_mp;
@@ -237,7 +234,7 @@ function dx = ode(t,x,params,dt, S1, S2)
     dx(19) = - x(19)/tau_si + AmplitudeE * S2(x(1) + x(5) + x(9) + INPUT_CURRENT_PY + x(16));
     % I -> GABAb
     dx(20) = x(21) - x(20)/tau_mi;
-    dx(21) = - x(21)/tau_si + (AmplitudeRI) * S1(x(3) + x(7) + INPUT_CURRENT_IN);
+    dx(21) = - x(21)/tau_si + AmplitudeRI * S1(x(3) + x(7) + INPUT_CURRENT_IN);
     
 
 end

@@ -5,7 +5,7 @@
 %
 % Machine learning to find ideal parameters for NMM taht match the LIF.
 % Having one NMM for each different LIF.
-function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
+function [x, y, t, f_e, f_i, params] = NMM_diff_equations_DblExp_recursive(varargin)
     clear option option2
     if nargin >= 2
         option = varargin{1};
@@ -24,7 +24,7 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     
     % Options  ------------------------------------------------------------
     params.options.ADD_NOISE = 1; % External input noise (0 = no noise, 1 = noise)
-    params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Anyother value of CHANGE_U: U changes.
+    params.options.CHANGE_U = 1; % 0: U doesn't change during simulation. Anyother value of CHANGE_U: U changes.
     
     params.options.INPUT_CURRENT_PY = 1000 * 0e-12 / params.g_m_P; % 1000 for milivolts, then xe-12 A, where x is the amplitude in pA
     params.options.INPUT_CURRENT_IN = 1000 * 0e-12 / params.g_m_I;    
@@ -134,7 +134,7 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     f_e = S2(x(:,1) + x(:,5) + x(:,9) + I_py);
     
     if nargin == 0        
-%         close all
+        close all
         do_plot(x,t,y, f_e, f_i);
     end
 end

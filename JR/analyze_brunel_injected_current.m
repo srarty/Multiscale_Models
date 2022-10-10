@@ -22,7 +22,7 @@ C_P = 0.5e-9;
 C_I = 0.2e-9;
 
 %% NMM sigmoid
-params = set_parameters('recursive');       % Chose params.u from a constant value in set_params
+params = set_parameters('default');       % Chose params.u from a constant value in set_params
 if strcmp(POPULATION, 'Py'), max_firing_rate = params.e0; elseif strcmp(POPULATION, 'In'), max_firing_rate = params.e0i; else, error('Wrong POPULATION'); end
 % if strcmp(POPULATION, 'Py'), max_firing_rate = 10; elseif strcmp(POPULATION, 'In'), max_firing_rate = 10; else, error('Wrong POPULATION'); end
     
@@ -100,10 +100,10 @@ end
 firing_rates(isnan(firing_rates)) = 0;
 
 % Ignore higher values to find a reasonable max_firing_rate (dodgy)
-% warning('Remove the following three dodgy lines')
-% membrane_potentials(firing_rates > 55) = [];
-% potential_integral(firing_rates > 55) = [];
-% firing_rates(firing_rates > 55) = [];
+warning('Remove the following three dodgy lines')
+membrane_potentials(firing_rates > 40) = [];
+potential_integral(firing_rates > 40) = [];
+firing_rates(firing_rates > 40) = [];
 
 % Sort values
 [potential_integral, idx] = sort(potential_integral);
@@ -151,8 +151,8 @@ elseif strcmp(FUNCTION, 'G') % Gompertz
         % Gompertz (In)
         opts = fitoptions(ft);
         opts.StartPoint =  [10 1 1 0];
-        opts.Lower =  [max_firing_rate-20 -100 -100 -10];
-        opts.Upper =  [max_firing_rate+20 100 100 10];
+        opts.Lower =  [max_firing_rate 2.124 -100 -10];
+        opts.Upper =  [max_firing_rate 2.124 100 10];
     else
         % Gompertz (Py)
         opts = fitoptions(ft);        

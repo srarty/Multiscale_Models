@@ -47,8 +47,15 @@ function varargout = spectrum(x, y, t, varargin)
 %     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_45.mat';
 
 %     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_61.mat'; % u=[0 0.25 0.5 1]
-    data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_63.mat'; % step response (normal parametesr)
+%     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_63.mat'; % step response (normal parametesr)
 %     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_64.mat'; % step response (j_pi = 18)
+% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_75.mat'; % impulse response (50 pA), j_pi = 37, alpha_i = -0.5xxx
+% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_80.mat'; % impulse response (100 pA), j_pi = 37, alpha_i = -0.5xxx
+% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_79.mat'; % impulse response (500 pA), j_pi = 37, alpha_i = -0.5xxx
+% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_65.mat'; % impulse response (500 pA), j_pi = 21.0666, alpha_i = -0.3
+% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_66.mat'; % Seizure: j_pi = 21.0666, alpha_i = -0.3 (random LIF th and t_ref)
+
+data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_71.mat'; % GABAb
 
     if nargin > 3, PLOT = varargin{1}; else, PLOT = true; end
     if nargin > 4, data_file = varargin{2}; end
@@ -71,7 +78,7 @@ function varargout = spectrum(x, y, t, varargin)
     
     
     harmonic_nmm = do_plot('nmm', signal, x_nmm, t_nmm);
-%     varargout = {harmonic_nmm};
+    varargout = {harmonic_nmm};
     harmonic_lif = do_plot('lif', signal, x_lif, t_lif);
 %     varargout = {harmonic_lif};
 %     varargout{end + 1} = u_lif;
@@ -87,9 +94,9 @@ function varargout = spectrum(x, y, t, varargin)
    
 %     do_correlation(x_nmm, x_lif, t_nmm, t_lif);
 %     do_variance(x_nmm, x_lif, t_nmm, t_lif);
-	[R,P] = do_spearmanCorr(x_nmm, x_lif)
+	[R,P] = do_spearmanCorr(x_nmm, x_lif);
    
-    varargout = {x_nmm, x_lif, t_nmm, t_lif};
+%     varargout = {x_nmm, x_lif, t_nmm, t_lif};
 end
 
 function [x_nmm, x_lif, t_nmm, t_lif, v_pi, v_ip, input_spike_rate, dt] = get_data(signal, x, y, t, data_file)

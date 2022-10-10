@@ -14,8 +14,8 @@ end
 
 %% Set default parameters:
 % Maximum firing rates
-params.e0 =  27.81; % Pyramidal % 35.58;%
-params.e0i = 60; % Inhibitory interneurons %55.53;%
+params.e0 =  27.81; % Pyramidal % 35.58;% Distribution = 27.81    | non_dsitribution = 35.58
+params.e0i = 60; % Inhibitory interneurons %55.53;% Distribution = 60    | non_dsitribution = 55.53
 
 % Sigmoid error function params
 % Pyramidal
@@ -39,13 +39,13 @@ params.gaussiani.d = 12.4;
 
 % Gompertz nonlinearity params:
 % Pyramidal:
-params.gompertz.b = 1.512; %1.445;%
-params.gompertz.c = 1.508; %1.476;%
-params.gompertz.d = 0.2805; %0.1557;%
+params.gompertz.b = 1.512; %1.445; % Distribution = 1.512    | non_dsitribution = 1.445
+params.gompertz.c = 1.508; %1.476; % Distribution = 1.508    | non_dsitribution = 1.476
+params.gompertz.d = 0.2805; %0.1557;% Distribution = 0.2805    | non_dsitribution = 0.1557
 % Interneurons:
-params.gompertzi.b = 2.124;%2.017;%
-params.gompertzi.c = 1.738;%1.78;%
-params.gompertzi.d = 0.1964;%0.2067;%
+params.gompertzi.b = 2.124;%2.017;%% Distribution = 2.124    | non_dsitribution = 2.017
+params.gompertzi.c = 1.738;%1.78;%% Distribution = 1.738    | non_dsitribution = 1.78
+params.gompertzi.d = 0.1964;%0.2067;%% Distribution = 0.1964    | non_dsitribution = 0.2067
 
 % time constants
 params.tau_mi = 0.01; %0.009738; % Membrane time constant - Interneurons (decay)
@@ -61,7 +61,7 @@ params.tau_sri = 0.00525; %0.006031; % Rising tau recursive inhibition
 params.alpha_i = -0.5269; %-0.26; %Inhibitory gain into pyramidal (Interneuron -> Py) %-0.26 <- oscillation
 params.alpha_e = 1.124;         % Excitatory gain into interneuron (Py -> Interneuron) (bifurcation: alpha_ei > 392.6)
 params.alpha_re = 0.4009;       % Recursive excitatory gain (bifuration: alpha_re > 4.7)
-params.alpha_ri = -2.5;%-0.9698;% Recursive inhibitory gain, -2.5 increases Py resting membrane potential
+params.alpha_ri = -2.5; %-0.9698;% Recursive inhibitory gain, -2.5 increases Py resting membrane potential
 params.alpha_u = 0.0615;        % External excitatory gain into pyramidal (U -> Py)
 
 % Connectivity parameters:
@@ -86,9 +86,12 @@ switch mode
     case 'default'
         % do nothing
     case 'seizure'
-        params.alpha_i = -0.26;
+        params.alpha_i = -0.3;
     case 'gabab'
-        params.alpha_ri = -0.9698;
+        params.alpha_i = 0.2108;
+        params.alpha_e = 0.2108;
+        params.alpha_ri = -1.9396; %-0.9698; % (?) hasn't been fit
+        params.alpha_re = 0.07527;
         params.P_inTOpy = 0.411/2;
         params.P_inTOin = 0.451/2;
         params.tau_sb = 20 * params.tau_sp;
