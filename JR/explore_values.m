@@ -11,27 +11,33 @@
 % range = [0.002:0.001:0.05]; % tau_m_e
 % range2 = [0.005:0.001:0.055]; % tau_m_i
 
-value = 'u';
-range = [0:0.5:5];
-value2 = 'alpha_i';
-range2 = -1*[0:0.25:5];%[0:0.05:1];%
+value = 'alpha_i';
+range = -1*[0:0.05:3];
+value2 = 'u';
+range2 = [0];%-1*[0:0.25:5];%[0:0.05:1];%
 
 freqs = [];
 freqs_py = [];
 freqs_in = [];
+recovery = size(range);
 for i = 1:length(range)
     for ii = 1:length(range2)
 %         [x, y, t] = NMM_diff_equations_DblExp_recursive(value, range(i));
         [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(value, range(i), value2, range2(ii));
 
-%         freqs(ii,i) = spectrum(x,y,t, false); % Oscillations
-        freqs_py(ii,i) = mean(f_e(250:end)); % spike rate Py
-        freqs_in(ii,i) = mean(f_i(250:end)); % spike rate Py
-        disp([num2str(i) '/' num2str(length(range)) ' , ' num2str(ii) '/' num2str(length(range2))]);
+        freqs(ii,i) = spectrum(x,y,t, false); % Oscillations
+
+%         freqs_py(ii,i) = mean(f_e(250:end)); % spike rate Py
+%         freqs_in(ii,i) = mean(f_i(250:end)); % spike rate Py
+%         disp([num2str(i) '/' num2str(length(range)) ' , ' num2str(ii) '/' num2str(length(range2))]);
+
+        recovery(i) = analyze_excitability(y,t);
     end
 end
 
+
 %% Store values
+
 results = struct;
 results.value = value;
 results.range = range;
@@ -40,7 +46,7 @@ results.range2 = range2;
 results.freqs = freqs;
 results.freqs_py = freqs_py;
 results.freqs_in = freqs_in;
-
+%{
 folder = 'C:\Users\artemios\Dropbox\University of Melbourne\Epilepsy\Resources for meetings\2022 07 14\';
 name = [value ' vs ' value2];
 if isempty(dir([folder name]))
@@ -49,7 +55,7 @@ if isempty(dir([folder name]))
 else
     disp('Results not saved, file exists');
 end
-
+%}
 %% Plot 3d Mesh for oscillations
 try
     f_handle = figure;
@@ -69,10 +75,21 @@ try
     caxis([25 100]);
     c.Limits = [25 65];
     zlim([25 100]);
-catch
-    close(f_handle);
-    disp('Couldn''t plot oscillation frequencies graph.');
+catch ME
+    if strcmp('MATLAB:surfchk:NonMatrixData', ME.identifier)
+        plot(range,freqs)
+    else
+        close(f_handle);
+        disp(['Couldn''t plot oscillation frequencies graph: ' ME.message]);
+    end
 end
+
+%% Plot value vs recovery time
+figure; stem(range, recovery);
+xlabel(['\' results.value]);
+ylabel('Recovery time (ms)');
+
+return
 
 %% Plot spike rates mesh
 if results.range2(end)<0, angle=[0 -90]; else, angle=[0 90]; end
