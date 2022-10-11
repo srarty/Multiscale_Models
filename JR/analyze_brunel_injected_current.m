@@ -9,7 +9,7 @@
 
 %% Options ----------------------------------------------------------------
 
-POPULATION = 'In'; % 'Py' or 'In'
+POPULATION = 'Py'; % 'Py' or 'In'
 FUNCTION = 'G'; % 'G' (Gompertz) or 'S' (Sigmoid) or 'Ga' (Gaussian) or 'B' (Bas-Jan Zandt 2014)
 
 % -------------------------------------------------------------------------
@@ -56,7 +56,8 @@ ylabel('Spike rate');
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_connected_noTha\';
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_I_Tha_disconnected\';
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_I_Tha\';
-folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_distribution\';
+% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_distribution\';
+folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_three_pop\';
 
 
 d = dir([folder '*.mat']);
@@ -76,7 +77,6 @@ for ii = 1:no_files
         catch
             membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_P;
         end        
-%         potential_integral(ii) = -(sum(I_py)/C_P)/1000;
         potential_integral(ii) = -(sum(I_py - I_py_tha)/C_P)/1000;
         firing_rates(ii) = mean(R_py(0.2*L : 0.8*L));
         
@@ -86,7 +86,6 @@ for ii = 1:no_files
         catch
             membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_I;
         end
-%         potential_integral(ii) = -(sum(I_in)/C_I)/2000;
         potential_integral(ii) = -(sum(I_in - I_in_tha)/C_I)/2000;
         firing_rates(ii) = mean(R_in(0.2*L : 0.8*L));
         
@@ -198,8 +197,8 @@ else
     error('Wrong POPULATION');
 end
 
-% fitresult_Py = fit(membrane_potentials', firing_rates', ft, opts) % With options
-fitresult_Py = fit(potential_integral', firing_rates', ft, opts) % With options
+fitresult_Py = fit(membrane_potentials', firing_rates', ft, opts) % With options
+% fitresult_Py = fit(potential_integral', firing_rates', ft, opts) % With options
 % fitresult_Py = fit(potential_integral', firing_rates', ft) % No options
     
 %% Define nonlinear function according to population

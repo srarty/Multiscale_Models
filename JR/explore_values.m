@@ -12,26 +12,39 @@
 % range2 = [0.005:0.001:0.055]; % tau_m_i
 
 value = 'alpha_i';
-range = -1*[0:0.05:3];
-value2 = 'u';
-range2 = [0];%-1*[0:0.25:5];%[0:0.05:1];%
+range = 0:0.1:2;%-1*[0:0.05:3];
+value2 = 'alpha_e';
+range2 = 0:0.1:2;%[0:0.05:3];%[0:0.05:1];%
 
 freqs = [];
 freqs_py = [];
 freqs_in = [];
-recovery = size(range);
+w_nmm = [];
+w_lif = [];
+recovery = [];%size(range);
 for i = 1:length(range)
     for ii = 1:length(range2)
 %         [x, y, t] = NMM_diff_equations_DblExp_recursive(value, range(i));
         [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(value, range(i), value2, range2(ii));
 
-        freqs(ii,i) = spectrum(x,y,t, false); % Oscillations
+%         freqs(ii,i) = spectrum(x,y,t, false); % Oscillations
+        try
+            [w_nmm(ii,i), w_lif(ii,i)] = spectrum(x,y,t, false); % Width of Autocorrelation function
+        catch E
+            if strcmp('MATLAB:subsassigndimmismatch', E.identifier)
+                w_nmm = 2000;
+            else
+                rethrow(E);
+            end
+        end
+
 
 %         freqs_py(ii,i) = mean(f_e(250:end)); % spike rate Py
 %         freqs_in(ii,i) = mean(f_i(250:end)); % spike rate Py
-%         disp([num2str(i) '/' num2str(length(range)) ' , ' num2str(ii) '/' num2str(length(range2))]);
 
-        recovery(i) = analyze_excitability(y,t);
+        disp([num2str(i) '/' num2str(length(range)) ' , ' num2str(ii) '/' num2str(length(range2))]);
+
+        recovery(i,ii) = analyze_excitability(y,t);
     end
 end
 
@@ -67,8 +80,8 @@ try
     zlabel('Frequency (Hz)');
     hold
     % plot3(0.01638,0.008115,25.6339,'rx','LineWidth',3)
-    title('NMM | u = 9');
-    % title('NMM');
+%     title('NMM | u = 9');
+    title('NMM');
     colormap hsv
     c = colorbar;
     c.Label.String = 'Frequency (Hz)';

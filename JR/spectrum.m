@@ -52,10 +52,10 @@ function varargout = spectrum(x, y, t, varargin)
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_75.mat'; % impulse response (50 pA), j_pi = 37, alpha_i = -0.5xxx
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_80.mat'; % impulse response (100 pA), j_pi = 37, alpha_i = -0.5xxx
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_79.mat'; % impulse response (500 pA), j_pi = 37, alpha_i = -0.5xxx
-% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_65.mat'; % impulse response (500 pA), j_pi = 21.0666, alpha_i = -0.3
+data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_65.mat'; % impulse response (500 pA), j_pi = 21.0666, alpha_i = -0.3
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_66.mat'; % Seizure: j_pi = 21.0666, alpha_i = -0.3 (random LIF th and t_ref)
 
-data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_71.mat'; % GABAb
+% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_71.mat'; % GABAb
 
     if nargin > 3, PLOT = varargin{1}; else, PLOT = true; end
     if nargin > 4, data_file = varargin{2}; end
@@ -74,6 +74,8 @@ data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_71.mat'; % G
         legend({'NMM', 'LIF'});
         xlabel('Time (s)');
         title(['Comparison of ' signal]);
+        xlim([0.25 max(t_lif)]);
+        ylabel('Normalized V_m (a.u.)')
     end
     
     
@@ -85,18 +87,31 @@ data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_71.mat'; % G
     
     if PLOT
         figure(2); clf;
-        subplot(2,1,1);
+        ax1 = subplot(2,1,1);
         plot(t,x(:,1)); hold on;
         plot(t,x(:,3));
+        title('NMM');
+        legend({'x1', 'x3'});
+        xlabel('Time (s)');
+        ylabel('V_m (mV)');
+        box off
         
         plot_lif_results(v_pi, v_ip, lfp_dt); % Won't run if lif results haven't been loaded
+        
+        % Set the Y limits to the highest values among both subplots:
+        figure(2)
+        ax2 = subplot(2,1,2);
+        limits = [min(ax1.YLim(1), ax2.YLim(1)) max(ax1.YLim(2), ax2.YLim(2))];
+        ax1.YLim = limits;
+        ax2.YLim = limits;
     end
    
-%     do_correlation(x_nmm, x_lif, t_nmm, t_lif);
-%     do_variance(x_nmm, x_lif, t_nmm, t_lif);
-	[R,P] = do_spearmanCorr(x_nmm, x_lif);
+    [w_nmm, w_lif] = do_correlation(x_nmm, x_lif, t_nmm, t_lif);
+    do_variance(x_nmm, x_lif, t_nmm, t_lif);
+% 	[R,P] = do_spearmanCorr(x_nmm, x_lif)
    
 %     varargout = {x_nmm, x_lif, t_nmm, t_lif};
+    varargout = {w_nmm, w_lif};
 end
 
 function [x_nmm, x_lif, t_nmm, t_lif, v_pi, v_ip, input_spike_rate, dt] = get_data(signal, x, y, t, data_file)
@@ -229,7 +244,6 @@ function oscillation = do_plot(model, signal, x_, t)
 %         f.Position([3 4]) = [1230 420];
         if strcmp('lif', model), subplot(2,2,4); else, subplot(2,2,3); end
         spectrogram(x_, w, so, freqbins, Fs, 'yaxis','power');
-        [~,~,~,ps] = spectrogram(x_, w, so, freqbins, Fs, 'yaxis','power');
 
         title([titlestr, ' (', ystr, ')']);
         ax = gca;
@@ -270,7 +284,9 @@ function plot_lif_results(v_pi, v_ip, dt)
     plot(t, x3*1e3);
     legend({'x1', 'x3'});
     xlabel('Time (s)');
-    ylabel('V?');
+    ylabel('V_m (mV)');
+    title('LIF');
+    box off;
     
 %     figure; plot3(t * 1e3,x3*1e3,x3_*1e6, 'r')
 %     xlabel('t');
@@ -278,22 +294,42 @@ function plot_lif_results(v_pi, v_ip, dt)
 %     zlabel('z');
 end
 
-function do_correlation(x_nmm, x_lif, t_nmm, t_lif)    
-    [correlation, lags] = xcorr(x_nmm, x_lif);
-    auto_nmm = autocorr(x_nmm, 'NumLags', 1000);
-    auto_lif = autocorr(x_lif, 'NumLags', 1000);
-        
-    figure;
-    [correlation, lags] = xcorr(x_nmm, x_nmm);
-    plot(lags, correlation);
-    hold
-    [correlation, lags] = xcorr(x_lif, x_lif);
-    plot(lags, correlation);
+function [w_nmm, w_lif] = do_correlation(x_nmm, x_lif, t_nmm, t_lif)    
+    global PLOT
+%     [correlation, lags] = xcorr(x_nmm, x_lif);
+    [auto_nmm, lag_nmm] = autocorr(x_nmm, 'NumLags', 1000);
+    [auto_lif, lag_lif] = autocorr(x_lif, 'NumLags', 1000);
+%         
+%     figure;
+%     [correlation, lags] = xcorr(x_nmm, x_nmm);
+%     plot(lags, correlation);
+%     hold
+%     [correlation, lags] = xcorr(x_lif, x_lif);
+%     plot(lags, correlation);
     
-    figure;
-    a = bar(auto_nmm, 'BarWidth', 0.85); hold
-    bar(auto_lif, 'BarWidth', 0.75);
-    legend({'NMM', 'LIF'});
+    % Compute width of the half section
+    w_nmm = 2 * find(auto_nmm <= 0.5, 1);
+    w_lif = 2 * find(auto_lif <= 0.5, 1);
+    
+	if PLOT
+        figure;
+        plty = [fliplr(auto_nmm) auto_nmm];
+        pltx = [fliplr(-lag_nmm) lag_nmm];
+        l_nmm = plot(pltx', plty');
+        hold
+        plty = [fliplr(auto_lif) auto_lif];
+        pltx = [fliplr(-lag_lif) lag_lif];
+        l_lif = plot(pltx', plty');
+
+        plot([-w_lif/2 w_lif/2], [0.5 0.5], 'Color', l_lif.Color);
+        plot([-w_nmm/2 w_nmm/2], [0.5 0.5], '--', 'Color', l_nmm.Color);
+
+        legend({'NMM', 'LIF'});
+        xlabel('Lag');
+        ylabel('Autocorrelation');
+        grid on
+        box off
+	end
 end
 
 function [R,P] = do_spearmanCorr(x_nmm, x_lif)
@@ -303,8 +339,9 @@ function [R,P] = do_spearmanCorr(x_nmm, x_lif)
 end
 
 function do_variance(x_nmm, x_lif, t_nmm, t_lif)    
+    global PLOT
 
-    window_size = 0.1; % Size of window in seconds
+    window_size = 0.25; % Size of window in seconds
     w_nmm = find(t_nmm <= window_size,1,'last');
     w_lif = find(t_lif <= window_size,1,'last');
     
@@ -322,8 +359,10 @@ function do_variance(x_nmm, x_lif, t_nmm, t_lif)
         variance_lif(i) = var(x_lif(i : i + w_lif));
     end
     
-    figure; 
-    plot(variance_nmm);
-    hold on
-    plot(variance_lif);    
+    if PLOT
+        figure; 
+        plot(variance_nmm);
+        hold on
+        plot(variance_lif);    
+    end
 end
