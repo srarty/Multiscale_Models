@@ -97,7 +97,6 @@ def set_params(type='pyramidal', source='brunel'):
         tau_GABA_s = 5.25 * ms
         tau_AMPA_s = 1.2 * ms
         tau_AMPA_s_ext = 1.2*ms 
-        tau_AMPA_d_ext = 1*ms 
         tau_l = 1 * ms # Latency
 
         # Synaptic efficacies
@@ -292,7 +291,7 @@ def get_equations(type = 'pyramidal'):
         eqs = '''
             dv / dt = (-v + V_leak - (I_tot/g_m_I)) / tau_m_I : volt (unless refractory)
             
-            I_tot = I_AMPA + I_GABA + I_AMPA_tha: amp
+            I_tot = I_AMPA + I_GABA + I_AMPA_tha + I_injected_I: amp
             
             I_GABA = j_GABA_B * s_GABA : amp
             ds_GABA / dt = -s_GABA / tau_s_GABA_I : 1

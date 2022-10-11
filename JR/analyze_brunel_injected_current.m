@@ -9,7 +9,7 @@
 
 %% Options ----------------------------------------------------------------
 
-POPULATION = 'Py'; % 'Py' or 'In'
+POPULATION = 'B'; % 'Py' or 'In'
 FUNCTION = 'G'; % 'G' (Gompertz) or 'S' (Sigmoid) or 'Ga' (Gaussian) or 'B' (Bas-Jan Zandt 2014)
 
 % -------------------------------------------------------------------------
@@ -23,7 +23,7 @@ C_I = 0.2e-9;
 
 %% NMM sigmoid
 params = set_parameters('default');       % Chose params.u from a constant value in set_params
-if strcmp(POPULATION, 'Py'), max_firing_rate = params.e0; elseif strcmp(POPULATION, 'In'), max_firing_rate = params.e0i; else, error('Wrong POPULATION'); end
+if strcmp(POPULATION, 'Py'), max_firing_rate = params.e0; elseif strcmp(POPULATION, 'In')||strcmp(POPULATION, 'B'), max_firing_rate = params.e0i; else, error('Wrong POPULATION'); end
 % if strcmp(POPULATION, 'Py'), max_firing_rate = 10; elseif strcmp(POPULATION, 'In'), max_firing_rate = 10; else, error('Wrong POPULATION'); end
     
 x = -20:0.1:100;
@@ -80,14 +80,15 @@ for ii = 1:no_files
         potential_integral(ii) = -(sum(I_py - I_py_tha)/C_P)/1000;
         firing_rates(ii) = mean(R_py(0.2*L : 0.8*L));
         
-    elseif strcmp(POPULATION, 'In')
+    elseif strcmp(POPULATION, 'In') || strcmp(POPULATION, 'B')
         try
             membrane_potentials(ii) = 1000*Vm_interneurons;
         catch
             membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_I;
         end
         potential_integral(ii) = -(sum(I_in - I_in_tha)/C_I)/2000;
-        firing_rates(ii) = mean(R_in(0.2*L : 0.8*L));
+%         firing_rates(ii) = mean(R_in(0.2*L : 0.8*L));
+        firing_rates(ii) = mean(R_b(0.2*L : 0.8*L));
         
     else
         error('Wrong POPULATION');
@@ -100,9 +101,9 @@ firing_rates(isnan(firing_rates)) = 0;
 
 % Ignore higher values to find a reasonable max_firing_rate (dodgy)
 warning('Remove the following three dodgy lines')
-membrane_potentials(firing_rates > 40) = [];
-potential_integral(firing_rates > 40) = [];
-firing_rates(firing_rates > 40) = [];
+membrane_potentials(firing_rates > 35) = [];
+potential_integral(firing_rates > 35) = [];
+firing_rates(firing_rates > 35) = [];
 
 % Sort values
 [potential_integral, idx] = sort(potential_integral);
@@ -150,27 +151,27 @@ elseif strcmp(FUNCTION, 'G') % Gompertz
         % Gompertz (In)
         opts = fitoptions(ft);
         opts.StartPoint =  [10 1 1 0];
-        opts.Lower =  [max_firing_rate 2.124 -100 -10];
-        opts.Upper =  [max_firing_rate 2.124 100 10];
+        opts.Lower =  [max_firing_rate-15 -100 -100 -10];
+        opts.Upper =  [max_firing_rate+15 100 100 10];
     else
         % Gompertz (Py)
         opts = fitoptions(ft);        
         opts.StartPoint =  [10 1 1 0];
-        opts.Lower =  [max_firing_rate-10 -100 -100 -10];
-        opts.Upper =  [max_firing_rate+10 100 100 10];
+        opts.Lower =  [max_firing_rate-15 -100 -100 -10];
+        opts.Upper =  [max_firing_rate+15 100 100 10];
     end    
     
 elseif strcmp(FUNCTION, 'Ga')% Gaussian
     ft = fittype( 'a*exp(-((x-b)/c).^2)', 'independent', 'x', 'dependent', 'y' ); % Gompertz sigmoid
     
     if strcmp(POPULATION, 'In')
-        % Gompertz (In)
+        % Gaussian (In)
         opts = fitoptions(ft);
         opts.StartPoint =  [24 10 7];
         opts.Lower =  [max_firing_rate-10 -100 -10];
         opts.Upper =  [max_firing_rate+10 100 100 10];
     else
-        % Gompertz (Py)
+        % Gaussian (Py)
         opts = fitoptions(ft);        
         opts.StartPoint =  [24 10 7];
         opts.Lower =  [max_firing_rate-10 10 6];
@@ -223,9 +224,9 @@ end
 % plot(x, max_firing_rate * nonlinearity_post);xlabel('Membrane potential (mV)');
 plot(x, nonlinearity_post);xlabel('Membrane potential (mV)');
 ylabel('Firing rate (spikes/s)');
-% ylim([0 max_firing_rate]);
+ylim([0 max_firing_rate+15]);
 yyaxis left
-% ylim([0 max_firing_rate]);
+ylim([0 max_firing_rate+15]);
 % ylim([0 40]);
 % yyaxis left
 % ylim([0 40]);

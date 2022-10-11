@@ -95,6 +95,18 @@ switch mode
         params.P_inTOpy = 0.411/2;
         params.P_inTOin = 0.451/2;
         params.tau_sb = 20 * params.tau_sp;
+        % Nonlinearity
+        % Pyramidal:
+        % Maximum firing rates
+        params.e0 =  34.34;
+        params.gompertz.b = 0.833;
+        params.gompertz.c = 1.184;
+        params.gompertz.d = 0.1747;
+        % Interneurons:
+        params.e0i = 48.07;
+        params.gompertzi.b = 2.04;
+        params.gompertzi.c = 1.607;
+        params.gompertzi.d = 0.255;
     otherwise
         error('%s rythm not implemented, sorry!', mode);
 end

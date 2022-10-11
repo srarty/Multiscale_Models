@@ -13,7 +13,7 @@ function [x, y, t, f_e, f_i, params] = NMM_GABAb(varargin)
     end
     
     N = 1000; % Number of samples: 1 sample = 1 milisecond
-    u = 0;
+    u = 5;
 
 %     params = set_parameters('seizure', u);
     params = set_parameters('gabab', u);
