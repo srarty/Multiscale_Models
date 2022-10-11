@@ -55,16 +55,16 @@ def brunel(corriente = 0):
     INHIBIT_INPUT = False         # Excitatory cortical input to inhibitory population
     ACTIVE_INTERNEURONS = False    # Inhibitory population
     PARAMS_SOURCE = 'three_pop'       # 'brunel' or 'allen' or 'three_pop'
-    ACTIVE_GABAb = True           # Second inhibitory (slow) population (Wendling-like model)
+    ACTIVE_GABAb = False           # Second inhibitory (slow) population (Wendling-like model)
     GAUSSIAN_REFRACTORY = False   # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
     GAUSSIAN_THRESHOLD = False    # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
     SAVE = True                  # Save ground truth data
     PLOT = False                   # Plot results (main Figure)
-    PLOT_EXTRA = True             # Plot extra things.
+    PLOT_EXTRA = False             # Plot extra things.
     PSP_FR = 0                    # Presynaptic firing rate for TEST_PSP (TEST_PSP needs to be diff to none for this to take effect)                               
     TEST_PSP = 'none'             # Testing the post synaptic potential of given synapses to a specified input firing rate. Options: 'pp', 'pi', 'ii', 'ip', 'none'. To prevent neurons spiking, make V_thr large.
     
-    corriente = 0
+    # corriente = 0
     # Balanced-rate network (?) with input currents: Py = 500.01 pA, In = 398 pA
     input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
     input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
@@ -80,7 +80,10 @@ def brunel(corriente = 0):
     # populations
     N = 2000 # 135 # 675
     N_P = int(N * 4)  # pyramidal neurons
-    N_I = int(N * (0.5 ** ACTIVE_GABAb))    # interneurons
+    if PARAMS_SOURCE == 'three_pop':
+    	N_I = int(N * 0.5)    # interneurons
+    else:
+    	N_I = int(N)    # interneurons
     N_B = int(N * 0.5)  # GABAb
     
     # set populations parameters
@@ -398,9 +401,9 @@ def brunel(corriente = 0):
     st_GABA_I = StateMonitor(In_Pop, 's_GABA', record = 0)
     st_AMPA_cor_I = StateMonitor(In_Pop, 's_AMPA_cor', record = 0)
     
-    Py_monitor = StateMonitor(Py_Pop, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'v', 'v_pi', 'I_tot'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
-    In_monitor = StateMonitor(In_Pop, ['v', 'v_ip', 'v_ii', 'I_tot'], record = True)
-    B_monitor = StateMonitor(B_Pop, ['v', 'I_tot'], record = True)
+    Py_monitor = StateMonitor(Py_Pop, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'v', 'v_pi', 'I_tot', 'I_AMPA_tha'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
+    In_monitor = StateMonitor(In_Pop, ['v', 'v_ip', 'v_ii', 'I_tot', 'I_AMPA_tha'], record = True)
+    B_monitor = StateMonitor(B_Pop, ['v', 'I_tot', 'I_AMPA_tha'], record = True)
     
     #%% simulate  -----------------------------------------------------------------
     net = Network(collect())
@@ -465,7 +468,14 @@ def brunel(corriente = 0):
     # r_Cor_rate = r_Cor.smooth_rate(width = window_size)
     # if shape(r_Cor_rate) != shape(r_Cor.t):
     #     r_Cor_rate = r_Cor_rate[1:]
-    
+
+    I_in = mean(In_monitor.I_tot, 0)
+    I_py = mean(Py_monitor.I_tot, 0)
+    I_b = mean(B_monitor.I_tot, 0)
+    I_in_tha = mean(In_monitor.I_AMPA_tha, 0)
+    I_py_tha = mean(Py_monitor.I_AMPA_tha, 0)
+    I_b_tha = mean(B_monitor.I_AMPA_tha, 0)
+
     # Calculate mean PSP (NMM states)
     v_pi = mean(Py_monitor.v_pi, 0)
     v_ip = mean(In_monitor.v_ip, 0)
@@ -631,12 +641,13 @@ def brunel(corriente = 0):
                         'v_ip': mean(In_monitor.v_ip,0),
                         'R_py': r_P_rate, # 1/diff(np.array(sp_P.t)).mean(),
                         'R_in': r_I_rate,
-                        'R_py_2': r_P_rate_2,
-                        'R_in_2': r_I_rate_2,
+                        'R_b': r_B_rate,
                         'I_in': I_in,
                         'I_py': I_py,
+                        'I_b': I_b,
                         'I_in_tha': I_in_tha,
                         'I_py_tha': I_py_tha,
+                        'I_b_tha': I_b_tha,
                         'RECURRENT_PYRAMIDAL': RECURRENT_PYRAMIDAL,
                         'RECURRENT_INHIBITORY': RECURRENT_INHIBITORY,
                         'INHIBIT_INPUT': INHIBIT_INPUT,

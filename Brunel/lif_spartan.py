@@ -42,7 +42,7 @@ from lif_model import set_params, get_equations
 #def brunel(p_II = 0.125):
 #def brunel(p_PP = 0.16, p_II = 0.125):
 #def brunel(p_PP = 0.16, p_II = 0.451, u = 20):
-def brunel(alpha_pp=0, u=0):
+def brunel(alpha_pi=0, u=0):
     
     # Options:
     RECURRENT_PYRAMIDAL = True    # Self excitation 
@@ -631,10 +631,10 @@ def brunel(alpha_pp=0, u=0):
                          mdict = save_dictionary)
         
         i = 0
-        while os.path.exists('/data/gpfs/projects/punim0643/artemios/simulations/sweep2/u_%s_pp_%s.mat' % (u,alpha_pp)):
+        while os.path.exists('/data/gpfs/projects/punim0643/artemios/simulations/sweep2/alpha2dot5_u_%s_pi_%s.mat' % (u,alpha_pi)):
             i += 1
         save_str = format('lfp_%s.png' %(i))
-        scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/sweep2/u_%s_pp_%s.mat' % (u,alpha_pp),
+        scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/sweep2/alpha2dot5_u_%s_pi_%s.mat' % (u,alpha_pi),
                          mdict = save_dictionary)
     
         #save_str = format('sweep/lfp_u%s_ii%s.png' %(u,alpha_ii))
@@ -708,8 +708,10 @@ def brunel(alpha_pp=0, u=0):
     plt.close('all')
 
 ranges = np.arange(0, 2.1, 0.1)
-ranges2 = np.arange(-916.7, 0.1, 43.65) # alpha_pp, 21 elements
+ranges2 = np.arange(0, 351.2, 17.5550) 
+#ranges2 = np.arange(-916.7, 0.1, 43.65) # alpha_pp, 21 elements
+#ranges2 = np.arange(-183.34, 0.1, 8.74) # alpha_pp, 21 elements
 #ranges2 = np.arange(0, 90.5, 4.3) # alpha_ii, 21 elements
 for iterations in ranges:
     for iterations2 in ranges2:
-        brunel(u = iterations, alpha_pp=iterations2)
+        brunel(u = round(iterations,2), alpha_pi=round(iterations2,2))
