@@ -51,8 +51,8 @@ function varargout = spectrum(x, y, t, varargin)
 %     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_64.mat'; % step response (j_pi = 18)
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_75.mat'; % impulse response (50 pA), j_pi = 37, alpha_i = -0.5xxx
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_80.mat'; % impulse response (100 pA), j_pi = 37, alpha_i = -0.5xxx
-% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_79.mat'; % impulse response (500 pA), j_pi = 37, alpha_i = -0.5xxx
-data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_65.mat'; % impulse response (500 pA), j_pi = 21.0666, alpha_i = -0.3
+data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_79.mat'; % impulse response (500 pA), j_pi = 37, alpha_i = -0.5xxx
+% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_65.mat'; % impulse response (500 pA), j_pi = 21.0666, alpha_i = -0.3
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_66.mat'; % Seizure: j_pi = 21.0666, alpha_i = -0.3 (random LIF th and t_ref)
 
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_71.mat'; % GABAb
@@ -308,11 +308,11 @@ function [w_nmm, w_lif] = do_correlation(x_nmm, x_lif, t_nmm, t_lif)
 %     plot(lags, correlation);
     
     % Compute width of the half section
-    w_nmm = 2 * find(auto_nmm <= 0.5, 1);
-    w_lif = 2 * find(auto_lif <= 0.5, 1);
+    w_nmm = 2 * (find(auto_nmm <= 0.5, 1) - 1);
+    w_lif = 2 * (find(auto_lif <= 0.5, 1) - 1);
     
 	if PLOT
-        figure;
+        figure
         plty = [fliplr(auto_nmm) auto_nmm];
         pltx = [fliplr(-lag_nmm) lag_nmm];
         l_nmm = plot(pltx', plty');

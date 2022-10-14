@@ -101,9 +101,12 @@ firing_rates(isnan(firing_rates)) = 0;
 
 % Ignore higher values to find a reasonable max_firing_rate (dodgy)
 warning('Remove the following three dodgy lines')
-membrane_potentials(firing_rates > 35) = [];
-potential_integral(firing_rates > 35) = [];
-firing_rates(firing_rates > 35) = [];
+% membrane_potentials(firing_rates > 35) = [];
+% potential_integral(firing_rates > 35) = [];
+% firing_rates(firing_rates > 35) = [];
+membrane_potentials(firing_rates > 55) = [];
+potential_integral(firing_rates > 55) = [];
+firing_rates(firing_rates > 55) = [];
 
 % Sort values
 [potential_integral, idx] = sort(potential_integral);

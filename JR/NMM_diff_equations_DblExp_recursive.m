@@ -18,7 +18,6 @@ function [x, y, t, f_e, f_i, params] = NMM_diff_equations_DblExp_recursive(varar
     
     N = 1000; % Number of samples: 1 sample = 1 milisecond
     u = 0;
-
 %     params = set_parameters('seizure', u);
     params = set_parameters('default', u);
     
@@ -26,8 +25,8 @@ function [x, y, t, f_e, f_i, params] = NMM_diff_equations_DblExp_recursive(varar
     params.options.ADD_NOISE = 1; % External input noise (0 = no noise, 1 = noise)
     params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Anyother value of CHANGE_U: U changes.
     
-    params.options.INPUT_CURRENT_PY = 1000 * 10e-12 / params.g_m_P; % 1000 for milivolts, then xe-12 A, where x is the amplitude in pA
-    params.options.INPUT_CURRENT_IN = 1000 * 10e-12 / params.g_m_I;    
+    params.options.INPUT_CURRENT_PY = 1000 * 50e-12 / params.g_m_P; % 1000 for milivolts, then xe-12 A, where x is the amplitude in pA
+    params.options.INPUT_CURRENT_IN = 1000 * 50e-12 / params.g_m_I;    
     % --------------------------------------------------------- End Options
     
     % Parse inputs --------------------------------------------------------
@@ -57,8 +56,6 @@ function [x, y, t, f_e, f_i, params] = NMM_diff_equations_DblExp_recursive(varar
     ic = params.gompertzi.c;
     id = params.gompertzi.d;
     
-    v0 = params.v0;
-    r = params.r;
     e_0 = params.e0; 
     e_0i = params.e0i;
     

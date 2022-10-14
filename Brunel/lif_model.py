@@ -121,7 +121,7 @@ def set_params(type='pyramidal', source='brunel'):
         if type == 'pyramidal':
             j_GABA  = 14.8 * pA
             j_AMPA  = -13.8 * pA
-            j_AMPA_tha  = -16.875 * pA
+            # j_AMPA_tha  = -16.875 * pA
             
         elif type == 'inhibitory':    
             j_AMPA  = -20 * pA

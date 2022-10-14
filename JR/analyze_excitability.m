@@ -1,10 +1,19 @@
-% Analyze excitability of NMM
-
+% Analyze excitability
+%
+% For NMM data, just call analyze excitability with the results of the NMM
+%
+% For LIF data, use:
+%   data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_79.mat'; % impulse response (500 pA), j_pi = 37, alpha_i = -0.5xxx
+%   a = load(data_file)
+%   y_lif = a.LFP_V;
+%   t_lif = a.lfp_dt:a.lfp_dt:length(a.LFP_V)*a.lfp_dt;
+%   recovery = analyze_excitability(y_lif', t_lif', 4899, -4e14)
+%
 function recovery = analyze_excitability(y,t,varargin)
 
 if nargin >= 3, idx_stim = varargin{1}; else, idx_stim = 489; end
-    
-
+if nargin >= 4, min_peak = varargin{2}; else, min_peak = 0.5; end
+   
 
 % Normalize signal
 y_ = -y/(max(-y));
@@ -12,8 +21,8 @@ y_ = -y/(max(-y));
 % the approximate recovery time given that the decay time constant from 
 % peak to recovery is the same in all recordings and it is almost identical
 % to the membrane time constant of the pyramidal population.
-[~, idx] = findpeaks(y_, 'MinPeakHeight', 0.5);
-idx(idx <= 490) = []; % Remove peaks found before the impulse
+[~, idx] = findpeaks(y_, 'MinPeakHeight', min_peak);
+idx(idx <= idx_stim+1) = []; % Remove peaks found before the impulse
 idx = min(idx); % only leave smallest idx
 
 y_ = y_(idx:end);

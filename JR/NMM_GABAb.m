@@ -13,7 +13,7 @@ function [x, y, t, f_e, f_i, params] = NMM_GABAb(varargin)
     end
     
     N = 1000; % Number of samples: 1 sample = 1 milisecond
-    u = 5;
+    u = 0;
 
 %     params = set_parameters('seizure', u);
     params = set_parameters('gabab', u);
@@ -24,6 +24,7 @@ function [x, y, t, f_e, f_i, params] = NMM_GABAb(varargin)
     
     params.options.INPUT_CURRENT_PY = 1000 * 0e-12 / params.g_m_P; % 1000 for milivolts, then xe-12 A, where x is the amplitude in pA
     params.options.INPUT_CURRENT_IN = 1000 * 0e-12 / params.g_m_I;    
+    params.options.INPUT_CURRENT_B = 1000 * 0e-12 / params.g_m_I;    
     % --------------------------------------------------------- End Options
     
     % Parse inputs --------------------------------------------------------
@@ -53,14 +54,18 @@ function [x, y, t, f_e, f_i, params] = NMM_GABAb(varargin)
     ic = params.gompertzi.c;
     id = params.gompertzi.d;
     
-    v0 = params.v0;
-    r = params.r;
+    bb = params.gompertzb.b;
+    bc = params.gompertzb.c;
+    bd = params.gompertzb.d;
+    
     e_0 = params.e0; 
     e_0i = params.e0i;
+    e_0b = params.e0b;
     
     % Synaptic functions
     S1 = @(x) gompertz_io(x, e_0i, ib, ic ,id);% sigmoid_io(x, e_0i, v0, r); %gaussian_io(x, params.gaussiani.a, params.gaussiani.b, params.gaussiani.c, params.gaussiani.d);% 
     S2 = @(x) gompertz_io(x, e_0, b, c, d);  % sigmoid_io(x, e_0, v0, r); % gaussian_io(x, params.gaussian.a, params.gaussian.b, params.gaussian.c, params.gaussian.d);% 
+    S3 = @(x) gompertz_io(x, e_0b, bb, bc ,bd);
         
     dt = params.dt;
     t = 0:dt:(N-1)*dt;
@@ -117,7 +122,7 @@ function [x, y, t, f_e, f_i, params] = NMM_GABAb(varargin)
         0;
         ];
     
-    [t,x,y] = ode45(@(t,x) ode(t,x,params,dt, S1, S2), t, x0); % use "t", instead of "[min(t) max(t)]" fix the output time vector
+    [t,x,y] = ode45(@(t,x) ode(t,x,params,dt, S1, S2, S3), t, x0); % use "t", instead of "[min(t) max(t)]" fix the output time vector
     %     [t,x,y] = ode23(@(t,x) ode(t,x,params,dt), [min(t) max(t)], x0);
     %     [t,x,y] = ode113(@(t,x) ode(t,x,params,dt), [min(t) max(t)], x0);
     
@@ -126,6 +131,7 @@ function [x, y, t, f_e, f_i, params] = NMM_GABAb(varargin)
     I_in = zeros(size(x,1),1);
     I_py(490:500) = params.options.INPUT_CURRENT_PY;
     I_in(490:500) = params.options.INPUT_CURRENT_IN;
+    I_b(490:500) = params.options.INPUT_CURRENT_IN;
     
     for i = 1:size(x,1)
         y(i) = x(i,1) + x(i,9) + x(i,5) + I_py(i) + x(i,16);
@@ -134,7 +140,7 @@ function [x, y, t, f_e, f_i, params] = NMM_GABAb(varargin)
     % Calculate firing rate
     f_e = S2(x(:,1) + x(:,5) + x(:,9) + I_py + x(:,16));
     f_i = S1(x(:,3) + x(:,7) + I_in); 
-    f_b = S1(x(:,18) + x(:,20)); 
+    f_b = S3(x(:,18) + x(:,20) + I_b); 
     
     if nargin == 0        
         close all
@@ -142,7 +148,7 @@ function [x, y, t, f_e, f_i, params] = NMM_GABAb(varargin)
     end
 end
 
-function dx = ode(t,x,params,dt, S1, S2)
+function dx = ode(t,x,params,dt, S1, S2, S3)
     
     u = params.u;
     
@@ -161,12 +167,15 @@ function dx = ode(t,x,params,dt, S1, S2)
     if t >= 0.5
         INPUT_CURRENT_PY = 0;
         INPUT_CURRENT_IN = 0;
+        INPUT_CURRENT_B = 0;
     elseif t >= 0.49
         INPUT_CURRENT_PY = params.options.INPUT_CURRENT_PY;
         INPUT_CURRENT_IN = params.options.INPUT_CURRENT_IN;
+        INPUT_CURRENT_B = params.options.INPUT_CURRENT_B;
     else
         INPUT_CURRENT_PY = 0;
         INPUT_CURRENT_IN = 0;
+        INPUT_CURRENT_B = 0;
     end
         
 
@@ -194,12 +203,12 @@ function dx = ode(t,x,params,dt, S1, S2)
     tau_sb = params.tau_sb;
     
     % Lumped gain parameters
-    AmplitudeI  = c2 * x(11) * Tau_coeff(tau_mp,  tau_sp);
-    AmplitudeE  = c1 * x(12) * Tau_coeff(tau_mi,  tau_si);
+    AmplitudeI  = 0.5 * c2 * x(11) * Tau_coeff(tau_mp,  tau_sp);
+    AmplitudeE  = 0.5 * c1 * x(12) * Tau_coeff(tau_mi,  tau_si);
     AmplitudeRE = c3 * x(13) * Tau_coeff(tau_mrp, tau_srp);
-    AmplitudeRI = c4 * x(14) * Tau_coeff(tau_mri, tau_sri);
+    AmplitudeRI = 0.5 * c4 * x(14) * Tau_coeff(tau_mri, tau_sri);
     AmplitudeU  = c5 * x(15) * Tau_coeff(tau_mrp, tau_srp);
-    AmplitudeB  = c2 * x(11) * Tau_coeff(tau_mp,  tau_sb);
+    AmplitudeB  = 0.5 * c2 * x(11) * Tau_coeff(tau_mp,  tau_sb);
     
     % Diff equations ------------------------------------------------------
     dx = zeros(21,1);
@@ -210,10 +219,10 @@ function dx = ode(t,x,params,dt, S1, S2)
     dx(2) = - x(2)/tau_sp + AmplitudeI * S1(x(3) + x(7) + INPUT_CURRENT_IN);
     % P->I
     dx(3) = x(4) - x(3)/tau_mi;
-    dx(4) = - x(4)/tau_si + AmplitudeE * S2(x(1) + x(5) + x(9) + INPUT_CURRENT_PY + x(16));
+    dx(4) = - x(4)/tau_si + AmplitudeE * S2(x(1) + x(5) + x(9) + x(16) + INPUT_CURRENT_PY);
     % Recurrent Pyramidal P->P
     dx(5) = x(6) - x(5)/tau_mrp;
-    dx(6) = - x(6)/tau_srp + AmplitudeRE * S2(x(1) + x(5) + x(9) + INPUT_CURRENT_PY + x(16));
+    dx(6) = - x(6)/tau_srp + AmplitudeRE * S2(x(1) + x(5) + x(9)+ x(16) + INPUT_CURRENT_PY );
     % Recurrent Inhibition I->I
     dx(7) = x(8) - x(7)/tau_mri;                       
     dx(8) = - x(8)/tau_sri + AmplitudeRI * 0;%S1(x(3) + x(7) + INPUT_CURRENT_IN);    
@@ -228,13 +237,13 @@ function dx = ode(t,x,params,dt, S1, S2)
     dx(15) = 0; % alpha_u
     % GABAb -> P
     dx(16) = x(17) - x(16)/tau_mp;
-    dx(17) = - x(17)/(20*tau_sp) + AmplitudeB * S1(x(18) + x(20));
+    dx(17) = - x(17)/tau_sb + AmplitudeB * S3(x(18) + x(20) + INPUT_CURRENT_B);
     % P -> GABAb
     dx(18) = x(19) - x(18)/tau_mi;
-    dx(19) = - x(19)/tau_si + AmplitudeE * S2(x(1) + x(5) + x(9) + INPUT_CURRENT_PY + x(16));
+    dx(19) = - x(19)/tau_si + AmplitudeE * S2(x(1) + x(5) + x(9) + x(16) + INPUT_CURRENT_PY);
     % I -> GABAb
-    dx(20) = x(21) - x(20)/tau_mi;
-    dx(21) = - x(21)/tau_si + AmplitudeRI * S1(x(3) + x(7) + INPUT_CURRENT_IN);
+    dx(20) = x(21) - x(20)/tau_mri;
+	dx(21) = - x(21)/tau_sri + AmplitudeRI * S1(x(3) + x(7) + INPUT_CURRENT_IN);
     
 
 end

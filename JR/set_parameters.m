@@ -58,7 +58,7 @@ params.tau_mri = 0.01; %0.009229; % Decay tau recursive inhibition
 params.tau_sri = 0.00525; %0.006031; % Rising tau recursive inhibition
 
 % Gains
-params.alpha_i = -0.5269; %-0.26; %Inhibitory gain into pyramidal (Interneuron -> Py) %-0.26 <- oscillation
+params.alpha_i = -0.5269;       %Inhibitory gain into pyramidal (Interneuron -> Py) %-0.26 <- oscillation
 params.alpha_e = 1.124;         % Excitatory gain into interneuron (Py -> Interneuron) (bifurcation: alpha_ei > 392.6)
 params.alpha_re = 0.4009;       % Recursive excitatory gain (bifuration: alpha_re > 4.7)
 params.alpha_ri = -2.5; %-0.9698;% Recursive inhibitory gain, -2.5 increases Py resting membrane potential
@@ -88,25 +88,29 @@ switch mode
     case 'seizure'
         params.alpha_i = -0.3;
     case 'gabab'
+        % Gains:
         params.alpha_i = 0.2108;
-        params.alpha_e = 0.2108;
-        params.alpha_ri = -1.9396; %-0.9698; % (?) hasn't been fit
-        params.alpha_re = 0.07527;
-        params.P_inTOpy = 0.411/2;
-        params.P_inTOin = 0.451/2;
+        params.alpha_e = 0.1362;
+        params.alpha_ri = -1.9397; % (?) hasn't been fit
+        params.alpha_re = 0.0723;
+        % Time constants:
         params.tau_sb = 20 * params.tau_sp;
         % Nonlinearity
         % Pyramidal:
-        % Maximum firing rates
-        params.e0 =  34.34;
+        params.e0 =  34.34; % Maximum firing rates
         params.gompertz.b = 0.833;
         params.gompertz.c = 1.184;
         params.gompertz.d = 0.1747;
         % Interneurons:
-        params.e0i = 48.07;
+        params.e0i = 48.07; % Maximum firing rates
         params.gompertzi.b = 2.04;
         params.gompertzi.c = 1.607;
         params.gompertzi.d = 0.255;
+        % GABAb:
+        params.e0b = 75; % Maximum firing rates
+        params.gompertzb.b = 2.298;
+        params.gompertzb.c = 1.922;
+        params.gompertzb.d = 0.3071;
     otherwise
         error('%s rythm not implemented, sorry!', mode);
 end
