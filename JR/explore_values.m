@@ -11,27 +11,46 @@
 % range = [0.002:0.001:0.05]; % tau_m_e
 % range2 = [0.005:0.001:0.055]; % tau_m_i
 
-value = 'u';
-range = [0:0.5:5];
-value2 = 'alpha_i';
-range2 = -1*[0:0.25:5];%[0:0.05:1];%
+value = 'alpha_e';
+range = 0:0.1:2;%-1*[0:0.05:3];
+value2 = 'alpha_re';
+range2 = 0:0.1:2;%[0:0.05:3];%[0:0.05:1];%
 
 freqs = [];
 freqs_py = [];
 freqs_in = [];
+w_nmm = [];
+w_lif = [];
+recovery = [];%size(range);
 for i = 1:length(range)
     for ii = 1:length(range2)
 %         [x, y, t] = NMM_diff_equations_DblExp_recursive(value, range(i));
         [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(value, range(i), value2, range2(ii));
 
 %         freqs(ii,i) = spectrum(x,y,t, false); % Oscillations
-        freqs_py(ii,i) = mean(f_e(250:end)); % spike rate Py
-        freqs_in(ii,i) = mean(f_i(250:end)); % spike rate Py
+        try
+            [w_nmm(ii,i), w_lif(ii,i)] = spectrum(x,y,t, false); % Width of Autocorrelation function
+        catch E
+            if strcmp('MATLAB:subsassigndimmismatch', E.identifier)
+                w_nmm = 2000;
+            else
+                rethrow(E);
+            end
+        end
+
+
+%         freqs_py(ii,i) = mean(f_e(250:end)); % spike rate Py
+%         freqs_in(ii,i) = mean(f_i(250:end)); % spike rate Py
+
         disp([num2str(i) '/' num2str(length(range)) ' , ' num2str(ii) '/' num2str(length(range2))]);
+
+        recovery(i,ii) = analyze_excitability(y,t);
     end
 end
 
+
 %% Store values
+
 results = struct;
 results.value = value;
 results.range = range;
@@ -40,7 +59,7 @@ results.range2 = range2;
 results.freqs = freqs;
 results.freqs_py = freqs_py;
 results.freqs_in = freqs_in;
-
+%{
 folder = 'C:\Users\artemios\Dropbox\University of Melbourne\Epilepsy\Resources for meetings\2022 07 14\';
 name = [value ' vs ' value2];
 if isempty(dir([folder name]))
@@ -49,30 +68,44 @@ if isempty(dir([folder name]))
 else
     disp('Results not saved, file exists');
 end
-
+%}
 %% Plot 3d Mesh for oscillations
+% z_axis = freqs; z_label = 'Frequency (Hz)'; limits = [25 100];
+z_axis = w_nmm; z_label = 'Autocorrelation Width'; limits = [25 100];
+% z_axis = recovery; z_label = 't_{recovery}'; limits = [15 20];
 try
     f_handle = figure;
-    mesh(range, range2, freqs, 'FaceColor', 'flat', 'EdgeColor', 'black')
+    mesh(range, range2, z_axis, 'FaceColor', 'flat', 'EdgeColor', 'none')
     % xlabel('\tau_{m_{i}}');
     % ylabel('\tau_{m_{e}}');
     xlabel(value);%('Input rate');
     ylabel(value2);
-    zlabel('Frequency (Hz)');
+    zlabel(z_label);
     hold
     % plot3(0.01638,0.008115,25.6339,'rx','LineWidth',3)
-    title('NMM | u = 9');
-    % title('NMM');
-    colormap hsv
+%     title('NMM | u = 9');
+    title('NMM');
+    colormap cool
     c = colorbar;
-    c.Label.String = 'Frequency (Hz)';
-    caxis([25 100]);
-    c.Limits = [25 65];
-    zlim([25 100]);
-catch
-    close(f_handle);
-    disp('Couldn''t plot oscillation frequencies graph.');
+    c.Label.String = z_label;
+    caxis(limits);
+    c.Limits = limits;
+    zlim(limits);
+catch ME
+    if strcmp('MATLAB:surfchk:NonMatrixData', ME.identifier)
+        plot(range,z_axis)
+    else
+        close(f_handle);
+        disp(['Couldn''t plot oscillation frequencies graph: ' ME.message]);
+    end
 end
+
+%% Plot value vs recovery time
+figure; stem(range, recovery);
+xlabel(['\' results.value]);
+ylabel('Recovery time (ms)');
+
+return
 
 %% Plot spike rates mesh
 if results.range2(end)<0, angle=[0 -90]; else, angle=[0 90]; end

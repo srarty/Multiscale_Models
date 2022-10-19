@@ -5,7 +5,7 @@
 %
 % Machine learning to find ideal parameters for NMM taht match the LIF.
 % Having one NMM for each different LIF.
-function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
+function [x, y, t, f_e, f_i, params] = NMM_diff_equations_DblExp_recursive(varargin)
     clear option option2
     if nargin >= 2
         option = varargin{1};
@@ -18,7 +18,6 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     
     N = 1000; % Number of samples: 1 sample = 1 milisecond
     u = 0;
-
 %     params = set_parameters('seizure', u);
     params = set_parameters('default', u);
     
@@ -26,14 +25,14 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     params.options.ADD_NOISE = 1; % External input noise (0 = no noise, 1 = noise)
     params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Anyother value of CHANGE_U: U changes.
     
-    params.options.INPUT_CURRENT_PY = 1000 * 0e-12 / params.g_m_P; % 1000 for milivolts, then xe-12 A, where x is the amplitude in pA
-    params.options.INPUT_CURRENT_IN = 1000 * 0e-12 / params.g_m_I;    
+    params.options.INPUT_CURRENT_PY = 1000 * 50e-12 / params.g_m_P; % 1000 for milivolts, then xe-12 A, where x is the amplitude in pA
+    params.options.INPUT_CURRENT_IN = 1000 * 50e-12 / params.g_m_I;    
     % --------------------------------------------------------- End Options
     
     % Parse inputs --------------------------------------------------------
     if exist('option','var')
         try
-            params.(option) = value;
+            params.(option) = params.(option)*value;
         catch
             error(['Couldn''t assign value: ' num2str(value) ' to the parameter: ' option]);
         end
@@ -41,7 +40,7 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     
     if exist('option2','var')
         try
-            params.(option2) = value2;
+            params.(option2) = params.(option2)*value2;
         catch
             error(['Couldn''t assign value: ' num2str(value2) ' to the parameter: ' option2]);
         end
@@ -57,8 +56,6 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     ic = params.gompertzi.c;
     id = params.gompertzi.d;
     
-    v0 = params.v0;
-    r = params.r;
     e_0 = params.e0; 
     e_0i = params.e0i;
     
@@ -134,7 +131,7 @@ function [x, y, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive(varargin)
     f_e = S2(x(:,1) + x(:,5) + x(:,9) + I_py);
     
     if nargin == 0        
-%         close all
+        close all
         do_plot(x,t,y, f_e, f_i);
     end
 end

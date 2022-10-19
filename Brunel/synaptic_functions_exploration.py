@@ -35,6 +35,18 @@ from lif_model import set_params
 # save = {'ipsp': Py_monitor.v1*1e3}
 # scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/inhibitory_ipsp.mat', mdict=save)
 
+# # AMPA on gabab population:
+# save = {'epsp': Py_monitor.v1*1e3}
+# scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/gabab_epsp.mat', mdict=save)
+
+# # GABA on gabab population:
+# save = {'ipsp': Py_monitor.v1*1e3}
+# scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/gabab_ipsp.mat', mdict=save)
+
+# # GABAb on Pyramidal population:
+# save = {'ipsp': Py_monitor.v1*1e3}
+# scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/pyramidalGabab_ipsp.mat', mdict=save)
+
 # # External input -> Pyramidal:
 # save = {'epsp': Py_monitor.v1*1e3}
 # scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/pyramidal_externalEPSP.mat', mdict=save)
@@ -47,10 +59,10 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     # plt.close('all')
     #%% options  --------------------------------------------------------------
     
-    source          = 'allen'       # brunel or allen
-    synaptic_type   = 'GABA'        # AMPA (excitatory) or GABA (inhibitory)
-    neuron_type     = 'pyramidal'  # pyramidal, inhibitory or spiny
-    external        = True         # When AMPA, synapsis can be external or recurrent (local)
+    source          = 'three_pop'       # 'brunel', 'allen'  or 'three_pop'
+    synaptic_type   = 'GABA'        # AMPA (excitatory), GABA (inhibitory) or GABAb
+    neuron_type     = 'gabab'  # pyramidal, inhibitory or gabab
+    external        = False         # When AMPA, synapsis can be external or recurrent (local)
     input_spike_rate = 0            # spikes/ms/cell 
     simulation_time = 0.3 * second
     
@@ -65,7 +77,7 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     # voltage
     V_leak = -70. * mV      # Resting membrane potential
     V_thr = -50 * mV        # Threshold
-    V_reset = -59 * mV # -59 * mV      # Reset voltage. Equal to V_leak-> To use Burkitt's, 2006 Eq. (12)
+    V_reset = -59 * mV      # Reset voltage. Equal to V_leak-> To use Burkitt's, 2006 Eq. (12)
     
     # parse inputs to synaptic_functions_exploration -------------------------
     if alpha_ee != '':
@@ -106,14 +118,14 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     
     # connectivity time constants
     if synaptic_type == 'AMPA':
-        tau_d =  params["tau_AMPA_d"]      # Decay time constant (From Brunel and Wang 2001)
-        tau_r =  params["tau_AMPA_r"] # Rising time constant (< 1 ms)
+        tau_s =  params["tau_AMPA_s"]
+    elif synaptic_type == 'GABAb':
+        tau_s = 20 * params["tau_GABA_s"]             
     else:
-        tau_d =  params["tau_GABA_d"]      # Decay time constant (From Brunel and Wang 2001)
-        tau_r =  params["tau_GABA_r"] # Rising time constant (< 1 ms)
+        tau_s = params["tau_GABA_s"]             
+        
     
-    tau_s = 0.5 * (tau_d + tau_r) + 0.05*ms      # "Lumped" time constant for alpha function. 
-    tau_l = 0.2 * ms
+    tau_l = 0.0 * ms
     tau_rp =  params["tau_rp"] # refractory period
     
     # Cortical input
@@ -125,13 +137,13 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     if synaptic_type == 'AMPA':
         if external:
             j =  params["j_AMPA_ext"]
-            alpha_weight = params["single_exp"]
+            alpha_weight = params["external_input_weight"]
         else:
             j =  params["j_AMPA"]        
-            alpha_weight = params["alpha_weight_AMPA"]
+            alpha_weight = params["weight"]
     else:
         j =  params["j_GABA"]
-        alpha_weight = params["alpha_weight_GABA"]
+        alpha_weight = params["weight"]
     
     
     # Alpha function's parameter (and double exponential) to fix the units in ds/dt
@@ -149,16 +161,12 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     dv / dt = (-v + V_leak - (I_tot/g_m)) / tau_m : volt (unless refractory)
     
     dv1 / dt = (-v1 - (I_AMPA1/g_m)) / tau_m : volt (unless refractory)
-    dv2 / dt = (-v2 - (I_AMPA2/g_m)) / tau_m : volt (unless refractory)
     dv6 / dt = (-v6 - (I_AMPA6/g_m)) / tau_m : volt (unless refractory)
     
     I_tot = I_AMPA1 + I_AMPA6: amp
     
     I_AMPA1 = j * s_AMPA1 : amp
-    ds_AMPA1 / dt = -s_AMPA1 / (tau_d + tau_r) : 1    
-       
-    I_AMPA2 = (j * 5.92) * s_AMPA2 : amp
-    s_AMPA2 : 1
+    ds_AMPA1 / dt = -s_AMPA1 / (tau_s) : 1    
     
     I_AMPA6 = (-896 * pA) * s_AMPA6 : amp
     s_AMPA6 : 1
@@ -166,16 +174,6 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     
     eqs_pre_ampa1 = '''
     s_AMPA1 += alpha_weight
-    ''' 
-    
-    eqs_ampa2 = '''
-    s_AMPA2_post = s_AMPA2_syn : 1 (summed)
-    ds_AMPA2_syn/dt = (x2 - s_AMPA2_syn) / tau_d : 1 (clock-driven)
-    dx2/dt = -x2/tau_r : 1 (clock-driven)
-    '''
-    
-    eqs_pre_ampa2 = '''
-    x2 += alpha_weight
     ''' 
     
     eqs_ampa6 ='''
@@ -190,7 +188,6 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     
     Pyramidal = NeuronGroup(N_P, eqs, threshold='v > V_thr', reset='''v = V_reset
                                                     v1 = V_reset-V_leak
-                                                    v2 = V_reset-V_leak
                                                     v6 = V_reset-V_leak
                                                     ''',refractory=tau_rp, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
     Pyramidal.v = V_leak
@@ -207,14 +204,12 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     
     AMPA1_synapses = Synapses(Input, Pyramidal, on_pre=eqs_pre_ampa1, method='rk4', delay=tau_l)#, dt=10*usecond)
     AMPA1_synapses.connect(p = 1)
-    
-    AMPA2_synapses = Synapses(Input, Pyramidal, model=eqs_ampa2, on_pre=eqs_pre_ampa2, method='rk4')#, dt=10*usecond)
-    AMPA2_synapses.connect(p = 1)
-    
+        
     AMPA6_synapses = Synapses(Input, Pyramidal, model=eqs_ampa6, on_pre=eqs_pre_ampa6, method='rk4')#, dt=10*usecond)
     AMPA6_synapses.connect(p = 1)
+    AMPA6_synapses.active = False
     
-    Py_monitor = StateMonitor(Pyramidal, ['v', 'v1', 'v2', 'v6', 'I_AMPA1', 'I_AMPA2', 'I_AMPA6', 'I_tot'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
+    Py_monitor = StateMonitor(Pyramidal, ['v', 'v1', 'v6', 'I_AMPA1', 'I_AMPA6', 'I_tot'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
 
     #%% Run
     net = Network(collect())

@@ -1,11 +1,7 @@
-% Same as NMM_GABAb.m but with recursive connections in the
-% Pyramidal and Ihibitory populations.
+% NMM_GABAb.m It is the NMM with 3 populations (1 pyramidal and 2
+% inhibitory: fast (GABA_A) and slow (GABA_B)).
 %
-% Spike train synchrony (Alex): pubmed.ncbi.nlm.nih.gov/17628690/
-%
-% Machine learning to find ideal parameters for NMM taht match the LIF.
-% Having one NMM for each different LIF.
-function [x, y, t, f_e, f_i] = NMM_GABAb(varargin)
+function [x, y, t, f_e, f_i, params] = NMM_GABAb(varargin)
     clear option option2
     if nargin >= 2
         option = varargin{1};
@@ -17,16 +13,18 @@ function [x, y, t, f_e, f_i] = NMM_GABAb(varargin)
     end
     
     N = 1000; % Number of samples: 1 sample = 1 milisecond
-    u = 1;
+    u = 0;
 
+%     params = set_parameters('seizure', u);
     params = set_parameters('gabab', u);
     
     % Options  ------------------------------------------------------------
     params.options.ADD_NOISE = 1; % External input noise (0 = no noise, 1 = noise)
-    params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Anyother value of CHANGE_U: U changes.
+    params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Any other value of CHANGE_U: U changes.
     
     params.options.INPUT_CURRENT_PY = 1000 * 0e-12 / params.g_m_P; % 1000 for milivolts, then xe-12 A, where x is the amplitude in pA
     params.options.INPUT_CURRENT_IN = 1000 * 0e-12 / params.g_m_I;    
+    params.options.INPUT_CURRENT_B = 1000 * 0e-12 / params.g_m_I;    
     % --------------------------------------------------------- End Options
     
     % Parse inputs --------------------------------------------------------
@@ -56,14 +54,18 @@ function [x, y, t, f_e, f_i] = NMM_GABAb(varargin)
     ic = params.gompertzi.c;
     id = params.gompertzi.d;
     
-    v0 = params.v0;
-    r = params.r;
+    bb = params.gompertzb.b;
+    bc = params.gompertzb.c;
+    bd = params.gompertzb.d;
+    
     e_0 = params.e0; 
     e_0i = params.e0i;
+    e_0b = params.e0b;
     
     % Synaptic functions
     S1 = @(x) gompertz_io(x, e_0i, ib, ic ,id);% sigmoid_io(x, e_0i, v0, r); %gaussian_io(x, params.gaussiani.a, params.gaussiani.b, params.gaussiani.c, params.gaussiani.d);% 
     S2 = @(x) gompertz_io(x, e_0, b, c, d);  % sigmoid_io(x, e_0, v0, r); % gaussian_io(x, params.gaussian.a, params.gaussian.b, params.gaussian.c, params.gaussian.d);% 
+    S3 = @(x) gompertz_io(x, e_0b, bb, bc ,bd);
         
     dt = params.dt;
     t = 0:dt:(N-1)*dt;
@@ -73,6 +75,7 @@ function [x, y, t, f_e, f_i] = NMM_GABAb(varargin)
     alpha_re = params.alpha_re; 
     alpha_ri = params.alpha_ri; 
     alpha_u = params.alpha_u; 
+    alpha_b = params.alpha_b; 
 
     % Steady state
 %     eq =   [-10.0174;%3.8824;
@@ -116,11 +119,10 @@ function [x, y, t, f_e, f_i] = NMM_GABAb(varargin)
         0;
         0;
         0;
-        0;
-        0;
+        alpha_b;
         ];
     
-    [t,x,y] = ode45(@(t,x) ode(t,x,params,dt, S1, S2), t, x0); % use "t", instead of "[min(t) max(t)]" fix the output time vector
+    [t,x,y] = ode45(@(t,x) ode(t,x,params,dt, S1, S2, S3), t, x0); % use "t", instead of "[min(t) max(t)]" fix the output time vector
     %     [t,x,y] = ode23(@(t,x) ode(t,x,params,dt), [min(t) max(t)], x0);
     %     [t,x,y] = ode113(@(t,x) ode(t,x,params,dt), [min(t) max(t)], x0);
     
@@ -129,6 +131,7 @@ function [x, y, t, f_e, f_i] = NMM_GABAb(varargin)
     I_in = zeros(size(x,1),1);
     I_py(490:500) = params.options.INPUT_CURRENT_PY;
     I_in(490:500) = params.options.INPUT_CURRENT_IN;
+    I_b(490:500) = params.options.INPUT_CURRENT_IN;
     
     for i = 1:size(x,1)
         y(i) = x(i,1) + x(i,9) + x(i,5) + I_py(i) + x(i,16);
@@ -136,16 +139,16 @@ function [x, y, t, f_e, f_i] = NMM_GABAb(varargin)
     
     % Calculate firing rate
     f_e = S2(x(:,1) + x(:,5) + x(:,9) + I_py + x(:,16));
-    f_i = S1(x(:,3) + x(:,7) + I_in); 
-    f_b = S1(x(:,18) + x(:,20)); 
+    f_i = S1(x(:,3) + I_in); 
+    f_b = S3(x(:,18) + x(:,7) + I_b); 
     
     if nargin == 0        
-%         close all
+        close all
         do_plot(x,t,y, f_e, f_i, f_b);
     end
 end
 
-function dx = ode(t,x,params,dt, S1, S2)
+function dx = ode(t,x,params,dt, S1, S2, S3)
     
     u = params.u;
     
@@ -164,23 +167,27 @@ function dx = ode(t,x,params,dt, S1, S2)
     if t >= 0.5
         INPUT_CURRENT_PY = 0;
         INPUT_CURRENT_IN = 0;
+        INPUT_CURRENT_B = 0;
     elseif t >= 0.49
         INPUT_CURRENT_PY = params.options.INPUT_CURRENT_PY;
         INPUT_CURRENT_IN = params.options.INPUT_CURRENT_IN;
+        INPUT_CURRENT_B = params.options.INPUT_CURRENT_B;
     else
         INPUT_CURRENT_PY = 0;
         INPUT_CURRENT_IN = 0;
+        INPUT_CURRENT_B = 0;
     end
         
 
     Tau_coeff = @(m, s) 1/(m*s);% Nicola Campbell
     
     c_constant = params.c_constant;
-    c1 = 70.5575    * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
+    c1 = 70.5575  * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
     c2 = 29.7217  * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
-    c3 = 141.1007   * c_constant * params.P_pyTOpy; % Recursive excitation to pyramidal cells
+    c3 = 141.1007 * c_constant * params.P_pyTOpy; % Recursive excitation to pyramidal cells
     c4 = 9.5339   * c_constant * params.P_inTOin; % Recursive inhibition to inhibitory cells
-    c5 = 17.8288    * c_constant;                   % External excitatory synapses into pyramidal population
+    c5 = 17.8288  * c_constant;                   % External excitatory synapses into pyramidal population
+    c6 = 8.52 * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population % 166.4415
     
     tau_sp = params.tau_sp;
     tau_mp = params.tau_mp;
@@ -202,24 +209,24 @@ function dx = ode(t,x,params,dt, S1, S2)
     AmplitudeRE = c3 * x(13) * Tau_coeff(tau_mrp, tau_srp);
     AmplitudeRI = c4 * x(14) * Tau_coeff(tau_mri, tau_sri);
     AmplitudeU  = c5 * x(15) * Tau_coeff(tau_mrp, tau_srp);
-    AmplitudeB  = c2 * x(11) * Tau_coeff(tau_mp,  tau_sb);
+    AmplitudeB  = c6 * x(20) * Tau_coeff(tau_mp,  tau_sb);
     
     % Diff equations ------------------------------------------------------
-    dx = zeros(21,1);
+    dx = zeros(20,1);
 
     % Double exponential from Nicola-Campbell (2013):
     % I->P
     dx(1) = x(2) - x(1)/tau_mp;
-    dx(2) = - x(2)/tau_sp + AmplitudeI * S1(x(3) + x(7) + INPUT_CURRENT_IN);
+    dx(2) = - x(2)/tau_sp + AmplitudeI * S1(x(3) + INPUT_CURRENT_IN);
     % P->I
     dx(3) = x(4) - x(3)/tau_mi;
-    dx(4) = - x(4)/tau_si + AmplitudeE * S2(x(1) + x(5) + x(9) + INPUT_CURRENT_PY + x(16));
+    dx(4) = - x(4)/tau_si + AmplitudeE * S2(x(1) + x(5) + x(9) + x(16) + INPUT_CURRENT_PY);
     % Recurrent Pyramidal P->P
     dx(5) = x(6) - x(5)/tau_mrp;
-    dx(6) = - x(6)/tau_srp + AmplitudeRE * S2(x(1) + x(5) + x(9) + INPUT_CURRENT_PY + x(16));
-    % Recurrent Inhibition I->I
-    dx(7) = x(8) - x(7)/tau_mri;                       
-    dx(8) = - x(8)/tau_sri + AmplitudeRI * 0;%S1(x(3) + x(7) + INPUT_CURRENT_IN);    
+    dx(6) = - x(6)/tau_srp + AmplitudeRE * S2(x(1) + x(5) + x(9)+ x(16) + INPUT_CURRENT_PY );
+    % Recurrent Inhibition I -> GABAb
+    dx(7) = x(8) - x(7)/tau_mri;
+	dx(8) = - x(8)/tau_sri + AmplitudeRI * S1(x(3) + INPUT_CURRENT_IN);
     % External input u->P
     dx(9) = x(10) - x(9)/tau_mrp;
     dx(10) = - x(10)/tau_srp + AmplitudeU * (u + (params.options.ADD_NOISE * (sqrt(u).*randn(1,1))));
@@ -231,14 +238,11 @@ function dx = ode(t,x,params,dt, S1, S2)
     dx(15) = 0; % alpha_u
     % GABAb -> P
     dx(16) = x(17) - x(16)/tau_mp;
-    dx(17) = - x(17)/(20*tau_sp) + AmplitudeB * S1(x(18) + x(20));
+    dx(17) = - x(17)/tau_sb + AmplitudeB * S3(x(18) + x(7) + INPUT_CURRENT_B);
     % P -> GABAb
     dx(18) = x(19) - x(18)/tau_mi;
-    dx(19) = - x(19)/tau_si + AmplitudeE * S2(x(1) + x(5) + x(9) + INPUT_CURRENT_PY + x(16));
-    % I -> GABAb
-    dx(20) = x(21) - x(20)/tau_mi;
-    dx(21) = - x(21)/tau_si + (AmplitudeRI) * S1(x(3) + x(7) + INPUT_CURRENT_IN);
-    
+    dx(19) = - x(19)/tau_si + (AmplitudeE / 5) * S2(x(1) + x(5) + x(9) + x(16) + INPUT_CURRENT_PY);
+    dx(20) = 0; % alpha_b
 
 end
 
@@ -250,10 +254,10 @@ function do_plot(x,t, Vm, f_e, f_i, f_b)
     xlabel('Time (s)');
     
     figure
-    plot(t, x(:,1) + x(:,5) + x(:,9));
+    plot(t, x(:,1) + x(:,5) + x(:,9) + x(:,16));
     hold
-    plot(t, x(:,3) + x(:,7));
-    plot(t, x(:,18) + x(:,20))
+    plot(t, x(:,3));
+    plot(t, x(:,18) + x(:,7))
     legend({'V_{mp}' 'V_{mi}' 'V_{mGABA_{b}}'});
     ylabel('mV');
     xlabel('Time (s)');
@@ -271,9 +275,9 @@ function do_plot(x,t, Vm, f_e, f_i, f_b)
     ylabel('Spike rate (Hz)');
     xlabel('Time (s)');
     
-    figure
-    plot(t, x(:,9));    
-    
+%     figure
+%     plot(t, x(:,9));    
+%     
     figure
     subplot(1,2,1)
     plot(x(:,1), x(:,3));
