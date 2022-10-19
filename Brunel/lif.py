@@ -53,19 +53,19 @@ GAUSSIAN_THRESHOLD = True    # If true, the refractory period of each cell is ta
 SAVE = False                  # Save ground truth data
 PLOT = True                   # Plot results (main Figure)
 PLOT_EXTRA = True             # Plot extra things.
-PSP_FR = 0                    # Presynaptic firing rate for TEST_PSP (TEST_PSP needs to be diff to none for this to take effect)                               
-TEST_PSP = 'none'             # Testing the post synaptic potential of given synapses to a specified input firing rate. Options: 'pp', 'pi', 'ii', 'ip', 'none'. To prevent neurons spiking, make V_thr large.
+PSP_FR = 5                    # Presynaptic firing rate for TEST_PSP (TEST_PSP needs to be diff to none for this to take effect)                               
+TEST_PSP = 'bi'             # Testing the post synaptic potential of given synapses to a specified input firing rate. Options: 'pp', 'pi', 'ii', 'ip', 'none'. To prevent neurons spiking, make V_thr large.
 
 corriente = 0
 # Balanced-rate network (?) with input currents: Py = 500.01 pA, In = 398 pA
 input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 
-input_spike_rate = [0]#[0, 0.25, 0.5, 1]#[0, 0.25, 0.75, 0.5]#[0, 1, 3, 5] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
-input_spike_rate_thalamic = 1.5 # 1.5 # spikes/ms/cell (spontaneous activity)
+input_spike_rate = [0]#[0, 0.25, 0.75, 0.5]#[0, 1, 3, 5] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
+input_spike_rate_thalamic = 1.5 # spikes/ms/cell (spontaneous activity)
 
 #%% parameters  --------------------------------------------------------------
-simulation_time = 1 * second
+simulation_time = 0.5 * second
 dt_ = 100 * usecond
 T = np.linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector for plots (in seconds)
    
@@ -88,7 +88,7 @@ p_II = params_py.get('p_II') # * np.sqrt(1000/N)  #0.2 #* 100/N # recurrent inhi
 
 # voltage
 V_leak = -70. * mV      # Resting membrane potential
-V_thr = -50 * mV        # Threshold
+V_thr = 1000*mV#-50 * mV        # Threshold
 V_reset = -59 * mV #    # Reset voltage. Equal to V_leak-> To use Burkitt's, 2006 Eq. (12)
 
 # membrane capacitance
@@ -108,6 +108,7 @@ tau_m_I = params_in.get('tau_m')
 tau_s_AMPA_P = params_py.get('tau_AMPA_s') # Decay time constant (From Brunel and Wang 2001)
 tau_s_AMPA_P_ext = params_py.get('tau_AMPA_s_ext') # Decay time constant (From Brunel and Wang 2001)
 tau_s_GABA_P = params_py.get('tau_GABA_s')
+tau_s_GABAb_P = params_py.get('tau_GABAb_s')
 
 # Inhibitory Interneurons
 tau_s_AMPA_I =  params_in.get('tau_AMPA_s')  
@@ -139,6 +140,7 @@ j_AMPA_tha_I = params_in.get('j_AMPA_tha')
 
 # GABAergic (inhibitory)
 j_GABA_P = params_py.get('j_GABA') * 2000/N # * np.sqrt(1000/N)
+j_GABAb_P = params_py.get('j_GABAb') * 2000/N # * np.sqrt(1000/N)
 j_GABA_I = params_in.get('j_GABA') * 2000/N # * np.sqrt(1000/N)
 j_GABA_B = params_b.get('j_GABA') * 2000/N # * np.sqrt(1000/N)
 
@@ -177,6 +179,7 @@ eqs_B = get_equations('gabab')
 Py_Pop = NeuronGroup(N_P, eqs_P, threshold='v > v_th', reset='''v = V_reset
                                                                 v_pe = V_reset-V_leak
                                                                 v_pi = V_reset-V_leak
+                                                                v_pb = V_reset-V_leak
                                                                 v_pp = V_reset-V_leak
                                                                 ''', refractory='ref', method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
 Py_Pop.v = V_leak
@@ -190,6 +193,8 @@ In_Pop = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='''v = V_reset
 In_Pop.v = V_leak
 
 B_Pop = NeuronGroup(N_I, eqs_B, threshold='v > V_thr', reset='''v = V_reset
+                                                                v_bi = V_reset-V_leak
+                                                                v_bp = V_reset-V_leak
                                                                 ''', refractory='ref', method='rk4', dt=dt_, name='GABAbPop') # Interneuron population
 B_Pop.v = V_leak
 
@@ -213,10 +218,12 @@ else:
     
 
 # Custom Poisson population to test PSP on a given synapse
-if (TEST_PSP == 'ip') | (TEST_PSP == 'pp'):
+if (TEST_PSP == 'ip') | (TEST_PSP == 'pp') | (TEST_PSP == 'bp'):
     N_PSP_Test = N_P
-elif (TEST_PSP == 'pi') | (TEST_PSP == 'ii'):
+elif (TEST_PSP == 'pi') | (TEST_PSP == 'ii') | (TEST_PSP == 'bi'):
     N_PSP_Test = N_I
+elif (TEST_PSP == 'ib') | (TEST_PSP == 'pb'):
+    N_PSP_Test = N_B
 else:
     N_PSP_Test = 0    
 Pop_PSP_Test = PoissonGroup(N_PSP_Test, rates = PSP_FR * Hz, dt=dt_) # poisson input
@@ -361,6 +368,15 @@ elif (TEST_PSP == 'ip'):
 elif (TEST_PSP == 'ii'):
     C_Test_PSP = Synapses(Pop_PSP_Test, In_Pop, on_pre=eqs_pre_gaba_I, method='rk4', dt=dt_, delay=delay, name='synapses_ii_test')
     connection_probability = p_II
+elif (TEST_PSP == 'bi'):
+    C_Test_PSP = Synapses(Pop_PSP_Test, B_Pop, on_pre=eqs_pre_gaba_B, method='rk4', dt=dt_, delay=delay, name='synapses_bi_test')
+    connection_probability = p_II
+elif (TEST_PSP == 'bp'):
+    C_Test_PSP = Synapses(Pop_PSP_Test, B_Pop, on_pre=eqs_pre_glut_B, method='rk4', dt=dt_, delay=delay, name='synapses_bp_test')
+    connection_probability = p_PI
+elif (TEST_PSP == 'pb'):
+    C_Test_PSP = Synapses(Pop_PSP_Test, Py_Pop, on_pre=eqs_pre_gabab_P, method='rk4', dt=dt_, delay=delay, name='synapses_pb_test')
+    connection_probability = p_IP
 else:
     C_Test_PSP = Synapses(Pop_PSP_Test, Pop_PSP_Test, method='rk4', name='none_synapse') # This won't do anything. It's to prevent runtime errors
     connection_probability = 1
@@ -390,9 +406,9 @@ st_AMPA_I = StateMonitor(In_Pop, 's_AMPA', record = 0)
 st_GABA_I = StateMonitor(In_Pop, 's_GABA', record = 0)
 st_AMPA_cor_I = StateMonitor(In_Pop, 's_AMPA_cor', record = 0)
 
-Py_monitor = StateMonitor(Py_Pop, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'v', 'v_pi', 'I_tot'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
-In_monitor = StateMonitor(In_Pop, ['v', 'v_ip', 'v_ii', 'I_tot'], record = True)
-B_monitor = StateMonitor(B_Pop, ['v', 'I_tot'], record = True)
+Py_monitor = StateMonitor(Py_Pop, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'v', 'v_pi', 'I_tot', 'v_pb'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
+In_monitor = StateMonitor(In_Pop, ['v', 'v_ip', 'I_tot'], record = True)
+B_monitor = StateMonitor(B_Pop, ['v', 'I_tot', 'v_bp', 'v_bi'], record = True)
 
 #%% simulate  -----------------------------------------------------------------
 net = Network(collect())
@@ -461,6 +477,8 @@ if shape(r_B_rate) != shape(r_B.t):
 # Calculate mean PSP (NMM states)
 v_pi = mean(Py_monitor.v_pi, 0)
 v_ip = mean(In_monitor.v_ip, 0)
+
+v_xx = mean(B_monitor.v_bi, 0)
 
 # Generate LFP
 # current based
@@ -548,22 +566,22 @@ if PLOT_EXTRA:
     axs[0].set_ylabel('IPSP (mV)')
     axs[0].plot(T*1000, np.transpose(v_pi)*1000)
     
-    axs[1].set_title('Inhibitory population (v_ip)')
+    axs[1].set_title('Inhibitory population (v_xx)')
     axs[1].set_xlabel('Time (ms)')
-    axs[1].set_ylabel('EPSP (mV)')
-    axs[1].plot(T*1000, np.transpose(v_ip)*1000)
+    axs[1].set_ylabel('PSP (mV)')
+    axs[1].plot(T*1000, np.transpose(v_xx)*1000)
 
-    axs[0].set_title('LFP (from voltage)')
-    axs[0].set_xlabel('Time (ms)')
-    axs[0].set_ylabel('mV')
-    axs[0].plot(T*1000, np.transpose(lfp_v), label='LFP_V')
-    axs[0].legend()
+    # axs[0].set_title('LFP (from voltage)')
+    # axs[0].set_xlabel('Time (ms)')
+    # axs[0].set_ylabel('mV')
+    # axs[0].plot(T*1000, np.transpose(lfp_v), label='LFP_V')
+    # axs[0].legend()
 
-    axs[1].set_title('LFP (from current)')
-    axs[1].set_xlabel('Time (ms)')
-    axs[1].set_ylabel('mV')
-    axs[1].plot(T*1000, np.transpose(lfp_), label='LFP_I')
-    axs[1].legend()
+    # axs[1].set_title('LFP (from current)')
+    # axs[1].set_xlabel('Time (ms)')
+    # axs[1].set_ylabel('mV')
+    # axs[1].plot(T*1000, np.transpose(lfp_), label='LFP_I')
+    # axs[1].legend()
     
     # Third figure. Membrane potential
     f3, axs = plt.subplots(2, 1, sharex=True, figsize=(10, 6.25)) # New figure with two subplots

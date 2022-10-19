@@ -43,12 +43,14 @@ def set_params(type='pyramidal', source='brunel'):
         tau_m = 20 * ms # Membrane time constant
 
         tau_GABA_s = 5.25 * ms
+        tau_GABAb_s = 105 * ms
         tau_AMPA_s = 2.4 * ms
         tau_AMPA_s_ext = 2.4 * ms
         tau_l = 1 * ms # Latency
 
         # Synaptic efficacies
         j_GABA  = 37 * pA # 37 * pA <- (normal parameters) # 18.3 * pA <- corresponds to alpha_i=0.26 # (default = 37 | seizure = j(alpha=-0.3) = 21.0666) 
+        j_GABAb  = 0 * pA
         j_AMPA  = -73.5 * pA
         j_AMPA_ext = -1.375 * pA
         j_AMPA_tha = -13.75 * pA
@@ -70,12 +72,14 @@ def set_params(type='pyramidal', source='brunel'):
         tau_m = C/g_leak #10 * ms # Membrane time constant
 
         tau_GABA_s = 5.25 * ms
+        tau_GABAb_s = 0 * ms
         tau_AMPA_s = 1.2 * ms
         tau_AMPA_s_ext = 1.2*ms 
         tau_l = 1 * ms # Latency
 
         # Synaptic efficacies
         j_GABA  = 45.24 * pA 
+        j_GABAb  = 0 * pA
         j_AMPA  = -165 * pA 
         j_AMPA_ext = -1.9 * pA
         j_AMPA_tha = -19 * pA
@@ -95,12 +99,14 @@ def set_params(type='pyramidal', source='brunel'):
         tau_m = C/g_leak #10 * ms # Membrane time constant
 
         tau_GABA_s = 5.25 * ms
+        tau_GABAb_s = 0 * ms
         tau_AMPA_s = 1.2 * ms
         tau_AMPA_s_ext = 1.2*ms 
         tau_l = 1 * ms # Latency
 
         # Synaptic efficacies
         j_GABA  = 45.24 * pA 
+        j_GABAb  = 0 * pA
         j_AMPA  = -165 * pA
         j_AMPA_ext = -1.9 * pA
         j_AMPA_tha = -19 * pA
@@ -118,18 +124,18 @@ def set_params(type='pyramidal', source='brunel'):
         print('allen parameters loaded')
     elif source == 'three_pop':
         #%% Three population parameters
-        if type == 'pyramidal':
-            j_GABA  = 14.8 * pA
-            j_AMPA  = -13.8 * pA
-            # j_AMPA_tha  = -16.875 * pA
+        if type == 'pyramidal':            
+            j_GABA  = 18.5 * pA
+            j_GABAb = 0.925 * pA
+            j_AMPA  = -147 * pA
             
-        elif type == 'inhibitory':    
-            j_AMPA  = -20 * pA
+        elif type == 'inhibitory':   
+            j_AMPA  = -41.25 * pA
             j_AMPA_tha = -19 * pA
             
         elif type == 'gabab':
-            j_GABA  = 35.1 * pA
-            j_AMPA  = -20 * pA
+            j_GABA  = 90.48 * pA
+            j_AMPA  = -8.25 * pA
             j_AMPA_tha = -15.2 * pA
             
             
@@ -209,10 +215,12 @@ def set_params(type='pyramidal', source='brunel'):
         "tau_rp":       tau_rp,
         "tau_m":        tau_m,
         "tau_GABA_s":   tau_GABA_s,
+        "tau_GABAb_s":   tau_GABAb_s,
         "tau_AMPA_s":   tau_AMPA_s,
         "tau_AMPA_s_ext":   tau_AMPA_s_ext,
         "tau_l":        tau_l,
         "j_GABA":       j_GABA,
+        "j_GABAb":      j_GABAb,
         "j_AMPA":       j_AMPA,
         "j_AMPA_ext":   j_AMPA_ext,
         "j_AMPA_tha":   j_AMPA_tha,
@@ -235,8 +243,9 @@ def get_equations(type = 'pyramidal'):
             dv_pe /dt = (-v_pe - ((I_AMPA_spi + I_AMPA_cor) / g_m_P)) / tau_m_P : volt (unless refractory)
             dv_pi /dt = (-v_pi - ( I_GABA_rec               / g_m_P)) / tau_m_P : volt (unless refractory)
             dv_pp /dt = (-v_pp - ( I_AMPA_rec               / g_m_P)) / tau_m_P : volt (unless refractory)
+            dv_pb /dt = (-v_pb - ( I_GABAb               / g_m_P)) / tau_m_P : volt (unless refractory)
         
-            I_tot = I_AMPA_cor + I_AMPA_tha + I_AMPA_rec + I_AMPA_spi + I_GABA_rec + I_injected : amp
+            I_tot = I_AMPA_cor + I_AMPA_tha + I_AMPA_rec + I_AMPA_spi + I_GABAb + I_GABA_rec + I_injected : amp
             
             I_AMPA_cor = j_AMPA_cor_P * s_AMPA_cor : amp
             ds_AMPA_cor / dt = -s_AMPA_cor / tau_s_AMPA_P : 1    
@@ -247,8 +256,8 @@ def get_equations(type = 'pyramidal'):
             I_GABA_rec = j_GABA_P * s_GABA : amp
             ds_GABA / dt = -s_GABA / tau_s_GABA_P : 1
 
-            I_GABAb = j_GABA_P * s_GABAb : amp
-            ds_GABAb / dt = -s_GABAb / (20 * tau_s_GABA_P) : 1
+            I_GABAb = j_GABAb_P * s_GABAb: amp
+            ds_GABAb / dt = -s_GABAb / tau_s_GABAb_P : 1
             
             I_AMPA_rec = j_AMPA_rec_P * s_AMPA : amp
             ds_AMPA / dt = -s_AMPA / tau_s_AMPA_P: 1    
@@ -290,6 +299,9 @@ def get_equations(type = 'pyramidal'):
     elif type == 'gabab':
         eqs = '''
             dv / dt = (-v + V_leak - (I_tot/g_m_I)) / tau_m_I : volt (unless refractory)
+
+            dv_bi /dt = (-v_bi -(I_GABA / g_m_I)) / tau_m_I : volt (unless refractory)
+            dv_bp /dt = (-v_bp -(I_AMPA / g_m_I)) / tau_m_I : volt (unless refractory)
             
             I_tot = I_AMPA + I_GABA + I_AMPA_tha + I_injected_I: amp
             

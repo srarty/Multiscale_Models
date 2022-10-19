@@ -55,7 +55,7 @@ data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_79.mat'; % i
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_65.mat'; % impulse response (500 pA), j_pi = 21.0666, alpha_i = -0.3
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_66.mat'; % Seizure: j_pi = 21.0666, alpha_i = -0.3 (random LIF th and t_ref)
 
-% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_71.mat'; % GABAb
+% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_76.mat'; % GABAb | u = 5
 
     if nargin > 3, PLOT = varargin{1}; else, PLOT = true; end
     if nargin > 4, data_file = varargin{2}; end

@@ -89,28 +89,32 @@ switch mode
         params.alpha_i = -0.3;
     case 'gabab'
         % Gains:
-        params.alpha_i = 0.2108;
-        params.alpha_e = 0.1362;
-        params.alpha_ri = -1.9397; % (?) hasn't been fit
-        params.alpha_re = 0.0723;
+        params.alpha_i = -0.2635; % Inhibitory -> Pyramidal
+        params.alpha_e = 0.2813;  % Pyramidal -> Inhibitory
+        params.alpha_ri = -5.002; % Inhibitory -> GABAb
+        params.alpha_re = 0.8021; % Pyramidal -> Pyramidal
+        params.alpha_b = -0.9144; % GABAb -> Pyramidal
+        % Probabilities
+        params.P_inTOin = 0.5 * params.P_inTOin;
+        params.P_inTOpy = 0.5 * params.P_inTOpy;
         % Time constants:
         params.tau_sb = 20 * params.tau_sp;
         % Nonlinearity
         % Pyramidal:
-        params.e0 =  34.34; % Maximum firing rates
-        params.gompertz.b = 0.833;
-        params.gompertz.c = 1.184;
-        params.gompertz.d = 0.1747;
+        params.e0 =  34.12; % Maximum firing rates
+        params.gompertz.b = 1.66;
+        params.gompertz.c = 1.455;
+        params.gompertz.d = 0.1912;
         % Interneurons:
-        params.e0i = 48.07; % Maximum firing rates
-        params.gompertzi.b = 2.04;
-        params.gompertzi.c = 1.607;
-        params.gompertzi.d = 0.255;
+        params.e0i = 63.07; % Maximum firing rates
+        params.gompertzi.b = 2.184;
+        params.gompertzi.c = 1.7;
+        params.gompertzi.d = 0.3183;
         % GABAb:
         params.e0b = 75; % Maximum firing rates
         params.gompertzb.b = 2.298;
-        params.gompertzb.c = 1.922;
-        params.gompertzb.d = 0.3071;
+        params.gompertzb.c = 1.893;
+        params.gompertzb.d = 0.3062;
     otherwise
         error('%s rythm not implemented, sorry!', mode);
 end

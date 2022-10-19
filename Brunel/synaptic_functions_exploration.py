@@ -27,13 +27,25 @@ from lif_model import set_params
 # save = {'epsp': Py_monitor.v1*1e3}
 # scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/inhibitory_epsp.mat', mdict=save)
 
-# RECURSIVE Pyramidal:
+# # RECURSIVE Pyramidal:
 # save = {'epsp': Py_monitor.v1*1e3}
 # scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/pyramidal_epsp.mat', mdict=save)
 
 # # RECURSIVE Interneurons:
 # save = {'ipsp': Py_monitor.v1*1e3}
 # scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/inhibitory_ipsp.mat', mdict=save)
+
+# # AMPA on gabab population:
+# save = {'epsp': Py_monitor.v1*1e3}
+# scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/gabab_epsp.mat', mdict=save)
+
+# # GABA on gabab population:
+# save = {'ipsp': Py_monitor.v1*1e3}
+# scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/gabab_ipsp.mat', mdict=save)
+
+# # GABAb on Pyramidal population:
+# save = {'ipsp': Py_monitor.v1*1e3}
+# scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/pyramidalGabab_ipsp.mat', mdict=save)
 
 # # External input -> Pyramidal:
 # save = {'epsp': Py_monitor.v1*1e3}
@@ -49,7 +61,7 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     
     source          = 'three_pop'       # 'brunel', 'allen'  or 'three_pop'
     synaptic_type   = 'GABA'        # AMPA (excitatory), GABA (inhibitory) or GABAb
-    neuron_type     = 'pyramidal'  # pyramidal, inhibitory or gabab
+    neuron_type     = 'gabab'  # pyramidal, inhibitory or gabab
     external        = False         # When AMPA, synapsis can be external or recurrent (local)
     input_spike_rate = 0            # spikes/ms/cell 
     simulation_time = 0.3 * second
@@ -107,8 +119,10 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     # connectivity time constants
     if synaptic_type == 'AMPA':
         tau_s =  params["tau_AMPA_s"]
+    elif synaptic_type == 'GABAb':
+        tau_s = 20 * params["tau_GABA_s"]             
     else:
-        tau_s =  params["tau_GABA_s"]             
+        tau_s = params["tau_GABA_s"]             
         
     
     tau_l = 0.0 * ms
