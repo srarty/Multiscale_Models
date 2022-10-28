@@ -74,6 +74,22 @@ l.EdgeColor = 'none';
 ylabel('t_{recovery} (ms)');
 xlabel('Multplier');
 
+%% Recovery time (again on its own figure)
+figure
+plot(values, tr_alpha_i,'-o', 'MarkerSize', 5);
+hold
+plot(values, tr_alpha_e,'-o', 'MarkerSize', 5);
+plot(values, tr_alpha_ri,'-o', 'MarkerSize', 5);
+plot(values, tr_alpha_re,'-o', 'MarkerSize', 5);
+plot([0.1 2], [30 30], '--k')
+box off
+grid
+l = legend({'\alpha_i', '\alpha_e', '\alpha_{ii}', '\alpha_{ee}'});
+l.Location = 'northeastoutside';
+l.EdgeColor = 'black';
+ylabel('t_{recovery} (ms)');
+xlabel('Multplier');
+
 %% ACFW * t_recovery / 6000
 figure
 plot(values, w_alpha_i .* tr_alpha_i ./ 6e3,'-o', 'MarkerSize', 2.5);

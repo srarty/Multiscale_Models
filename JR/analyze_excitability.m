@@ -9,7 +9,7 @@
 %   t_lif = a.lfp_dt:a.lfp_dt:length(a.LFP_V)*a.lfp_dt;
 %   recovery = analyze_excitability(y_lif', t_lif', 4899, -4e14)
 %
-function recovery = analyze_excitability(y,t,varargin)
+function [recovery, y_, t_] = analyze_excitability(y,t,varargin)
 
 if nargin >= 3, idx_stim = varargin{1}; else, idx_stim = 489; end
 if nargin >= 4, min_peak = varargin{2}; else, min_peak = 0.5; end

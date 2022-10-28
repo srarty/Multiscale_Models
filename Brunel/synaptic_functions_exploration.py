@@ -61,7 +61,7 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     
     source          = 'three_pop'       # 'brunel', 'allen'  or 'three_pop'
     synaptic_type   = 'GABA'        # AMPA (excitatory), GABA (inhibitory) or GABAb
-    neuron_type     = 'gabab'  # pyramidal, inhibitory or gabab
+    neuron_type     = 'pyramidal'  # pyramidal, inhibitory or gabab
     external        = False         # When AMPA, synapsis can be external or recurrent (local)
     input_spike_rate = 0            # spikes/ms/cell 
     simulation_time = 0.3 * second
@@ -141,6 +141,11 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
         else:
             j =  params["j_AMPA"]        
             alpha_weight = params["weight"]
+
+    elif synaptic_type == 'GABAb':
+        j =  params["j_GABAb"]
+        alpha_weight = params["weight"]
+
     else:
         j =  params["j_GABA"]
         alpha_weight = params["weight"]
