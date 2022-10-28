@@ -126,16 +126,16 @@ def set_params(type='pyramidal', source='brunel'):
         #%% Three population parameters
         if type == 'pyramidal':            
             j_GABA  = 18.5 * pA
-            j_GABAb = 0.925 * pA
-            j_AMPA  = -147 * pA
+            j_GABAb = 2.3125 * pA
+            j_AMPA  = -147 * pA / 2
             
         elif type == 'inhibitory':   
             j_AMPA  = -41.25 * pA
             j_AMPA_tha = -19 * pA
             
         elif type == 'gabab':
-            j_GABA  = 90.48 * pA
-            j_AMPA  = -8.25 * pA
+            j_GABA  = 4.524 * pA
+            j_AMPA  = -41.25 * pA
             j_AMPA_tha = -15.2 * pA
             
             

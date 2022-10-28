@@ -256,15 +256,3 @@ function do_plot(x,t, Vm, f_e, f_i)
     subplot(1,2,2)
     plot(x(:,1), [0; diff(x(:,1))]);
 end
-
-function out = sigmoid_io(x, e0, v0, r)
-    out = e0 * (0.5 * erf((x - v0) / (sqrt(2)*r)) + 0.5);
-end
-
-function out = gompertz_io(x, a, b, c, d)
-    out = a * exp(-b*exp(-d*(x-c)));
-end
-
-function out = gaussian_io(x, a, b, c, d)
-    out = a*exp(-((x-b)/c).^2);
-end

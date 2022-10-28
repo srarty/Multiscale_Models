@@ -9,7 +9,7 @@
 
 %% Options ----------------------------------------------------------------
 
-POPULATION = 'Py'; % 'Py' or 'In' of 'B'
+POPULATION = 'B'; % 'Py' or 'In' of 'B'
 FUNCTION = 'G'; % 'G' (Gompertz) or 'S' (Sigmoid) or 'Ga' (Gaussian) or 'B' (Bas-Jan Zandt 2014)
 
 % -------------------------------------------------------------------------
@@ -24,7 +24,6 @@ C_I = 0.2e-9;
 %% NMM sigmoid
 params = set_parameters('gabab');       % Chose params.u from a constant value in set_params
 if strcmp(POPULATION, 'Py'), max_firing_rate = params.e0; elseif strcmp(POPULATION, 'In')||strcmp(POPULATION, 'B'), max_firing_rate = params.e0i; else, error('Wrong POPULATION'); end
-% if strcmp(POPULATION, 'Py'), max_firing_rate = 10; elseif strcmp(POPULATION, 'In'), max_firing_rate = 10; else, error('Wrong POPULATION'); end
     
 x = -20:0.1:100;
 nonlinearity = nan(size(x));
@@ -72,22 +71,17 @@ for ii = 1:no_files
     L = length(LFP);
     
     if strcmp(POPULATION, 'Py')
-        try
-            membrane_potentials(ii) = 1000*Vm;
-        catch
-            membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_P;
-        end        
-        potential_integral(ii) = -(sum(I_py - I_py_tha)/C_P)/1000;
+        try membrane_potentials(ii) = 1000*v_p; catch, membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_P; end        
+        potential_integral(ii) = -(sum(I_py - I_py_tha)/C_P)/500;
         firing_rates(ii) = mean(R_py(0.2*L : 0.8*L));
         
-    elseif strcmp(POPULATION, 'In') || strcmp(POPULATION, 'B')
-        try
-            membrane_potentials(ii) = 1000*Vm_interneurons;
-        catch
-            membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_I;
-        end
-        potential_integral(ii) = -(sum(I_in - I_in_tha)/C_I)/2000;
-%         firing_rates(ii) = mean(R_in(0.2*L : 0.8*L));
+    elseif strcmp(POPULATION, 'In')
+        try membrane_potentials(ii) = 1000*v_i; catch, membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_I; end
+        potential_integral(ii) = -(sum(I_in - I_in_tha)/C_I)/1000;
+        firing_rates(ii) = mean(R_in(0.2*L : 0.8*L));
+    elseif strcmp(POPULATION, 'B')
+        try membrane_potentials(ii) = 1000*v_b; catch, membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_I; end
+        potential_integral(ii) = -(sum(I_b - I_b_tha)/C_I)/1000;
         firing_rates(ii) = mean(R_b(0.2*L : 0.8*L));
         
     else
@@ -101,9 +95,9 @@ firing_rates(isnan(firing_rates)) = 0;
 
 % Ignore higher values to find a reasonable max_firing_rate (dodgy)
 warning('Remove the following three dodgy lines')
-membrane_potentials(firing_rates > 35) = [];
-potential_integral(firing_rates > 35) = [];
-firing_rates(firing_rates > 35) = [];
+membrane_potentials(firing_rates > 30) = [];
+potential_integral(firing_rates > 30) = [];
+firing_rates(firing_rates > 30) = [];
 % membrane_potentials(firing_rates > 55) = [];
 % potential_integral(firing_rates > 55) = [];
 % firing_rates(firing_rates > 55) = [];
