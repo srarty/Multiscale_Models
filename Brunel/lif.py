@@ -55,7 +55,8 @@ PLOT = True                   # Plot results (main Figure)
 PLOT_EXTRA = True             # Plot extra things.
 PSP_FR = 0                    # Presynaptic firing rate for TEST_PSP (TEST_PSP needs to be diff to none for this to take effect)                               
 TEST_PSP = 'none'             # Testing the post synaptic potential of given synapses to a specified input firing rate. Options: 'pp', 'pi', 'ii', 'ip', 'none'. To prevent neurons spiking, make V_thr large.
-GABA_A_MULTIPLIER = 1.5       # GABA_A Agonist
+GABA_A_MULTIPLIER = 1         # GABA_A Agonist applied for the whole duration
+MIDWAY_MULTIPLIER = 2         # GABA_A Agonist applied midsimulation
 
 corriente = 0
 # Balanced-rate network (?) with input currents: Py = 500.01 pA, In = 398 pA
@@ -417,12 +418,14 @@ B_monitor = StateMonitor(B_Pop, ['v', 'I_tot'], record = True)
 #%% simulate  -----------------------------------------------------------------
 net = Network(collect())
 
+## NORMAL:
 input1.active = True
-net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+# net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
 
+## INJECTED CURRENT PULSE
 # I_injected = 0 * pA
 # I_injected_I = 0 * pA
-# net.run(0.49 * second, report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+# net.run(1.49 * second, report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
 
 # I_injected = -input_current * pA # Input current to Pyramidal population. Sets a baseline spiking rate
 # I_injected_I = -input_current_I * pA # Input current to Pyramidal population. Sets a baseline spiking rate
@@ -431,6 +434,12 @@ net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first seg
 # I_injected = 0 * pA
 # I_injected_I = 0 * pA
 # net.run(0.5 * second, report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+
+## GABA_A AGONIST
+agonist = 1
+net.run(simulation_time/2, report='stdout')
+agonist = MIDWAY_MULTIPLIER
+net.run(simulation_time/2, report='stdout')
 
 if np.size(input_spike_rate) > 1:
     input1.active = False

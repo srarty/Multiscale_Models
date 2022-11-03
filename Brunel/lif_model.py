@@ -253,7 +253,7 @@ def get_equations(type = 'pyramidal'):
             I_AMPA_tha = j_AMPA_tha_P * s_AMPA_tha : amp
             ds_AMPA_tha / dt = -s_AMPA_tha / tau_s_AMPA_P : 1
             
-            I_GABA_rec = j_GABA_P * s_GABA : amp
+            I_GABA_rec = agonist * j_GABA_P * s_GABA : amp
             ds_GABA / dt = -s_GABA / tau_s_GABA_P : 1
 
             I_GABAb = j_GABAb_P * s_GABAb: amp
@@ -305,7 +305,7 @@ def get_equations(type = 'pyramidal'):
             
             I_tot = I_AMPA + I_GABA + I_AMPA_tha + I_injected_I: amp
             
-            I_GABA = j_GABA_B * s_GABA : amp
+            I_GABA = agonist * j_GABA_B * s_GABA : amp
             ds_GABA / dt = -s_GABA / tau_s_GABA_I : 1
                         
             I_AMPA = j_AMPA_B * s_AMPA : amp
