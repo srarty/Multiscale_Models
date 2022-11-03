@@ -6,14 +6,14 @@
 % Machine learning to find ideal parameters for NMM taht match the LIF.
 % Having one NMM for each different LIF.
 function [x, y, t, f_e, f_i, params] = NMM_diff_equations_DblExp_recursive(varargin)
-    clear option option2
+    clear option
     if nargin >= 2
-        option = varargin{1};
-        value = varargin{2};
-    end
-    if nargin == 4
-        option2 = varargin{3};
-        value2 = varargin{4};
+        option = cell(1,nargin/2);
+        value = cell(1,nargin/2);
+        for i = 2:2:nargin
+            option{round(i/2)} = varargin{i-1};
+            value{round(i/2)} = varargin{i};
+        end
     end
     
     N = 1000; % Number of samples: 1 sample = 1 milisecond
@@ -31,18 +31,12 @@ function [x, y, t, f_e, f_i, params] = NMM_diff_equations_DblExp_recursive(varar
     
     % Parse inputs --------------------------------------------------------
     if exist('option','var')
-        try
-            params.(option) = params.(option)*value;
-        catch
-            error(['Couldn''t assign value: ' num2str(value) ' to the parameter: ' option]);
-        end
-    end
-    
-    if exist('option2','var')
-        try
-            params.(option2) = params.(option2)*value2;
-        catch
-            error(['Couldn''t assign value: ' num2str(value2) ' to the parameter: ' option2]);
+        for i = 1:numel(option)
+            try
+                params.(option{i}) = params.(option{i}) * value{i};
+            catch
+                error(['Couldn''t assign value: ' num2str(value{i}) ' to the parameter: ' option{i}]);
+            end
         end
     end
     % --------------------------------------------------- End input parsing

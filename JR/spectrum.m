@@ -51,11 +51,12 @@ function varargout = spectrum(x, y, t, varargin)
 %     data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_64.mat'; % step response (j_pi = 18)
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_75.mat'; % impulse response (50 pA), j_pi = 37, alpha_i = -0.5xxx
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_80.mat'; % impulse response (100 pA), j_pi = 37, alpha_i = -0.5xxx
-data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_79.mat'; % impulse response (500 pA), j_pi = 37, alpha_i = -0.5xxx
+% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_79.mat'; % impulse response (500 pA), j_pi = 37, alpha_i = -0.5xxx
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_65.mat'; % impulse response (500 pA), j_pi = 21.0666, alpha_i = -0.3
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_66.mat'; % Seizure: j_pi = 21.0666, alpha_i = -0.3 (random LIF th and t_ref)
 
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_76.mat'; % GABAb | u = 5
+data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_86.mat'; % GABAb impulse response | 500pA
 
     if nargin > 3, PLOT = varargin{1}; else, PLOT = true; end
     if nargin > 4, data_file = varargin{2}; end
@@ -132,13 +133,13 @@ function [x_nmm, x_lif, t_nmm, t_lif, v_pi, v_ip, input_spike_rate, dt] = get_da
         otherwise
             error('Wrong options (signal)');
     end
-    x_nmm = x_nmm(250:end);
-    t_nmm = t_nmm(250:end);
+    x_nmm = x_nmm(1000:end);
+    t_nmm = t_nmm(1000:end);
 
     %% LIF
     load(data_file);
     
-    trim = 2500; % Samples to remove from the beginning of the LFP_V vector
+    trim = 10000; % Samples to remove from the beginning of the LFP_V vector
     LFP_ = LFP_V(trim:end); % LFP(trim:end);
     
     if exist('lfp_dt','var'), dt = lfp_dt; else, dt = 1e-4; end

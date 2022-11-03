@@ -2,18 +2,18 @@
 % inhibitory: fast (GABA_A) and slow (GABA_B)).
 %
 function [x, y, t, f_e, f_i, params, yy] = NMM_GABAb(varargin)
-    clear option option2
+    clear option
     if nargin >= 2
-        option = varargin{1};
-        value = varargin{2};
-    end
-    if nargin == 4
-        option2 = varargin{3};
-        value2 = varargin{4};
+        option = cell(1,nargin/2);
+        value = cell(1,nargin/2);
+        for i = 2:2:nargin
+            option{round(i/2)} = varargin{i-1};
+            value{round(i/2)} = varargin{i};
+        end
     end
     
-    N = 3000; % Number of samples: 1 sample = 1 milisecond
-    u = 5;
+    N = 2000; % Number of samples: 1 sample = 1 milisecond
+    u = 0;
 
 %     params = set_parameters('seizure', u);
     params = set_parameters('gabab', u);
@@ -22,26 +22,21 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABAb(varargin)
     params.options.ADD_NOISE = 1; % External input noise (0 = no noise, 1 = noise)
     params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Any other value of CHANGE_U: U changes.
     
-    params.options.INPUT_CURRENT_PY = 1000 * 0e-12 / params.g_m_P; % 1000 for milivolts, then xe-12 A, where x is the amplitude in pA
-    params.options.INPUT_CURRENT_IN = 1000 * 0e-12 / params.g_m_I;    
-    params.options.INPUT_CURRENT_B = 1000 * 0e-12 / params.g_m_I;    
+    CURRENT = 50e-12; %50e-12;
     params.options.CURRENT_TIME = 1490:1500;
+    params.options.INPUT_CURRENT_PY = 1000 * CURRENT / params.g_m_P; % 1000 for milivolts, then xe-12 A, where x is the amplitude in pA
+    params.options.INPUT_CURRENT_IN = 1000 * CURRENT / params.g_m_I;    
+    params.options.INPUT_CURRENT_B = 1000 * CURRENT / params.g_m_I;    
     % --------------------------------------------------------- End Options
     
     % Parse inputs --------------------------------------------------------
     if exist('option','var')
-        try
-            params.(option) = params.(option) * value;
-        catch
-            error(['Couldn''t assign value: ' num2str(value) ' to the parameter: ' option]);
-        end
-    end
-    
-    if exist('option2','var')
-        try
-            params.(option2) = params.(option2) * value2;
-        catch
-            error(['Couldn''t assign value: ' num2str(value2) ' to the parameter: ' option2]);
+        for i = 1:numel(option)
+            try
+                params.(option{i}) = params.(option{i}) * value{i};
+            catch
+                error(['Couldn''t assign value: ' num2str(value{i}) ' to the parameter: ' option{i}]);
+            end
         end
     end
     % --------------------------------------------------- End input parsing
@@ -132,7 +127,7 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABAb(varargin)
     f_b = S3(x(:,13) + x(:,7) + I_b); 
     
     if nargin == 0        
-        close all
+        %close all
         do_plot(x,t,y, yy, f_e, f_i, f_b);
     end
 end

@@ -13,9 +13,10 @@
 % Beta activity increase: Nunez, page 435. , Niedermeyers and Lopes da
 % Silva 1999, 
 %
-% TODO: Check which concentration or dose corresponds to which increase in GABA_A gain
-% TODO: Plot the increase of Beta band activity, i.e. original vs after barbiturates
-% TODO: Test barbiturates instead of benzodiazepines
+% TODO: Check which concentration or dose corresponds to which increase in
+%       GABA_A gain (Rovira 1993)
+% TODO: Bar plot of Beta-band energy with different concentrations of the
+%       agonist
 
 %% Options
 % normalize = @(x) x./rms(x);
@@ -27,10 +28,10 @@ normalize = @(x) x - mean(x);
 %% NMM - Simulate
 % Simulates NMM, one with default parameters, one with augmented GABA_A like diazepam
 [~, y_d]=NMM_GABAb('alpha_i', 1);
-% [~, y_a, t]=NMM_GABAb('tau_sp',1.5, 'tau_sri', 1.5);% Barbiturate
-[~, y_a, t]=NMM_GABAb('alpha_i', 2, 'alpha_ri', 2); % Benzodiazepine
+[~, y_a, t]=NMM_GABAb('tau_sp',2, 'tau_sri', 2, 'alpha_i', 2, 'alpha_ri', 2);% Barbiturate
+% [~, y_a, t]=NMM_GABAb('alpha_i', 2, 'alpha_ri', 2); % Benzodiazepine
 
-range = 600:length(t);
+range = 1000:length(t);
 Fs = 1/diff(t(1:2));
 
 t = t(range);
@@ -41,8 +42,8 @@ y_agonist = y_a(range);
 b_default =bandpass(normalize(y_default)', [13 20], Fs);
 b_agonist =bandpass(normalize(y_agonist)', [13 20], Fs);
 
-E_default = sum(b_default.^2)/sum(y_default.^2)
-E_agonist = sum(b_agonist.^2)/sum(y_agonist.^2)
+E_default = sum(b_default.^2)/sum(y_default.^2);
+E_agonist = sum(b_agonist.^2)/sum(y_agonist.^2);
 
 %% Plot NMM
 figure;

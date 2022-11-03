@@ -19,7 +19,7 @@ close all;
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_46.mat'; % injected_in=[300]
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_0.mat'; % u=[0, 0.25, 0.75, 0.5]
 
-data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_61.mat'; % u=[0, 0.25, 0.5, 1], j_ii = 45.24, alpha_ii = -2.5 (NOTE!! I believe this recording in the LIF was computed with FIXED th and refractory period)
+% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_61.mat'; % u=[0, 0.25, 0.5, 1], j_ii = 45.24, alpha_ii = -2.5 (NOTE!! I believe this recording in the LIF was computed with FIXED th and refractory period)
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_63.mat'; % impulse response, j_ii = 45.24, alpha_ii = -2.5
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_64.mat'; % impulse response, j_pi = 18.2577, alpha_i = -0.26
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_75.mat'; % impulse response (50 pA), j_pi = 37, alpha_i = -0.5xxx
@@ -28,7 +28,7 @@ data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_61.mat'; % u
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_65.mat'; % impulse response (500 pA), j_pi = 21.0666, alpha_i = -0.3
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_66.mat'; % Seizure: j_pi = 21.0666, alpha_i = -0.3 (random LIF th and t_ref)
 
-% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_76.mat'; % Three populations | u = 5
+data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_76.mat'; % Three populations | u = 5
 
 load(data_file);
 tt = lfp_dt:lfp_dt:lfp_dt*length(v_ip);
