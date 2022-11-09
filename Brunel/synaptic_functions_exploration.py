@@ -56,11 +56,11 @@ from lif_model import set_params
 # scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/inhibitory_externalEPSP.mat', mdict=save)
 
 def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii='', PLOT=True):
-    # plt.close('all')
+    plt.close('all')
     #%% options  --------------------------------------------------------------
     
     source          = 'three_pop'       # 'brunel', 'allen'  or 'three_pop'
-    synaptic_type   = 'GABA'        # AMPA (excitatory), GABA (inhibitory) or GABAb
+    synaptic_type   = 'AMPA'        # AMPA (excitatory), GABA (inhibitory) or GABAb
     neuron_type     = 'pyramidal'  # pyramidal, inhibitory or gabab
     external        = False         # When AMPA, synapsis can be external or recurrent (local)
     input_spike_rate = 0            # spikes/ms/cell 

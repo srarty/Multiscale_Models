@@ -50,24 +50,25 @@ PARAMS_SOURCE = 'three_pop'       # 'brunel' or 'allen' or 'three_pop'
 ACTIVE_GABAb = True           # Second inhibitory (slow) population (Wendling-like model)
 GAUSSIAN_REFRACTORY = True    # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
 GAUSSIAN_THRESHOLD = True     # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
-SAVE = True                   # Save ground truth data
+SAVE = False                   # Save ground truth data
 PLOT = True                   # Plot results (main Figure)
 PLOT_EXTRA = True             # Plot extra things.
-PSP_FR = 0                    # Presynaptic firing rate for TEST_PSP (TEST_PSP needs to be diff to none for this to take effect)                               
-TEST_PSP = 'none'             # Testing the post synaptic potential of given synapses to a specified input firing rate. Options: 'pp', 'pi', 'ii', 'ip', 'none'. To prevent neurons spiking, make V_thr large.
+PSP_FR = 1                    # Presynaptic firing rate for TEST_PSP (TEST_PSP needs to be diff to none for this to take effect)                               
+TEST_PSP = 'none'             # Testing the post synaptic potential of given synapses to a specified input firing rate. Options: 'pu', 'pp', 'pi', 'ii', 'ip', 'bp', 'bi', 'pb', 'none'. To prevent neurons spiking, make V_thr large.
 GABA_A_MULTIPLIER = 1         # GABA_A Agonist applied for the whole duration
-MIDWAY_MULTIPLIER = 2         # GABA_A Agonist applied midsimulation
+MIDWAY_MULTIPLIER = 1         # GABA_A Agonist applied midsimulation
+RUNTYPE = 'normal'            # Simulation: 'normal', 'current_pulse' or 'gaba_agonist'
 
-corriente = 0
+corriente = 0#50
 # Balanced-rate network (?) with input currents: Py = 500.01 pA, In = 398 pA
 input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 
-input_spike_rate = [5]#[0, 0.25, 0.75, 0.5]#[0, 1, 3, 5] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
+input_spike_rate = [0]#[0, 0.25, 0.75, 0.5]#[0, 1, 3, 5] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
 input_spike_rate_thalamic = 1.5 # spikes/ms/cell (spontaneous activity)
 
 #%% parameters  --------------------------------------------------------------
-simulation_time = 2 * second
+simulation_time = 1 * second
 dt_ = 100 * usecond
 T = np.linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector for plots (in seconds)
    
@@ -90,8 +91,11 @@ p_II = params_py.get('p_II') # * np.sqrt(1000/N)  #0.2 #* 100/N # recurrent inhi
 
 # voltage
 V_leak = -70. * mV      # Resting membrane potential
-V_thr = -50 * mV        # Threshold
 V_reset = -59 * mV #    # Reset voltage. Equal to V_leak-> To use Burkitt's, 2006 Eq. (12)
+if TEST_PSP == 'none':
+    V_thr = -50 * mV        # Threshold
+else:
+    V_thr = 1000 * mV        # Threshold
 
 # membrane capacitance
 C_m_P = params_py.get('C')
@@ -331,12 +335,14 @@ C_B_P.active = ACTIVE_GABAb
 # Poisson input (Cortico-cortical)
 input1 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[0] * 1000/num_inputs) * Hz, increment_AMPA_ext_P)
 if np.size(input_spike_rate) > 1:
-    input2 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[1] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
-    input3 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[2] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
-    input4 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[3] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
     input1.active = False
+    input2 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[1] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
     input2.active = False
+if np.size(input_spike_rate) > 2:
+    input3 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[2] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
     input3.active = False
+if np.size(input_spike_rate) > 3:
+    input4 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[3] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
     input4.active = False
     
 # Poisson input (Cortico-cortical) input to inhibitory interneurons. Controlled by INHIBIT_INPUT
@@ -408,7 +414,7 @@ st_AMPA_I = StateMonitor(In_Pop, 's_AMPA', record = 0)
 st_GABA_I = StateMonitor(In_Pop, 's_GABA', record = 0)
 st_AMPA_cor_I = StateMonitor(In_Pop, 's_AMPA_cor', record = 0)
 
-Py_monitor = StateMonitor(Py_Pop, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'I_GABAb', 'v', 'v_pi', 'I_tot'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
+Py_monitor = StateMonitor(Py_Pop, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'I_GABAb', 'v',  'v_pi', 'I_tot', 'v_pu'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
 In_monitor = StateMonitor(In_Pop, ['v', 'v_ip', 'I_tot'], record = True)
 B_monitor = StateMonitor(B_Pop, ['v', 'I_tot'], record = True)
 
@@ -417,46 +423,52 @@ B_monitor = StateMonitor(B_Pop, ['v', 'I_tot'], record = True)
 
 #%% simulate  -----------------------------------------------------------------
 net = Network(collect())
+agonist = 1 # Default simulation should run with agonist = 1 so the GABA_A synapse is not boosted.
 
-## NORMAL:
-input1.active = True
-# net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
-
-## INJECTED CURRENT PULSE
-# I_injected = 0 * pA
-# I_injected_I = 0 * pA
-# net.run(1.49 * second, report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
-
-# I_injected = -input_current * pA # Input current to Pyramidal population. Sets a baseline spiking rate
-# I_injected_I = -input_current_I * pA # Input current to Pyramidal population. Sets a baseline spiking rate
-# net.run(0.01 * second, report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
-
-# I_injected = 0 * pA
-# I_injected_I = 0 * pA
-# net.run(0.5 * second, report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
-
-## GABA_A AGONIST
-agonist = 1
-net.run(simulation_time/2, report='stdout')
-agonist = MIDWAY_MULTIPLIER
-net.run(simulation_time/2, report='stdout')
-
-if np.size(input_spike_rate) > 1:
-    input1.active = False
-    input2.active = True
-    net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
-
-if np.size(input_spike_rate) > 2:    
-    input2.active = False
-    input3.active = True
-    net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
-       
-if np.size(input_spike_rate) > 3:
-    input3.active = False
-    input4.active = True
+if RUNTYPE == 'normal':
+    ## NORMAL:
+    input1.active = True
     net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
     
-   
+    if np.size(input_spike_rate) > 1:
+        input1.active = False
+        input2.active = True
+        net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+    
+    if np.size(input_spike_rate) > 2:    
+        input2.active = False
+        input3.active = True
+        net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+           
+    if np.size(input_spike_rate) > 3:
+        input3.active = False
+        input4.active = True
+        net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+
+elif RUNTYPE == 'current_pulse':
+    # INJECTED CURRENT PULSE
+    I_injected = 0 * pA
+    I_injected_I = 0 * pA
+    net.run(1.49 * second, report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+    
+    I_injected = -input_current * pA # Input current to Pyramidal population. Sets a baseline spiking rate
+    I_injected_I = -input_current_I * pA # Input current to Pyramidal population. Sets a baseline spiking rate
+    net.run(0.01 * second, report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+    
+    I_injected = 0 * pA
+    I_injected_I = 0 * pA
+    net.run(0.5 * second, report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+
+elif RUNTYPE == 'gaba_agonist':
+    ## GABA_A AGONIST
+    
+    net.run(simulation_time/2, report='stdout')
+    agonist = MIDWAY_MULTIPLIER
+    net.run(simulation_time/2, report='stdout')
+            
+else:
+    print(colored('The simulation did not run. RUNTYPE most be one of the three options.', 'yellow'))
+    
 #%% analysis ------------------------------------------------------------------
 # spike rates
 window_size = 10*ms#%100.1*ms # Size of the window for the smooth spike rate # 100.1 instead of 100 to avoid an annoying warning at the end of the simulation
@@ -486,8 +498,6 @@ if shape(r_B_rate) != shape(r_B.t):
 # Calculate mean PSP (NMM states)
 v_pi = mean(Py_monitor.v_pi, 0)
 v_ip = mean(In_monitor.v_ip, 0)
-
-# v_xx = mean(Py_monitor.v_pp, 0)
 
 # Generate LFP
 # current based;
@@ -564,29 +574,54 @@ if PLOT_EXTRA:
     # Second figure. PSP
     f2, axs = plt.subplots(2, 1, sharex=True, figsize=(10, 6.25)) # New figure with two subplots
     
-    # axs[0].set_title('Pyramidal population (v_pi)')
-    # axs[0].set_xlabel('Time (ms)')
-    # axs[0].set_ylabel('IPSP (mV)')
-    # axs[0].plot(T*1000, np.transpose(v_pi)*1000)
+ 
+    # Testing PSP on chosen synapses
+    if (TEST_PSP == 'pi'):
+        v_xx = mean(Py_monitor.v_pi, 0)
+    elif (TEST_PSP == 'pp'):
+        v_xx = mean(Py_monitor.v_pp, 0)
+    elif (TEST_PSP == 'ip'):
+        v_xx = mean(In_monitor.v_ip, 0)
+    elif (TEST_PSP == 'ii'):
+        v_xx = mean(In_monitor.v_ii, 0)
+    elif (TEST_PSP == 'bi'):
+        v_xx = mean(B_monitor.v_bi, 0)
+    elif (TEST_PSP == 'bp'):
+        v_xx = mean(B_monitor.v_bp, 0)
+    elif (TEST_PSP == 'pb'):
+        v_xx = mean(Py_monitor.v_pb, 0)
+    elif (TEST_PSP == 'pu'):
+        v_xx = mean(Py_monitor.v_pu, 0)
+    else:
+        v_xx = T
+ 
+    axs[0].set_xlabel('Time (ms)')
+    axs[0].set_ylabel('IPSP (mV)')
+    axs[0].plot(T*1000, np.transpose(v_xx)*1000)
+    
+    axs[1].plot( T*1000, 1000 * (-V_leak + mean(Py_monitor.v,0)),lw=0.5, label='Pyramidal')
+    axs[1].plot( T*1000, 1000 * (-V_leak + mean(In_monitor.v,0)),lw=0.5, label='GABA_A')
+    axs[1].plot( T*1000, 1000 * (-V_leak + mean(B_monitor.v,0)),lw=0.5, label='GABA_B')
+    axs[1].legend()
     
     # axs[1].set_title('Inhibitory population (v_xx)')
     # axs[1].set_xlabel('Time (ms)')
     # axs[1].set_ylabel('PSP (mV)')
     # axs[1].plot(T*1000, np.transpose(v_xx)*1000)
 
-    axs[0].set_title('LFP (from voltage)')
-    axs[0].set_xlabel('Time (ms)')
-    axs[0].set_ylabel('mV')
-    axs[0].plot(T*1000, np.transpose(lfp_v), label='LFP_V')
-    axs[0].legend()
+    # axs[0].set_title('LFP (from voltage)')
+    # axs[0].set_xlabel('Time (ms)')
+    # axs[0].set_ylabel('mV')
+    # axs[0].plot(T*1000, np.transpose(lfp_v), label='LFP_V')
+    # axs[0].legend()
 
-    axs[1].set_title('LFP (from current)')
-    axs[1].set_xlabel('Time (ms)')
-    axs[1].set_ylabel('mV')
-    axs[1].plot(T*1000, np.transpose(lfp_), label='LFP_I')
-    axs[1].legend()
+    # axs[1].set_title('LFP (from current)')
+    # axs[1].set_xlabel('Time (ms)')
+    # axs[1].set_ylabel('mV')
+    # axs[1].plot(T*1000, np.transpose(lfp_), label='LFP_I')
+    # axs[1].legend()
     
-    # Third figure. Membrane potential
+    # # Third figure. Membrane potential
     # f3, axs = plt.subplots(2, 1, sharex=True, figsize=(10, 6.25)) # New figure with two subplots
     
     # axs[0].set_title('Pyramidal Vm (selected cells)')
@@ -600,7 +635,7 @@ if PLOT_EXTRA:
     # axs[1].plot(T*1000, np.transpose(In_monitor.v[0:5])*1e3, lw=0.5, c=c_inter)
     
     # f3.tight_layout()
-    
+   
     # f4, axs = plt.subplots(1, 1, figsize=(6,6))
     # axs.plot(np.transpose(v_pi) * 1000, np.transpose(v_ip) * 1000)
     # axs.set_xlabel('x1 = V_pi')

@@ -1,6 +1,5 @@
 % Generates figure:  Excitability vs GABA_A agonist
 %
-% TODO: Vary the gains to see trend
 
 values = 0.5:0.1:2.5;
 recovery_times = zeros(3, length(values));

@@ -4,6 +4,7 @@
 %
 % For LIF data, use:
 %   data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_86.mat'; % 500pA current pulse, u=0
+%   data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_89.mat'; % 50pA current pulse, u=0
 %   a = load(data_file)
 %   y_lif = a.LFP_V;
 %   t_lif = a.lfp_dt:a.lfp_dt:length(a.LFP_V)*a.lfp_dt;
@@ -21,7 +22,7 @@ y = y(trim:end);
 idx_stim = idx_stim - trim;
 
 % Normalize signal
-y_ = -y/(max(-y));
+y_ = -y/abs(max(-y));
 
 % Find peak. The time between idx_stim and the peak (plus 20 ms) will be 
 % the approximate recovery time given that the decay time constant from 
