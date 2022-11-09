@@ -1,7 +1,7 @@
 % NMM_GABAb.m It is the NMM with 3 populations (1 pyramidal and 2
 % inhibitory: fast (GABA_A) and slow (GABA_B)).
 %
-function [x, y, t, f_e, f_i, params, yy] = NMM_GABAb(varargin)
+function [x, y, t, f_e, f_i, f_b, params, yy] = NMM_GABAb(varargin)
     clear option
     if nargin >= 2
         option = cell(1,nargin/2);
@@ -17,12 +17,14 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABAb(varargin)
 
 %     params = set_parameters('seizure', u);
     params = set_parameters('gabab', u);
+    params.time = N * params.dt;
     
     % Options  ------------------------------------------------------------
     params.options.ADD_NOISE = 1; % External input noise (0 = no noise, 1 = noise)
     params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Any other value of CHANGE_U: U changes.
+    params.options.CHANGE_AGONIST = 0; % 0: U doesn't change during simulation. Any other value of CHANGE_U: U changes.
     
-    CURRENT = 50e-12; %50e-12;
+    CURRENT = 0e-12; %50e-12;
     params.options.CURRENT_TIME = 1490:1500;
     params.options.INPUT_CURRENT_PY = 1000 * CURRENT / params.g_m_P; % 1000 for milivolts, then xe-12 A, where x is the amplitude in pA
     params.options.INPUT_CURRENT_IN = 1000 * CURRENT / params.g_m_I;    
@@ -73,9 +75,6 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABAb(varargin)
     alpha_u = params.alpha_u; 
     alpha_b = params.alpha_b; 
     alpha_eb = params.alpha_eb; 
-
-    % Steady state
-%     eq =   [-5.7; 0; 1.53; 0; 1.57; 0; -0.2; 0; 0; 0; -4.42; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0];
         
     eq =zeros(21,1);
         
@@ -118,7 +117,7 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABAb(varargin)
     yy = zeros(size(y));
     for i = 1:size(x,1)
         y(i) = x(i,1) + x(i,5) + x(i,9) + x(i,11) + I_py(i);
-        yy(i) = (x(i,6) + x(i,10) - x(i,2) - x(i,12))/params.g_m_P; % Current based LFP
+        yy(i) = (x(i,6) + x(i,10) - x(i,2) - x(i,12) + I_py(i))/params.g_m_P; % Current based LFP
     end
     
     % Calculate firing rate
@@ -127,7 +126,7 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABAb(varargin)
     f_b = S3(x(:,13) + x(:,7) + I_b); 
     
     if nargin == 0        
-        %close all
+        close all
         do_plot(x,t,y, yy, f_e, f_i, f_b);
     end
 end
@@ -139,12 +138,17 @@ function dx = ode(t,x,params,dt, S1, S2, S3)
     % Following lines are meant to change the input mid simulation, comment
     % them to run it with constant input.
     if isfield(params,'options') & isfield(params.options,'CHANGE_U') & params.options.CHANGE_U
-        if t >= 0.75
+        if t >= 3*params.time/4
+            u = 5;
+        elseif t >= 2*params.time/4
+            u = 5;
+        elseif t >= 1*params.time/4
             u = 1;
-        elseif t >= 0.5
-            u = 0.5;
-        elseif t >= 0.25
-            u = 0.25;
+        end
+    elseif isfield(params,'options') & isfield(params.options,'CHANGE_AGONIST') & params.options.CHANGE_AGONIST
+        if t >= 1
+            x(15) = 2 * params.alpha_i;
+            x(18) = 2 * params.alpha_ri;
         end
     end
     
@@ -167,12 +171,12 @@ function dx = ode(t,x,params,dt, S1, S2, S3)
     
     c_constant = params.c_constant;
     c1 = 29.7217  * c_constant * params.P_inTOpy;   % Inhibitory synapses into pyramidal population
-    c2 = 29.033 * c_constant * params.P_pyTOin;     % Excitatory synapses into inhibitory population
+    c2 = 70.6482 * c_constant * params.P_pyTOin ;% Excitatory synapses into inhibitory population
     c3 = 141.1007 * c_constant * params.P_pyTOpy;   % Recursive excitation to pyramidal cells
-    c4 = 9.5339   * c_constant * params.P_inTOin;   % Recursive inhibition to inhibitory cells
-    c5 = 17.8288  * c_constant;                     % External excitatory synapses into pyramidal population
-    c6 = 170.4 * c_constant * params.P_inTOpy;      % Inhibitory synapses into pyramidal population % 166.4415
-    c7 = 70.1989 * c_constant * params.P_pyTOin;    % Excitatory to GABAb
+    c4 = 8.9828   * c_constant * params.P_inTOin;   % Recursive inhibition to inhibitory cells
+    c5 = 17.5913 ;%* 2.5;                                   % External excitatory synapses into pyramidal population
+    c6 = 151.7094 * c_constant * params.P_inTOpy;      % Inhibitory synapses into pyramidal population % 166.4415
+    c7 = 70.6482 * c_constant * params.P_pyTOin;    % Excitatory to GABAb
     
     tau_sp = params.tau_sp;
     tau_mp = params.tau_mp;
@@ -215,7 +219,7 @@ function dx = ode(t,x,params,dt, S1, S2, S3)
 	dx(8) = - x(8)/tau_sri + AmplitudeRI * S1(x(3) + INPUT_CURRENT_IN);
     % External input u->P
     dx(9) = x(10) - x(9)/tau_mrp;
-    dx(10) = - x(10)/tau_srp + AmplitudeU * (u + (params.options.ADD_NOISE * (sqrt(u).*randn(1,1))));
+    dx(10) = - x(10)/tau_srp + AmplitudeU * (u + (params.options.ADD_NOISE *(sqrt(u).*randn(1,1))));
     % GABAb -> P
     dx(11) = x(12) - x(11)/tau_mp;
     dx(12) = - x(12)/tau_sb + AmplitudeB * S3(x(13) + x(7) + INPUT_CURRENT_B);
@@ -241,10 +245,10 @@ function do_plot(x,t, Vm, LFP_I, f_e, f_i, f_b)
     xlabel('Time (s)');
     
     figure
-    plot(t, x(:,1) + x(:,5) + x(:,9) + x(:,11));
+    plot(t, x(:,1) + x(:,5) + x(:,9) + x(:,11) + 7.75);
     hold
-    plot(t, x(:,3));
-    plot(t, x(:,13) + x(:,7))
+    plot(t, x(:,3) + 13.9);
+    plot(t, x(:,13) + x(:,7) + 12.8)
     legend({'V_{mp}' 'V_{mi}' 'V_{mGABA_{b}}'});
     ylabel('mV');
     xlabel('Time (s)');
@@ -268,7 +272,7 @@ function do_plot(x,t, Vm, LFP_I, f_e, f_i, f_b)
     plot(t, f_b);
     ylabel('Spike rate (Hz)');
     xlabel('Time (s)');
-    legend({'Pyramidal', 'GABA_A', 'GABA_B'})
+    legend({'Pyramidal', 'GABA_A', 'GABA_B'}, 'Location', 'best');
     
 %     figure
 %     plot(t, x(:,9));    

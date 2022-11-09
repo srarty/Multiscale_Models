@@ -62,7 +62,7 @@ params.alpha_i = -0.5269;       %Inhibitory gain into pyramidal (Interneuron -> 
 params.alpha_e = 1.124;         % Excitatory gain into interneuron (Py -> Interneuron) (bifurcation: alpha_ei > 392.6)
 params.alpha_re = 0.4009;       % Recursive excitatory gain (bifuration: alpha_re > 4.7)
 params.alpha_ri = -2.5; %-0.9698;% Recursive inhibitory gain, -2.5 increases Py resting membrane potential
-params.alpha_u = 0.0615;        % External excitatory gain into pyramidal (U -> Py)
+params.alpha_u = 0.06152;        % External excitatory gain into pyramidal (U -> Py)
 
 % Connectivity parameters:
 params.c_constant = 1; % Connectivity constant
@@ -95,20 +95,17 @@ switch mode
         params.alpha_i = -0.2635; % Inhibitory -> Pyramidal
         params.alpha_e = 0.2813;  % Pyramidal -> Inhibitory
         params.alpha_ri = -0.2501; % Inhibitory -> GABAb
-        params.alpha_re = 0.8021/2; % Pyramidal -> Pyramidal
-        params.alpha_b = -0.1143; % GABAb -> Pyramidal
+        params.alpha_re = 0.2005; % Pyramidal -> Pyramidal
+        params.alpha_b = -0.1143; % GABAb -> Pyramidal %  Note, this is (non-intuituvely) positive during the fit, but should be negative in here.
         params.alpha_eb = 0.2813; %0.1364; % Py -> GABAb
         
         % Probabilities
+        params.c_constant = 1;
         params.P_inTOin = 0.5 * params.P_inTOin;
         params.P_inTOpy = 0.5 * params.P_inTOpy;
         
         % Time constants:
         params.tau_sb = 20 * params.tau_sp;
-        
-%         warning('remove the following 2 lines');
-%         params.tau_sp = 2 * params.tau_sp;
-%         params.tau_sri = 2 * params.tau_sri;
         
         % Nonlinearity
         % Pyramidal:

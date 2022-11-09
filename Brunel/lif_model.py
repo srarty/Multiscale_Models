@@ -27,10 +27,10 @@ def set_params(type='pyramidal', source='brunel'):
     
     #%% Default parameters
     # Connectivity
-    p_IP =  0.411
-    p_PI =  0.395
-    p_PP =  0.16
-    p_II =  0.451
+    p_IP =  0.411 #* 0.25
+    p_PI =  0.395 #* 0.25
+    p_PP =  0.16 #* 0.25
+    p_II =  0.451 #* 0.25
     
     if type == 'pyramidal':
         #%% Pyramidal. Allen
@@ -127,7 +127,7 @@ def set_params(type='pyramidal', source='brunel'):
         if type == 'pyramidal':            
             j_GABA  = 18.5 * pA
             j_GABAb = 2.3125 * pA
-            j_AMPA  = -147 * pA / 2
+            j_AMPA  = -36.75 * pA
             
         elif type == 'inhibitory':   
             j_AMPA  = -41.25 * pA
@@ -244,6 +244,7 @@ def get_equations(type = 'pyramidal'):
             dv_pi /dt = (-v_pi - ( I_GABA_rec               / g_m_P)) / tau_m_P : volt (unless refractory)
             dv_pp /dt = (-v_pp - ( I_AMPA_rec               / g_m_P)) / tau_m_P : volt (unless refractory)
             dv_pb /dt = (-v_pb - ( I_GABAb               / g_m_P)) / tau_m_P : volt (unless refractory)
+            dv_pu /dt = (-v_pu - ( I_AMPA_cor               / g_m_P)) / tau_m_P : volt (unless refractory)
         
             I_tot = I_AMPA_cor + I_AMPA_tha + I_AMPA_rec + I_AMPA_spi + I_GABAb + I_GABA_rec + I_injected : amp
             
