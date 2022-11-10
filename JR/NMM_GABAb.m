@@ -13,7 +13,7 @@ function [x, y, t, f_e, f_i, f_b, params, yy] = NMM_GABAb(varargin)
     end
     
     N = 2000; % Number of samples: 1 sample = 1 milisecond
-    u = 0;
+    u = 5;
 
 %     params = set_parameters('seizure', u);
     params = set_parameters('gabab', u);
@@ -22,7 +22,7 @@ function [x, y, t, f_e, f_i, f_b, params, yy] = NMM_GABAb(varargin)
     % Options  ------------------------------------------------------------
     params.options.ADD_NOISE = 1; % External input noise (0 = no noise, 1 = noise)
     params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Any other value of CHANGE_U: U changes.
-    params.options.CHANGE_AGONIST = 0; % 0: U doesn't change during simulation. Any other value of CHANGE_U: U changes.
+    params.options.CHANGE_AGONIST = 1; % 0: U doesn't change during simulation. Any other value of CHANGE_U: U changes.
     
     CURRENT = 0e-12; %50e-12;
     params.options.CURRENT_TIME = 1490:1500;
@@ -139,16 +139,16 @@ function dx = ode(t,x,params,dt, S1, S2, S3)
     % them to run it with constant input.
     if isfield(params,'options') & isfield(params.options,'CHANGE_U') & params.options.CHANGE_U
         if t >= 3*params.time/4
-            u = 5;
+            u = 0.75;
         elseif t >= 2*params.time/4
-            u = 5;
+            u = 0.5;
         elseif t >= 1*params.time/4
-            u = 1;
+            u = 0.25;
         end
     elseif isfield(params,'options') & isfield(params.options,'CHANGE_AGONIST') & params.options.CHANGE_AGONIST
         if t >= 1
-            x(15) = 2 * params.alpha_i;
-            x(18) = 2 * params.alpha_ri;
+            x(15) = 1.5 * params.alpha_i;
+            x(18) = 1.5 * params.alpha_ri;
         end
     end
     

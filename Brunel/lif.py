@@ -39,21 +39,21 @@ devices.device.size = []
 from lif_model import set_params, get_equations
 
 # def brunel(u=0):
-plt.close('all')
+# plt.close('all')
     
-# Options:
-RECURRENT_PYRAMIDAL = True    # Self excitation 
+#%% Options:
+RECURRENT_PYRAMIDAL = False    # Self excitation 
 RECURRENT_INHIBITORY = True   # Self inhibition
 INHIBIT_INPUT = False         # Excitatory cortical input to inhibitory population
-ACTIVE_INTERNEURONS = True    # Inhibitory population
 PARAMS_SOURCE = 'three_pop'       # 'brunel' or 'allen' or 'three_pop'
-ACTIVE_GABAb = True           # Second inhibitory (slow) population (Wendling-like model)
+ACTIVE_INTERNEURONS = False    # Inhibitory population
+ACTIVE_GABAb = False           # Second inhibitory (slow) population (Wendling-like model)
 GAUSSIAN_REFRACTORY = True    # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
 GAUSSIAN_THRESHOLD = True     # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
 SAVE = False                   # Save ground truth data
 PLOT = True                   # Plot results (main Figure)
-PLOT_EXTRA = True             # Plot extra things.
-PSP_FR = 1                    # Presynaptic firing rate for TEST_PSP (TEST_PSP needs to be diff to none for this to take effect)                               
+PLOT_EXTRA = False             # Plot extra things.
+PSP_FR = 0                    # Presynaptic firing rate for TEST_PSP (TEST_PSP needs to be diff to none for this to take effect)                               
 TEST_PSP = 'none'             # Testing the post synaptic potential of given synapses to a specified input firing rate. Options: 'pu', 'pp', 'pi', 'ii', 'ip', 'bp', 'bi', 'pb', 'none'. To prevent neurons spiking, make V_thr large.
 GABA_A_MULTIPLIER = 1         # GABA_A Agonist applied for the whole duration
 MIDWAY_MULTIPLIER = 1         # GABA_A Agonist applied midsimulation
@@ -64,8 +64,8 @@ corriente = 0#50
 input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 
-input_spike_rate = [0]#[0, 0.25, 0.75, 0.5]#[0, 1, 3, 5] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
-input_spike_rate_thalamic = 1.5 # spikes/ms/cell (spontaneous activity)
+input_spike_rate = [0]#[0, 2.5, 5, 7.5]#[0, 1, 3, 5] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
+input_spike_rate_thalamic = 2 # spikes/ms/cell (spontaneous activity)
 
 #%% parameters  --------------------------------------------------------------
 simulation_time = 1 * second
