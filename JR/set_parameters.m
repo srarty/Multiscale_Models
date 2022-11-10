@@ -95,7 +95,7 @@ switch mode
         params.alpha_i = -0.2635; % Inhibitory -> Pyramidal
         params.alpha_e = 0.2813;  % Pyramidal -> Inhibitory
         params.alpha_ri = -0.2501; % Inhibitory -> GABAb
-        params.alpha_re = 0.2005; % Pyramidal -> Pyramidal
+        params.alpha_re = 2*0.2005; % Pyramidal -> Pyramidal
         params.alpha_b = -0.1143; % GABAb -> Pyramidal %  Note, this is (non-intuituvely) positive during the fit, but should be negative in here.
         params.alpha_eb = 0.2813; %0.1364; % Py -> GABAb
         

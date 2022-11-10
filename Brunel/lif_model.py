@@ -129,6 +129,11 @@ def set_params(type='pyramidal', source='brunel'):
             j_GABAb = 2.3125 * pA
             j_AMPA  = -36.75 * pA
             
+            j_AMPA_ext = -112.75 * pA #1.375 * pA # Too large
+            j_AMPA_tha = -112.75 * pA # too large_
+            external_input_weight = 1.15
+            
+            
         elif type == 'inhibitory':   
             j_AMPA  = -41.25 * pA
             j_AMPA_tha = -19 * pA
