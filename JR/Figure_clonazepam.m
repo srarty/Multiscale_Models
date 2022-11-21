@@ -28,8 +28,9 @@ normalize = @(x) x - mean(x);
 %% NMM - Simulate
 % Simulates NMM, one with default parameters, one with augmented GABA_A like diazepam
 [~, y_d]=NMM_GABAb('alpha_i', 1);
-[~, y_a, t]=NMM_GABAb('tau_sp',2, 'tau_sri', 2, 'alpha_i', 2, 'alpha_ri', 2);% Barbiturate
-% [~, y_a, t]=NMM_GABAb('alpha_i', 2, 'alpha_ri', 2); % Benzodiazepine
+% [~, y_a, t]=NMM_GABAb('tau_sp',2, 'tau_sri', 2);% Barbiturate (GABAa agonist, incereases Cl- channel opening)
+% [~, y_a, t]=NMM_GABAb('alpha_i', 3); % Benzodiazepine (GABAa agonist, increases gain)
+% [~, y_a, t]=NMM_GABAb('alpha_b', 3); % Baclofen (Increases inhibition in GABAb receptors, decreases release of excitatory neurotransimtters in presynaptic neurons)
 
 range = 1000:length(t);
 Fs = 1/diff(t(1:2));
@@ -81,7 +82,7 @@ ylabel('|X|');
 xlabel('Frequency (Hz)');
 
 
-
+return
 
 %% LIF
 file_default = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_77.mat'; % 1 x j_pi

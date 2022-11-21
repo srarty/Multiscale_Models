@@ -14,8 +14,8 @@ end
 
 %% Set default parameters:
 % Maximum firing rates
-params.e0 =  27.81; % Pyramidal % 35.58;% Distribution = 27.81    | non_dsitribution = 35.58
-params.e0i = 60; % Inhibitory interneurons %55.53;% Distribution = 60    | non_dsitribution = 55.53
+params.e0 =  33.02; %27.81; % Pyramidal % 35.58;% Distribution = 27.81    | non_dsitribution = 35.58
+params.e0i = 47.67; %60; % Inhibitory interneurons %55.53;% Distribution = 60    | non_dsitribution = 55.53
 
 % Sigmoid error function params
 % Pyramidal
@@ -27,25 +27,25 @@ params.r = 3.443; % Sigmoid slope (b)
 
 % Gaussian nonlinearity params
 % Pyramidal
-params.gaussian.a = 26.2;
-params.gaussian.b = 10;
-params.gaussian.c = 6;
-params.gaussian.d = 10;
+params.gaussian.a = 1; %26.2;
+params.gaussian.b = 1.58; %10;
+params.gaussian.c = 1.459; %6;
+params.gaussian.d = 0.08991; %10;
 % Inhibitory
-params.gaussiani.a = 50;
-params.gaussiani.b = 12.37;
-params.gaussiani.c = 7.329;
-params.gaussiani.d = 12.4;
+params.gaussiani.a = 1; %50;
+params.gaussiani.b = 2.417; %12.37;
+params.gaussiani.c = 1.927; %7.329;
+params.gaussiani.d = 0.1299; %12.4;
 
 % Gompertz nonlinearity params:
 % Pyramidal:
-params.gompertz.b = 1.512; %1.445; % Distribution = 1.512    | non_dsitribution = 1.445
-params.gompertz.c = 1.508; %1.476; % Distribution = 1.508    | non_dsitribution = 1.476
-params.gompertz.d = 0.2805; %0.1557;% Distribution = 0.2805    | non_dsitribution = 0.1557
+params.gompertz.b = 1.411;% 1.58; %1.445; % Distribution = 1.512    | non_dsitribution = 1.445
+params.gompertz.c = 1.361;% 1.459; %1.476; % Distribution = 1.508    | non_dsitribution = 1.476
+params.gompertz.d = 0.1798;% 0.08991; %0.1557;% Distribution = 0.2805    | non_dsitribution = 0.1557
 % Interneurons:
-params.gompertzi.b = 2.124;%2.017;%% Distribution = 2.124    | non_dsitribution = 2.017
-params.gompertzi.c = 1.738;%1.78;%% Distribution = 1.738    | non_dsitribution = 1.78
-params.gompertzi.d = 0.1964;%0.2067;%% Distribution = 0.1964    | non_dsitribution = 0.2067
+params.gompertzi.b = 2.06;% 2.417;%2.017;%% Distribution = 2.124    | non_dsitribution = 2.017
+params.gompertzi.c = 1.578;% 1.927;%1.78;%% Distribution = 1.738    | non_dsitribution = 1.78
+params.gompertzi.d = 0.2597;% 0.1299;%0.2067;%% Distribution = 0.1964    | non_dsitribution = 0.2067
 
 % time constants
 params.tau_mi = 0.01; %0.009738; % Membrane time constant - Interneurons (decay)
@@ -92,13 +92,13 @@ switch mode
         params.alpha_i = -0.3;
     case 'gabab'
         % Gains:
-        params.alpha_i = -0.2635; % Inhibitory -> Pyramidal
-        params.alpha_e = 0.2813;  % Pyramidal -> Inhibitory
-        params.alpha_ri = -0.2501; % Inhibitory -> GABAb
-        params.alpha_re = 2*0.2005; % Pyramidal -> Pyramidal
-        params.alpha_b = -0.1143; % GABAb -> Pyramidal %  Note, this is (non-intuituvely) positive during the fit, but should be negative in here.
-        params.alpha_eb = 0.2813; %0.1364; % Py -> GABAb
-        
+        params.alpha_i = -0.2635;   % GABAa -> Pyramidal
+        params.alpha_e = 0.2813;    % Pyramidal -> GABAa
+        params.alpha_ri = -0.2501;  % GABAb -> GABAa
+        params.alpha_re = 0.2005; % Pyramidal -> Pyramidal
+        params.alpha_b = -0.1143;   % GABAb -> Pyramidal %  Note, this is (counterintuituvely) positive during the fit, but should be negative in here.
+        params.alpha_eb = 0.2813;   % Py -> GABAb
+
         % Probabilities
         params.c_constant = 1;
         params.P_inTOin = 0.5 * params.P_inTOin;
@@ -122,6 +122,57 @@ switch mode
         
         % GABAb:
         params.e0b = 64.3; % Maximum firing rates
+        params.gompertzb.b = 2.19;
+        params.gompertzb.c = 1.719;
+        params.gompertzb.d = 0.3111;
+        
+    case 'wendling'
+        % Gains:
+        params.alpha_i = -1.19; % GABAa -> Pyramidal
+        params.alpha_e = 10;  % Pyramidal -> Inhibitory
+        params.alpha_ri = -31.5; % GABAb -> GABAa
+        params.alpha_re = 5.5; % Pyramidal -> Pyramidal
+        params.alpha_b = -90; % GABAb -> Pyramidal %  Note, this is (non-intuituvely) positive during the fit, but should be negative in here.
+        params.alpha_eb = 1.19; % Py -> GABAb
+        params.alpha_u = 1.19;%0.06152;   % External excitatory gain into pyramidal (U -> Py)
+        
+        % Probabilities
+        % TODO
+        params.c_constant = 135;
+        params.P_bTOpy = 0.25; % GABAa -> Py
+        params.P_bTOa = 0.1; % GABAb -> GABAa
+        params.P_aTOpy = 0.8;% GABAa -> Py
+        params.P_pyTOb = 0.25; % Py -> GABAb
+        params.P_pyTOa = 0.3; % Py -> GABAa
+        params.P_pyTOpy = 0.8; % Py -> Py
+        
+        % Time constants:
+        params.tau_mi = 0.008457; % Membrane time constant - Interneurons (decay)
+        params.tau_mp = 0.01788;  % Decay tau (membrane time constant) - Pyramidal
+        params.tau_mrp = params.tau_mp;  % Decay tau recursive excitation
+        params.tau_mri = params.tau_mi; % Decay tau recursive inhibition
+        
+        params.tau_si = 0.01172; % Synaptic time constant - Py->In
+        params.tau_sp = 0.0011; % Rising tau Pyramidal - In -> Py
+        params.tau_srp = 0.01172; % Rising tau recursive excitation
+        params.tau_sri = 0.0229; % Rising tau recursive inhibition
+        params.tau_sb = 0.0229;
+
+        % Nonlinearity
+        % Pyramidal:
+        params.e0 =  30.8/6; % Maximum firing rates
+        params.gompertz.b = 1.618;
+        params.gompertz.c = 1.457;
+        params.gompertz.d = 0.2382;
+        
+        % Interneurons:
+        params.e0i = 49.3/6; % Maximum firing rates
+        params.gompertzi.b = 2.083;
+        params.gompertzi.c = 1.623;
+        params.gompertzi.d = 0.2538;
+        
+        % GABAb:
+        params.e0b = 64.3/6; % Maximum firing rates
         params.gompertzb.b = 2.19;
         params.gompertzb.c = 1.719;
         params.gompertzb.d = 0.3111;

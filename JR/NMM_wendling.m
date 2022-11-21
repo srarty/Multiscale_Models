@@ -1,7 +1,7 @@
 % NMM_GABAb.m It is the NMM with 3 populations (1 pyramidal and 2
 % inhibitory: fast (GABA_A) and slow (GABA_B)).
 %
-function [x, y, t, f_e, f_i, f_b, params, yy] = NMM_GABAb(varargin)
+function [x, y, t, f_e, f_i, f_b, params, yy] = NMM_wendling(varargin)
     clear option
     if nargin >= 2
         option = cell(1,nargin/2);
@@ -12,17 +12,17 @@ function [x, y, t, f_e, f_i, f_b, params, yy] = NMM_GABAb(varargin)
         end
     end
     
-    N = 2000; % Number of samples: 1 sample = 1 milisecond
-    u = 0;
+    N = 3000; % Number of samples: 1 sample = 1 milisecond
+    u = 1;
 
 %     params = set_parameters('seizure', u);
-    params = set_parameters('gabab', u);
-%     params = set_parameters('wendling', u);
+%     params = set_parameters('gabab', u);
+    params = set_parameters('wendling', u);
     params.time = N * params.dt;
     
     % Options  ------------------------------------------------------------
     params.options.ADD_NOISE = 1; % External input noise (0 = no noise, 1 = noise)
-    params.options.CHANGE_U = 1; % 0: U doesn't change during simulation. Any other value of CHANGE_U: U changes.
+    params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Any other value of CHANGE_U: U changes.
     params.options.CHANGE_AGONIST = 0; % 1.5 X GABA_A gain at mid-simulation
     
     CURRENT = 0e-12; %50e-12;
@@ -62,9 +62,10 @@ function [x, y, t, f_e, f_i, f_b, params, yy] = NMM_GABAb(varargin)
     e_0b = params.e0b;
     
     % Synaptic functions
-    S1 = @(x) gompertz_io(x, e_0i, ib, ic ,id);% sigmoid_io(x, e_0i, v0, r); %gaussian_io(x, params.gaussiani.a, params.gaussiani.b, params.gaussiani.c, params.gaussiani.d);% 
-    S2 = @(x) gompertz_io(x, e_0, b, c, d);  % sigmoid_io(x, e_0, v0, r); % gaussian_io(x, params.gaussian.a, params.gaussian.b, params.gaussian.c, params.gaussian.d);% 
-    S3 = @(x) gompertz_io(x, e_0b, bb, bc ,bd);
+    e0 = 2.5; v0 = 6; r = 0.56;
+    S1 = @(v) 2*e0./(1+ exp(r.*(v0-v))); %@(x) gompertz_io(x, e_0i, ib, ic ,id);% sigmoid_io(x, e_0i, v0, r); %gaussian_io(x, params.gaussiani.a, params.gaussiani.b, params.gaussiani.c, params.gaussiani.d);% 
+    S2 = @(v) 2*e0./(1+ exp(r.*(v0-v))); %@(x) gompertz_io(x, e_0, b, c, d);  % sigmoid_io(x, e_0, v0, r); % gaussian_io(x, params.gaussian.a, params.gaussian.b, params.gaussian.c, params.gaussian.d);% 
+    S3 = @(v) 2*e0./(1+ exp(r.*(v0-v))); %@(x) gompertz_io(x, e_0b, bb, bc ,bd);
         
     dt = params.dt;
     t = 0:dt:(N-1)*dt;
@@ -77,8 +78,8 @@ function [x, y, t, f_e, f_i, f_b, params, yy] = NMM_GABAb(varargin)
     alpha_b = params.alpha_b; 
     alpha_eb = params.alpha_eb; 
         
-    eq = zeros(21,1);
-%     eq = [-1.7257; -86.2826; 0.0008; 0.0766; 0.0009; 0.0441; -0.7756; -77.5645; 0; 0; -5.4558; -272.7924; 0.0008; 0.0766; -0.2635; 0.2813; 0.4010; -0.2501; 0.0615; -0.1143; 0.2813];
+    %eq = zeros(21,1);
+    eq = [-1.7257; -86.2826; 0.0008; 0.0766; 0.0009; 0.0441; -0.7756; -77.5645; 0; 0; -5.4558; -272.7924; 0.0008; 0.0766; -0.2635; 0.2813; 0.4010; -0.2501; 0.0615; -0.1143; 0.2813];
         
     x0 =[eq(1);
         eq(2);
@@ -140,12 +141,12 @@ function dx = ode(t,x,params,dt, S1, S2, S3)
     % Following lines are meant to change the input mid simulation, comment
     % them to run it with constant input.
     if isfield(params,'options') & isfield(params.options,'CHANGE_U') & params.options.CHANGE_U
-        if t >= 2*params.time/3
-            u = 1;
-        elseif t >= 1*params.time/3
+        if t >= 3*params.time/4
+            u = 0.75;
+        elseif t >= 2*params.time/4
             u = 0.5;
-%         elseif t >= 1*params.time/4
-%             u = 0.25;
+        elseif t >= 1*params.time/4
+            u = 0.25;
         end
     elseif isfield(params,'options') & isfield(params.options,'CHANGE_AGONIST') & params.options.CHANGE_AGONIST
         if t >= params.time/2
@@ -171,13 +172,13 @@ function dx = ode(t,x,params,dt, S1, S2, S3)
     Tau_coeff = @(m, s) 1/(m*s);% Nicola Campbell
     
     c_constant = params.c_constant;
-    c1 = 29.7217  * c_constant * params.P_inTOpy;   % Inhibitory synapses into pyramidal population
-    c2 = 70.6482 * c_constant * params.P_pyTOin ;% Excitatory synapses into inhibitory population
-    c3 = 141.1007 * c_constant * params.P_pyTOpy;   % Recursive excitation to pyramidal cells
-    c4 = 8.9828   * c_constant * params.P_inTOin;   % Recursive inhibition to inhibitory cells
-    c5 = 17.5913;% * c_constant;%* 2.5;                                   % External excitatory synapses into pyramidal population
-    c6 = 151.7094 * c_constant * params.P_inTOpy;      % Inhibitory synapses into pyramidal population % 166.4415
-    c7 = 70.6482 * c_constant * params.P_pyTOin;    % Excitatory to GABAb
+    c1 = c_constant * params.P_inTOpy;	% Inhibitory synapses into pyramidal population
+    c2 = c_constant * params.P_pyTOin;  % Excitatory synapses into inhibitory population
+    c3 = c_constant * params.P_pyTOpy;  % Recursive excitation to pyramidal cells
+    c4 = c_constant * params.P_inTOin;  % Recursive inhibition to inhibitory cells
+    c5 = c_constant;                    % External excitatory synapses into pyramidal population
+    c6 = c_constant * params.P_inTOpy;  % Inhibitory synapses into pyramidal population % 166.4415
+    c7 = c_constant * params.P_pyTOin;  % Excitatory to GABAb
     
     tau_sp = params.tau_sp;
     tau_mp = params.tau_mp;
@@ -206,13 +207,13 @@ function dx = ode(t,x,params,dt, S1, S2, S3)
     dx = zeros(21,1);
 
     % Double exponential from Nicola-Campbell (2013):
-    % GABAa -> P
+    % I->P
     dx(1) = x(2) - x(1)/tau_mp;
     dx(2) = - x(2)/tau_sp + AmplitudeI * S1(x(3) + x(7) + INPUT_CURRENT_IN);
-    % P -> GABAa
+    % P->I
     dx(3) = x(4) - x(3)/tau_mi;
     dx(4) = - x(4)/tau_si + AmplitudeE * S2(x(1) + x(5) + x(9) + x(11) + INPUT_CURRENT_PY);
-    % Recurrent Pyramidal P -> P
+    % Recurrent Pyramidal P->P
     dx(5) = x(6) - x(5)/tau_mrp;
     dx(6) = - x(6)/tau_srp + AmplitudeRE * S2(x(1) + x(5) + x(9)+ x(11) + INPUT_CURRENT_PY );
     % Recurrent GABAb -> GABAa
@@ -246,10 +247,10 @@ function do_plot(x,t, Vm, LFP_I, f_e, f_i, f_b)
     xlabel('Time (s)');
     
     figure
-    plot(t, x(:,1) + x(:,5) + x(:,9) + x(:,11));
+    plot(t, x(:,1) + x(:,5) + x(:,9) + x(:,11) + 7.75);
     hold
-    plot(t, x(:,3) + x(:,7));
-    plot(t, x(:,13))
+    plot(t, x(:,3) + x(:,7) + 13.9);
+    plot(t, x(:,13) + 12.8)
     legend({'V_{mp}' 'V_{mi}' 'V_{mGABA_{b}}'});
     ylabel('mV');
     xlabel('Time (s)');

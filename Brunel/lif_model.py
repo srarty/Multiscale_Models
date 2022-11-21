@@ -129,83 +129,24 @@ def set_params(type='pyramidal', source='brunel'):
             j_GABAb = 2.3125 * pA
             j_AMPA  = -36.75 * pA
             
-            j_AMPA_ext = -112.75 * pA #1.375 * pA # Too large
-            j_AMPA_tha = -112.75 * pA # too large_
-            external_input_weight = 1.15
-            
+            j_AMPA_ext = -11.275 * pA #1.375 * pA
+            j_AMPA_tha = -112.75 * pA #-13.75 * pA
+            external_input_weight = 1
             
         elif type == 'inhibitory':   
             j_AMPA  = -41.25 * pA
-            j_AMPA_tha = -19 * pA
+            j_AMPA_tha = -155.79 * pA
+            external_input_weight = 1 # 1.15            
             
         elif type == 'gabab':
             j_GABA  = 4.524 * pA
             j_AMPA  = -41.25 * pA
             j_AMPA_tha = -15.2 * pA
             
-            
-    elif source == 'brunel':
-        #%% Brunel parameters
-        # Connectivity
-        p_IP =  0.2
-        p_PI =  0.2
-        p_PP =  0.2
-        p_II =  0.2
-        
-        if type == 'pyramidal':
-            #%% Pyramidal. Brunel
-            g_leak = 25 * nS # Leak conductance
-            C = 0.5 * nF # Membrane capacitance
-    
-            tau_rp = 2 * ms # Absolute refractory period
-            tau_m = 20 * ms # Membrane time constant
-    
-            tau_GABA_s = 5.25 * ms
-            tau_AMPA_s = 2.4 * ms
-            tau_AMPA_s_ext = 2.4 * ms
-            tau_l = 1 * ms # Latency
-    
-            # Synaptic efficacies
-            j_GABA  = 42.5 * pA 
-            j_AMPA  = -10.5 * pA
-            j_AMPA_ext = -13.75 * pA
-            j_AMPA_tha = -13.75 * pA
-            
-            # Delta function weight (increment with each input spike)
-            # Defined experimentally with 'synaptic_functions.py'. Based on the 
-            # unitary increment of the single exponential.
-            alpha_simple_weight_AMPA = 12.5
-            alpha_simple_weight_GABA = 1
-            alpha_simple_weight_AMPA_ext = 12.5
-            single_exponential_weight = 8.2
-            
-        elif type == 'inhibitory':    
-            #%% Inhibitory. Brunel
-            g_leak = 20 * nS # Leak conductance
-            C = 0.2 * nF # Membrane capacitance
-    
-            tau_rp = 1 * ms # Absolute refractory period
-            tau_m = 10 * ms # Membrane time constant
-    
-            tau_GABA_s = 5.25 * ms
-            tau_AMPA_s = 1.2 * ms
-            tau_AMPA_s_ext = 1.2 * ms
-            tau_l = 1 * ms # Latency
-    
-            # Synaptic efficacies
-            j_GABA  = 54 * pA 
-            j_AMPA  = -14 * pA
-            j_AMPA_ext = -19 * pA
-            j_AMPA_tha = -19 * pA
-            
-            # Delta function weight (increment with each input spike)
-            alpha_simple_weight_AMPA = 13 # 2.85
-            alpha_simple_weight_GABA = 1.25 # 0.69
-            alpha_simple_weight_AMPA_ext = 23
-            single_exponential_weight = 8.2
-            
         else:
-            return 0
+            return 0        
+        
+        print('three_pop parameters loaded: %s' %(type))
         
     else:
          return 0   
@@ -245,13 +186,12 @@ def get_equations(type = 'pyramidal'):
         eqs = '''
             dv / dt = (-v + V_leak - (I_tot/g_m_P)) / tau_m_P : volt (unless refractory)
             
-            dv_pe /dt = (-v_pe - ((I_AMPA_spi + I_AMPA_cor) / g_m_P)) / tau_m_P : volt (unless refractory)
             dv_pi /dt = (-v_pi - ( I_GABA_rec               / g_m_P)) / tau_m_P : volt (unless refractory)
             dv_pp /dt = (-v_pp - ( I_AMPA_rec               / g_m_P)) / tau_m_P : volt (unless refractory)
             dv_pb /dt = (-v_pb - ( I_GABAb               / g_m_P)) / tau_m_P : volt (unless refractory)
             dv_pu /dt = (-v_pu - ( I_AMPA_cor               / g_m_P)) / tau_m_P : volt (unless refractory)
         
-            I_tot = I_AMPA_cor + I_AMPA_tha + I_AMPA_rec + I_AMPA_spi + I_GABAb + I_GABA_rec + I_injected : amp
+            I_tot = I_AMPA_cor + I_AMPA_tha + I_AMPA_rec + I_GABAb + I_GABA_rec + I_injected : amp
             
             I_AMPA_cor = j_AMPA_cor_P * s_AMPA_cor : amp
             ds_AMPA_cor / dt = -s_AMPA_cor / tau_s_AMPA_P : 1    
@@ -268,9 +208,6 @@ def get_equations(type = 'pyramidal'):
             I_AMPA_rec = j_AMPA_rec_P * s_AMPA : amp
             ds_AMPA / dt = -s_AMPA / tau_s_AMPA_P: 1    
             
-            I_AMPA_spi = j_AMPA_rec_P * s_AMPA_spi : amp
-            ds_AMPA_spi / dt = -s_AMPA_spi / tau_s_AMPA_P : 1
-            
             ref : second
             v_th : volt
         '''
@@ -283,10 +220,7 @@ def get_equations(type = 'pyramidal'):
             dv_ip /dt = (-v_ip -(I_AMPA_rec / g_m_I)) / tau_m_I : volt (unless refractory)
             dv_ii /dt = (-v_ii -(I_GABA_rec / g_m_I)) / tau_m_I : volt (unless refractory)
             
-            I_tot = I_AMPA_cor + I_AMPA_tha + I_AMPA_rec + I_GABA_rec + I_injected_I : amp
-            
-            I_AMPA_cor = j_AMPA_cor_I * s_AMPA_cor : amp
-            ds_AMPA_cor / dt = - s_AMPA_cor / tau_s_AMPA_I : 1
+            I_tot = I_AMPA_tha + I_AMPA_rec + I_GABA_rec + I_injected_I : amp
             
             I_AMPA_tha = j_AMPA_tha_I * s_AMPA_tha : amp
             ds_AMPA_tha / dt = - s_AMPA_tha / tau_s_AMPA_I_ext : 1
