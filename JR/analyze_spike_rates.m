@@ -30,7 +30,8 @@ close all;
 
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_76.mat'; % Three populations | u = 5
 
-data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_113.mat';
+% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_113.mat'; % 2 pops u=[0,0.5,1]
+data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_114.mat'; % 3 pops u=[0,0.5,1]
 
 load(data_file);
 tt = lfp_dt:lfp_dt:lfp_dt*length(v_ip);

@@ -288,6 +288,7 @@ if np.size(input_spike_rate) > 3:
 # Poisson input (Thalamic, baseline spike rate)
 C_Tha_P = PoissonInput(Py_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_P)
 C_Tha_I = PoissonInput(In_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_I)
+C_Tha_B = PoissonInput(B_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_I)
 
 # Testing PSP on chosen synapses
 ACTIVE_TEST = True

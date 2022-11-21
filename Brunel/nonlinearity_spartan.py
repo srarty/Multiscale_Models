@@ -51,8 +51,8 @@ def brunel(corriente = 0):
         
     
     #%% Options:
-    RECURRENT_PYRAMIDAL = True    # Self excitation 
-    RECURRENT_INHIBITORY = True   # Self inhibition
+    RECURRENT_PYRAMIDAL = False    # Self excitation 
+    RECURRENT_INHIBITORY = False   # Self inhibition
     INHIBIT_INPUT = False         # Excitatory cortical input to inhibitory population
     PARAMS_SOURCE = 'three_pop'       # 'brunel' or 'allen' or 'three_pop'
     ACTIVE_INTERNEURONS = True    # Inhibitory population
