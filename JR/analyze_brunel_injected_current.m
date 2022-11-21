@@ -55,8 +55,9 @@ ylabel('Spike rate');
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_connected_noTha\';
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_I_Tha_disconnected\';
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_I_Tha\';
-% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_distribution\';
-folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_three_pop\';
+
+% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_distribution\'; % 2 populations
+folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_three_pop\'; % 3 populations
 
 
 d = dir([folder '*.mat']);
@@ -127,6 +128,7 @@ if strcmp(FUNCTION, 'S') % Sigmoid
 %     ft = fittype( '2.^-(a.^-(x-b))', 'independent', 'x', 'dependent', 'y' );                          % Double exponential sigmoid
 %     ft = fittype( 'c/(1+exp(-a*(x-b)))+d', 'independent', 'x', 'dependent','y' );                     % sigmoid
     ft = fittype( 'alpha*(0.5*erf((x - v0) / (sqrt(2) * r)) + 0.5)', 'independent', 'x', 'dependent', 'y' ); % Error function | a = v0 | b = r
+%     ft = fittype( '2*e0/(1+exp(r*(v0-x)))', 'independent', 'x', 'dependent', 'y' ); % Error function | a = v0 | b = r
     if strcmp(POPULATION, 'In')
         % Error (In)
         opts = fitoptions(ft);
@@ -195,13 +197,15 @@ else
     error('Wrong POPULATION');
 end
 
-fitresult_Py = fit(membrane_potentials', firing_rates', ft, opts) % With options
+fitresult_Py = fit(membrane_potentials', firing_rates', ft, opts) % With options % Membrane potentials seem to be the right way to go
 % fitresult_Py = fit(potential_integral', firing_rates', ft, opts) % With options
 % fitresult_Py = fit(potential_integral', firing_rates', ft) % No options
     
 %% Define nonlinear function according to population
 if strcmp(FUNCTION, 'S')
     f_nonlinearity = @(x) fitresult_Py.alpha * non_linear_sigmoid(x, fitresult_Py.r, fitresult_Py.v0);
+%     f_nonlinearity = @(x) 2*fitresult_Py.e0/(1+exp(fitresult_Py.r*(fitresult_Py.v0-x)));
+    
 elseif strcmp(FUNCTION, 'G')
     f_nonlinearity = @(x) gompertz(x, fitresult_Py.a, fitresult_Py.b, fitresult_Py.c, fitresult_Py.d);
 elseif strcmp(FUNCTION, 'Ga')

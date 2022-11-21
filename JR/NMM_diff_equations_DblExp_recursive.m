@@ -16,17 +16,19 @@ function [x, y, t, f_e, f_i, params] = NMM_diff_equations_DblExp_recursive(varar
         end
     end
     
-    N = 1000; % Number of samples: 1 sample = 1 milisecond
+    N = 2000; % Number of samples: 1 sample = 1 milisecond
     u = 0;
 %     params = set_parameters('seizure', u);
     params = set_parameters('default', u);
+    params.time = N * params.dt;
     
     % Options  ------------------------------------------------------------
     params.options.ADD_NOISE = 1; % External input noise (0 = no noise, 1 = noise)
-    params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Anyother value of CHANGE_U: U changes.
+    params.options.CHANGE_U = 1; % 0: U doesn't change during simulation. Anyother value of CHANGE_U: U changes.
     
-    params.options.INPUT_CURRENT_PY = 1000 * 50e-12 / params.g_m_P; % 1000 for milivolts, then xe-12 A, where x is the amplitude in pA
-    params.options.INPUT_CURRENT_IN = 1000 * 50e-12 / params.g_m_I;    
+    CURRENT = 0e-12; %50e-12;
+    params.options.INPUT_CURRENT_PY = 1000 * CURRENT / params.g_m_P; % 1000 for milivolts, then xe-12 A, where x is the amplitude in pA
+    params.options.INPUT_CURRENT_IN = 1000 * CURRENT / params.g_m_I;    
     % --------------------------------------------------------- End Options
     
     % Parse inputs --------------------------------------------------------
@@ -137,12 +139,12 @@ function dx = ode(t,x,params,dt, S1, S2)
     % Following lines are meant to change the input mid simulation, comment
     % them to run it with constant input.
     if isfield(params,'options') & isfield(params.options,'CHANGE_U') & params.options.CHANGE_U
-        if t >= 0.75
+        if t >= 2*params.time/3
             u = 1;
-        elseif t >= 0.5
+        elseif t >= 1*params.time/3
             u = 0.5;
-        elseif t >= 0.25
-            u = 0.25;
+%         elseif t >= 1*params.time/4
+%             u = 0.25;
         end
     end
     

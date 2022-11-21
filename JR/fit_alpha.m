@@ -21,14 +21,14 @@ psp(1) = [];
 
 T = linspace(0,0.3,length(psp));
 
-
+%%
 % ft = fittype( 'b*t*exp(-t/a)', 'independent', 't', 'dependent', 'y' ); % Alpha function | a = tau_mn
 ft = fittype( 'c*(exp(-t/a)-exp(-t/b))', 'independent', 't', 'dependent', 'y');
 
 opts = fitoptions(ft);
-opts.StartPoint = [0.02 0.01001 1];
-opts.Lower = [0.02 0.0024 -10]; %[0.01 0.00525 0]; %0.0024 0];     % opts.Lower = [0.0001 0.006031 0]; 
-opts.Upper = [0.02 0.0024 10]; %0.0024 10];    % opts.Upper = [0.1 0.006031 10];    
+opts.StartPoint = [0.00537 9.552e-7 4.304];%[0.02 0.01001 1];
+opts.Lower = [0.008457 0.008457 10]; %[0.01 0.00525 0]; %0.0024 0];     % opts.Lower = [0.0001 0.006031 0]; 
+opts.Upper = [0.01172 0.008457 10]; %0.0024 10];    % opts.Upper = [0.1 0.006031 10];    
 opts.Robust = 'Off';
 fitresult = fit(T', psp', ft, opts) % With options
 % fitresult = fit(T', psp', ft) % No options
@@ -38,7 +38,7 @@ plot(fitresult)
 hold
 plot(T,psp,'b--')
 legend({'fit' 'brunel'})
-
+%%
 % %%
 % alpha = fitresult.b; % 277; %
 % tau = fitresult.a; % 0.01452; %
