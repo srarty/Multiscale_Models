@@ -44,12 +44,12 @@ from lif_model import set_params, get_equations
 #%% Options:
 RECURRENT_PYRAMIDAL = True    # Self excitation 
 RECURRENT_INHIBITORY = True   # Self inhibition
-PARAMS_SOURCE = 'three_pop'       # 'brunel' or 'allen' or 'three_pop'
+PARAMS_SOURCE = 'three_pop'       # 'brunel' or 'allen' or 'three_pop' or''
 ACTIVE_INTERNEURONS = True    # Inhibitory population
 ACTIVE_GABAb = True           # Second inhibitory (slow) population (Wendling-like model)
 INHIBIT_INPUT = False         # Excitatory cortical input to inhibitory population
-GAUSSIAN_REFRACTORY = False    # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
-GAUSSIAN_THRESHOLD = False     # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
+GAUSSIAN_REFRACTORY = True    # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
+GAUSSIAN_THRESHOLD = True     # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
 SAVE = False                   # Save ground truth data
 PLOT = True                   # Plot results (main Figure)
 PLOT_EXTRA = False             # Plot extra things.
@@ -64,7 +64,7 @@ corriente = 0#50
 input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 
-input_spike_rate = [2]#[0, 2.5, 5, 7.5]#[0, 1, 3, 5] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
+input_spike_rate = [5]#[0, 2.5, 5, 7.5]#[0, 1, 3, 5] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
 input_spike_rate_thalamic = 2 # spikes/ms/cell (spontaneous activity)
 
 #%% parameters  --------------------------------------------------------------

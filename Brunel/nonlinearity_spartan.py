@@ -56,14 +56,16 @@ def brunel(corriente = 0):
     ACTIVE_INTERNEURONS = False    # Inhibitory population
     PARAMS_SOURCE = 'three_pop'       # 'brunel' or 'allen' or 'three_pop'
     ACTIVE_GABAb = False           # Second inhibitory (slow) population (Wendling-like model)
-    GAUSSIAN_REFRACTORY = False   # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
-    GAUSSIAN_THRESHOLD = False    # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
+    GAUSSIAN_REFRACTORY = True   # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
+    GAUSSIAN_THRESHOLD = True    # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
     SAVE = True                  # Save ground truth data
     PLOT = False                   # Plot results (main Figure)
     PLOT_EXTRA = False             # Plot extra things.
     PSP_FR = 0                    # Presynaptic firing rate for TEST_PSP (TEST_PSP needs to be diff to none for this to take effect)                               
     TEST_PSP = 'none'             # Testing the post synaptic potential of given synapses to a specified input firing rate. Options: 'pp', 'pi', 'ii', 'ip', 'none'. To prevent neurons spiking, make V_thr large.
-    
+    GABA_A_MULTIPLIER = 1         # GABA_A Agonist applied for the whole duration
+    MIDWAY_MULTIPLIER = 1         # GABA_A Agonist applied midsimulation
+
     # corriente = 0
     # Balanced-rate network (?) with input currents: Py = 500.01 pA, In = 398 pA
     input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
@@ -119,6 +121,7 @@ def brunel(corriente = 0):
     tau_s_AMPA_P = params_py.get('tau_AMPA_s') # Decay time constant (From Brunel and Wang 2001)
     tau_s_AMPA_P_ext = params_py.get('tau_AMPA_s_ext') # Decay time constant (From Brunel and Wang 2001)
     tau_s_GABA_P = params_py.get('tau_GABA_s')
+    tau_s_GABAb_P = params_py.get('tau_GABAb_s')
     
     # Inhibitory Interneurons
     tau_s_AMPA_I =  params_in.get('tau_AMPA_s')  
@@ -149,9 +152,10 @@ def brunel(corriente = 0):
     j_AMPA_tha_I = params_in.get('j_AMPA_tha')
     
     # GABAergic (inhibitory)
-    j_GABA_P = params_py.get('j_GABA') * 2000/N # * np.sqrt(1000/N)
-    j_GABA_I = params_in.get('j_GABA') * 2000/N # * np.sqrt(1000/N)
-    j_GABA_B = params_b.get('j_GABA') * 2000/N # * np.sqrt(1000/N)
+    j_GABA_P = GABA_A_MULTIPLIER * params_py.get('j_GABA') * 2000/N # * np.sqrt(1000/N)
+    j_GABAb_P = params_py.get('j_GABAb') * 2000/N # * np.sqrt(1000/N)
+    j_GABA_I = GABA_A_MULTIPLIER * params_in.get('j_GABA') * 2000/N # * np.sqrt(1000/N)
+    j_GABA_B = GABA_A_MULTIPLIER * params_b.get('j_GABA') * 2000/N # * np.sqrt(1000/N)
     
     # Weight constants. Amplitude of the synaptic input
     # Pyramidal 
@@ -176,7 +180,7 @@ def brunel(corriente = 0):
     # I_injected = np.random.normal(loc=-input_current, scale=10, size=int(l))
     # I_injected[:] = I_injected
     # I_injected = TimedArray(I_injected * pA, dt=dt_)
-    
+
     #%% modeling  ----------------------------------------------------------------
     # model equations
     eqs_P = get_equations('pyramidal')
@@ -407,6 +411,8 @@ def brunel(corriente = 0):
     
     #%% simulate  -----------------------------------------------------------------
     net = Network(collect())
+    agonist = 1 # Default simulation should run with agonist = 1 so the GABA_A synapse is not boosted.
+
     
     input1.active = True
     net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
