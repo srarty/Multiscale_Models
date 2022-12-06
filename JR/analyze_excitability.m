@@ -2,6 +2,31 @@
 %
 % For NMM data, just call analyze excitability with the results of the NMM
 %
+% Syntaxis: 
+%   [t_recovery, y_, t_] = analyze_excitability(y, t);
+%   [t_recovery, y_, t_] = analyze_excitability(y, t, idx_stim, min_peak, trim, PLOT, NEG);
+% 
+%
+% Inputs:
+%   y           : input recording (LFP or Membrane potential).
+%   t           : time vector corresponding to the 'y'.
+%   idx_stim    : (optional) Index at which the stimulus pulse started, 489
+%                   is the default.
+%   min_peak    : (optional) Minimum peak height to find for 'y_' after the
+%                   stimulus pulse. The exponential decay is fitted from 
+%                   the peak found above min_peak.
+%   trim        : (optional) trims 'y' and 't' by these initial number of 
+%                   samples prior to the analysis.
+%   PLOT        : (optional) Boolean, plots the results if true (default).
+%   NEG         : (optional) Multiplies 'y' by -1 when normalizing if true.
+%   
+%
+% Outputs:
+%   t_recovery  : recovery time in ms
+%   y_          : Normalized (if NEG) and trimmed recording
+%   t_          : trimmed time vector
+%
+%
 % For LIF data, use:
 %   data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_86.mat'; % 500pA current pulse, u=0
 %   data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_89.mat'; % 50pA current pulse, u=0
@@ -16,6 +41,7 @@ if nargin >= 3, idx_stim = varargin{1}; else, idx_stim = 489; end
 if nargin >= 4, min_peak = varargin{2}; else, min_peak = 0.5; end
 if nargin >= 5, trim = varargin{3}; else, trim = 1; end
 if nargin >= 6, PLOT = varargin{4}; else, PLOT = true; end
+if nargin >= 7, NEG = varargin{5}; else, NEG = true; end
 
 % Trim the first part of the simulation
 y = y(trim:end);
@@ -67,7 +93,6 @@ end
 % Recovery time:
 dt = t(2)-t(1);
 recovery = fit_time_constant + dt*(max(idx) - idx_stim);
-% integral = sum()% TODO
 
 % If large negative number, it means (most likely) that the populations are
 % saturated after the probe

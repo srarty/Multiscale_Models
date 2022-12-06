@@ -9,7 +9,7 @@
 
 %% Options ----------------------------------------------------------------
 
-POPULATION = 'B'; % 'Py' or 'In' of 'B'
+POPULATION = 'Py'; % 'Py' or 'In' of 'B'
 FUNCTION = 'G'; % 'G' (Gompertz) or 'S' (Sigmoid) or 'Ga' (Gaussian) or 'B' (Bas-Jan Zandt 2014)
 
 % -------------------------------------------------------------------------

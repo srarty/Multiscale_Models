@@ -42,14 +42,14 @@ from lif_model import set_params, get_equations
 # plt.close('all')
     
 #%% Options:
-RECURRENT_PYRAMIDAL = False    # Self excitation 
+RECURRENT_PYRAMIDAL = True    # Self excitation 
 RECURRENT_INHIBITORY = True   # Self inhibition
-INHIBIT_INPUT = False         # Excitatory cortical input to inhibitory population
 PARAMS_SOURCE = 'three_pop'       # 'brunel' or 'allen' or 'three_pop'
-ACTIVE_INTERNEURONS = False    # Inhibitory population
-ACTIVE_GABAb = False           # Second inhibitory (slow) population (Wendling-like model)
-GAUSSIAN_REFRACTORY = True    # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
-GAUSSIAN_THRESHOLD = True     # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
+ACTIVE_INTERNEURONS = True    # Inhibitory population
+ACTIVE_GABAb = True           # Second inhibitory (slow) population (Wendling-like model)
+INHIBIT_INPUT = False         # Excitatory cortical input to inhibitory population
+GAUSSIAN_REFRACTORY = False    # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
+GAUSSIAN_THRESHOLD = False     # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
 SAVE = False                   # Save ground truth data
 PLOT = True                   # Plot results (main Figure)
 PLOT_EXTRA = False             # Plot extra things.
@@ -64,11 +64,11 @@ corriente = 0#50
 input_current = corriente  # 437.5 # 500.01       # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
 input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
 
-input_spike_rate = [0]#[0, 2.5, 5, 7.5]#[0, 1, 3, 5] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
+input_spike_rate = [2]#[0, 2.5, 5, 7.5]#[0, 1, 3, 5] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
 input_spike_rate_thalamic = 2 # spikes/ms/cell (spontaneous activity)
 
 #%% parameters  --------------------------------------------------------------
-simulation_time = 1 * second
+simulation_time = 2 * second
 dt_ = 100 * usecond
 T = np.linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector for plots (in seconds)
    

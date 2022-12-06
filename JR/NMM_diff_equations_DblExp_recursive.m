@@ -17,25 +17,35 @@ function [x, y, t, f_e, f_i, params] = NMM_diff_equations_DblExp_recursive(varar
     end
     
     N = 1000; % Number of samples: 1 sample = 1 milisecond
-    u = 0;
+    u = 1;
 %     params = set_parameters('seizure', u);
     params = set_parameters('default', u);
     
     % Options  ------------------------------------------------------------
     params.options.ADD_NOISE = 1; % External input noise (0 = no noise, 1 = noise)
     params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Anyother value of CHANGE_U: U changes.
-    
-    params.options.INPUT_CURRENT_PY = 1000 * 50e-12 / params.g_m_P; % 1000 for milivolts, then xe-12 A, where x is the amplitude in pA
-    params.options.INPUT_CURRENT_IN = 1000 * 50e-12 / params.g_m_I;    
+        
+    CURRENT = 50e-12;
+    if exist('injected_current','var'), CURRENT = injected_current; end % If 'CURRENT' was a varargin, ignore previous line
+    params.options.CURRENT_TIME = 1490:1500;
+    params.options.INPUT_CURRENT_PY = 1000 * CURRENT / params.g_m_P; % 1000 for milivolts, then xe-12 A, where x is the amplitude in pA
+    params.options.INPUT_CURRENT_IN = 1000 * CURRENT / params.g_m_I;    
     % --------------------------------------------------------- End Options
     
     % Parse inputs --------------------------------------------------------
-    if exist('option','var')
-        for i = 1:numel(option)
+    if exist('parameter','var')
+        for i = 1:numel(parameter)
             try
-                params.(option{i}) = params.(option{i}) * value{i};
-            catch
-                error(['Couldn''t assign value: ' num2str(value{i}) ' to the parameter: ' option{i}]);
+                params.(parameter{i}) = params.(parameter{i}) * value{i};
+            catch E
+                if strcmp('MATLAB:nonExistentField', E.identifier) && strcmp('CURRENT', parameter{i})
+                    % The parameter to modify is the injected current
+                    params.options.INPUT_CURRENT_PY = 1000 * value{i} / params.g_m_P;
+                    params.options.INPUT_CURRENT_IN = 1000 * value{i} / params.g_m_I;    
+                    disp('The injected current has been modified by an input argument to the function NMM_GABAb.m')
+                else
+                    error(['Couldn''t assign value: ' num2str(value{i}) ' to the parameter: ' parameter{i}]);
+                end
             end
         end
     end
@@ -113,8 +123,8 @@ function [x, y, t, f_e, f_i, params] = NMM_diff_equations_DblExp_recursive(varar
     % Create injected current vector
     I_py = zeros(size(x,1),1);
     I_in = zeros(size(x,1),1);
-    I_py(490:500) = params.options.INPUT_CURRENT_PY;
-    I_in(490:500) = params.options.INPUT_CURRENT_IN;
+    I_py(params.options.CURRENT_TIME) = params.options.INPUT_CURRENT_PY;
+    I_in(params.options.CURRENT_TIME) = params.options.INPUT_CURRENT_IN;
     
     for i = 1:size(x,1)
         y(i) = x(i,1) + x(i,9) + x(i,5) + I_py(i);
@@ -137,11 +147,11 @@ function dx = ode(t,x,params,dt, S1, S2)
     % Following lines are meant to change the input mid simulation, comment
     % them to run it with constant input.
     if isfield(params,'options') & isfield(params.options,'CHANGE_U') & params.options.CHANGE_U
-        if t >= 0.75
-            u = 1;
-        elseif t >= 0.5
+        if t >= 3*params.time/4
+            u = 0.75;
+        elseif t >= 2*params.time/4
             u = 0.5;
-        elseif t >= 0.25
+        elseif t >= 1*params.time/4
             u = 0.25;
         end
     end

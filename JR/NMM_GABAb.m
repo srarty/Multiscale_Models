@@ -2,18 +2,19 @@
 % inhibitory: fast (GABA_A) and slow (GABA_B)).
 %
 function [x, y, t, f_e, f_i, f_b, params, yy] = NMM_GABAb(varargin)
-    clear option
+    clear parameter
     if nargin >= 2
-        option = cell(1,nargin/2);
+        parameter = cell(1,nargin/2);
         value = cell(1,nargin/2);
         for i = 2:2:nargin
-            option{round(i/2)} = varargin{i-1};
+            % In case the input is a regular parameter:
+            parameter{round(i/2)} = varargin{i-1};
             value{round(i/2)} = varargin{i};
         end
     end
     
     N = 2000; % Number of samples: 1 sample = 1 milisecond
-    u = 5;
+    u = 2;
 
 %     params = set_parameters('seizure', u);
     params = set_parameters('gabab', u);
@@ -22,9 +23,10 @@ function [x, y, t, f_e, f_i, f_b, params, yy] = NMM_GABAb(varargin)
     % Options  ------------------------------------------------------------
     params.options.ADD_NOISE = 1; % External input noise (0 = no noise, 1 = noise)
     params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Any other value of CHANGE_U: U changes.
-    params.options.CHANGE_AGONIST = 1; % 0: U doesn't change during simulation. Any other value of CHANGE_U: U changes.
+    params.options.CHANGE_AGONIST = 0; % Agonist changes
     
-    CURRENT = 0e-12; %50e-12;
+    CURRENT = 0e-12; % 50
+    if exist('injected_current','var'), CURRENT = injected_current; end % If 'CURRENT' was a varargin, ignore previous line
     params.options.CURRENT_TIME = 1490:1500;
     params.options.INPUT_CURRENT_PY = 1000 * CURRENT / params.g_m_P; % 1000 for milivolts, then xe-12 A, where x is the amplitude in pA
     params.options.INPUT_CURRENT_IN = 1000 * CURRENT / params.g_m_I;    
@@ -32,12 +34,20 @@ function [x, y, t, f_e, f_i, f_b, params, yy] = NMM_GABAb(varargin)
     % --------------------------------------------------------- End Options
     
     % Parse inputs --------------------------------------------------------
-    if exist('option','var')
-        for i = 1:numel(option)
+    if exist('parameter','var')
+        for i = 1:numel(parameter)
             try
-                params.(option{i}) = params.(option{i}) * value{i};
-            catch
-                error(['Couldn''t assign value: ' num2str(value{i}) ' to the parameter: ' option{i}]);
+                params.(parameter{i}) = params.(parameter{i}) * value{i};
+            catch E
+                if strcmp('MATLAB:nonExistentField', E.identifier) && strcmp('CURRENT', parameter{i})
+                    % The parameter to modify is the injected current
+                    params.options.INPUT_CURRENT_PY = 1000 * value{i} / params.g_m_P;
+                    params.options.INPUT_CURRENT_IN = 1000 * value{i} / params.g_m_I;    
+                    params.options.INPUT_CURRENT_B = 1000 * value{i} / params.g_m_I; 
+                    disp('The injected current has been modified by an input argument to the function NMM_GABAb.m')
+                else
+                    error(['Couldn''t assign value: ' num2str(value{i}) ' to the parameter: ' parameter{i}]);
+                end
             end
         end
     end
@@ -139,11 +149,11 @@ function dx = ode(t,x,params,dt, S1, S2, S3)
     % them to run it with constant input.
     if isfield(params,'options') & isfield(params.options,'CHANGE_U') & params.options.CHANGE_U
         if t >= 3*params.time/4
-            u = 0.75;
+            u = 10;%0.75;
         elseif t >= 2*params.time/4
-            u = 0.5;
+            u = 5;%0.5;
         elseif t >= 1*params.time/4
-            u = 0.25;
+            u = 1;%0.25;
         end
     elseif isfield(params,'options') & isfield(params.options,'CHANGE_AGONIST') & params.options.CHANGE_AGONIST
         if t >= 1
