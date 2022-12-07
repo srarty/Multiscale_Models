@@ -109,10 +109,10 @@ switch mode
         
         % Nonlinearity
         % Pyramidal:
-        params.e0 =  30.8; % Maximum firing rates
-        params.gompertz.b = 1.618;
-        params.gompertz.c = 1.457;
-        params.gompertz.d = 0.2382;
+        params.e0 =  33.77; % 30.8; % Maximum firing rates
+        params.gompertz.b = 0.9328;% 1.618;
+        params.gompertz.c = 1.136;% 1.457;
+        params.gompertz.d = 0.1691;% 0.2382;
         
         % Interneurons:
         params.e0i = 49.3; % Maximum firing rates

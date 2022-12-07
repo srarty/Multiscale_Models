@@ -208,18 +208,22 @@ B_Pop.v = V_leak
 if GAUSSIAN_REFRACTORY:
     Py_Pop.ref = tau_rp_P + (3*ms * randn(N_P,))
     In_Pop.ref = tau_rp_I + (3*ms * randn(N_I,))
+    B_Pop.ref = tau_rp_I + (3*ms * randn(N_I,))
 else:
     Py_Pop.ref = tau_rp_P
     In_Pop.ref = tau_rp_I
+    B_Pop.ref = tau_rp_I
     
     
 # Thresholds
 if GAUSSIAN_THRESHOLD:
     Py_Pop.v_th = V_thr + (3*mV * randn(N_P,))
     In_Pop.v_th = V_thr + (3*mV * randn(N_I,))
+    B_Pop.v_th = V_thr + (3*mV * randn(N_I,))
 else:
     Py_Pop.v_th = V_thr
     In_Pop.v_th = V_thr
+    B_Pop.v_th = V_thr
     
     
 

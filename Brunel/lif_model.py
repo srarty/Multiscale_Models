@@ -141,7 +141,7 @@ def set_params(type='pyramidal', source='brunel'):
         elif type == 'gabab':
             j_GABA  = 4.524 * pA
             j_AMPA  = -41.25 * pA
-            j_AMPA_tha = -15.2 * pA
+            j_AMPA_tha = -19*pA#-15.2 * pA
             
             
     elif source == 'brunel':
@@ -306,8 +306,8 @@ def get_equations(type = 'pyramidal'):
         eqs = '''
             dv / dt = (-v + V_leak - (I_tot/g_m_I)) / tau_m_I : volt (unless refractory)
 
-            dv_bi /dt = (-v_bi -(I_GABA / g_m_I)) / tau_m_I : volt (unless refractory)
             dv_bp /dt = (-v_bp -(I_AMPA / g_m_I)) / tau_m_I : volt (unless refractory)
+            dv_bi /dt = (-v_bi -(I_GABA / g_m_I)) / tau_m_I : volt (unless refractory)
             
             I_tot = I_AMPA + I_GABA + I_AMPA_tha + I_injected_I: amp
             

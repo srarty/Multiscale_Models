@@ -212,18 +212,22 @@ def brunel(corriente = 0):
     if GAUSSIAN_REFRACTORY:
         Py_Pop.ref = tau_rp_P + (3*ms * randn(N_P,))
         In_Pop.ref = tau_rp_I + (3*ms * randn(N_I,))
+        B_Pop.ref = tau_rp_I + (3*ms * randn(N_I,))
     else:
         Py_Pop.ref = tau_rp_P
         In_Pop.ref = tau_rp_I
+        B_Pop.ref = tau_rp_I
         
         
     # Thresholds
     if GAUSSIAN_THRESHOLD:
         Py_Pop.v_th = V_thr + (3*mV * randn(N_P,))
         In_Pop.v_th = V_thr + (3*mV * randn(N_I,))
+        B_Pop.v_th = V_thr + (3*mV * randn(N_I,))
     else:
         Py_Pop.v_th = V_thr
         In_Pop.v_th = V_thr
+        B_Pop.v_th = V_thr
         
         
     
@@ -353,37 +357,6 @@ def brunel(corriente = 0):
     C_Tha_P = PoissonInput(Py_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_P)
     C_Tha_I = PoissonInput(In_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_I)
     C_Tha_B = PoissonInput(B_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_I)
-    
-    # Poisson population
-    # C_Cor_P = Synapses(Pop_Cor, Py_Pop, model=eqs_cor_P, on_pre=eqs_pre_cor_P, method='rk4', dt=dt_, delay=delay, name='synapses_pext')
-    # C_Cor_P.connect(p = 1)    
-    # C_Cor_I = Synapses(Pop_Cor, In_Pop, model=eqs_cor_I, on_pre=eqs_pre_cor_I, method='rk4', dt=dt_, delay=delay, name='synapses_iext')
-    # C_Cor_I.connect(p = 1)    
-    
-    
-    
-    # Testing PSP on chosen synapses
-    ACTIVE_TEST = True
-    if (TEST_PSP == 'pi'):
-        C_Test_PSP = Synapses(Pop_PSP_Test, Py_Pop, on_pre=eqs_pre_gaba_P, method='rk4', dt=dt_, delay=delay, name='synapses_pi_test')
-        connection_probability = p_IP
-    elif (TEST_PSP == 'pp'):
-        C_Test_PSP = Synapses(Pop_PSP_Test, Py_Pop, on_pre=eqs_pre_glut_P, method='rk4', dt=dt_, delay=delay, name='synapses_pp_test')
-        connection_probability = p_PP
-    elif (TEST_PSP == 'ip'):
-        C_Test_PSP = Synapses(Pop_PSP_Test, In_Pop, on_pre=eqs_pre_glut_I, method='rk4', dt=dt_, delay=delay, name='synapses_ip_test')
-        connection_probability = p_PI
-    elif (TEST_PSP == 'ii'):
-        C_Test_PSP = Synapses(Pop_PSP_Test, In_Pop, on_pre=eqs_pre_gaba_I, method='rk4', dt=dt_, delay=delay, name='synapses_ii_test')
-        connection_probability = p_II
-    else:
-        C_Test_PSP = Synapses(Pop_PSP_Test, Pop_PSP_Test, method='rk4', name='none_synapse') # This won't do anything. It's to prevent runtime errors
-        connection_probability = 1
-        ACTIVE_TEST = False
-    
-    C_Test_PSP.connect('i != j', p = connection_probability)
-    C_Test_PSP.active = ACTIVE_TEST 
-    
     
     
     #%% monitors  -----------------------------------------------------------------
