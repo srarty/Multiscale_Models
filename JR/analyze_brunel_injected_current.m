@@ -214,6 +214,7 @@ end
 fitresult{bestrmse}
 
 %% Plot goodness of fit
+clear rmse sse r2
 for i = 1:length(gof)
     rmse(i) = gof{i}.rmse;
     sse(i) = gof{i}.sse;

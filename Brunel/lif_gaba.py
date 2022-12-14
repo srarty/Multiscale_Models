@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jan 19 13:20:17 2022
+Created on 8/Dec/2022
 
 @author: Artemio Soto-Breceda [artemios]
 
 Current based
-3 populations (like JR, Spiny Stellate cells optional)
+2 populations (Pyramidal and Inhibitory 2 types of GABA receptors)
 
 References: 
     
@@ -32,11 +32,14 @@ from brian2 import *
 from scipy import signal
 from termcolor import colored  # Coloured text in the terminal
 import matplotlib.pyplot as plt
+import pyspike as spk
 prefs.codegen.target = 'numpy'  # use the Python fallback instead of C compilation
 devices.device.shape = []       # This and the following line remove an annoying warning when brian2 is imported and loaded into RAM
 devices.device.size = []
 
 from lif_model import set_params, get_equations
+import lif_model_CUBN as cubn
+import analyse_spike_trains as ast
 
 # def brunel(u=0):
 # plt.close('all')
@@ -46,13 +49,13 @@ RECURRENT_PYRAMIDAL = True    # Self excitation
 RECURRENT_INHIBITORY = True   # Self inhibition
 PARAMS_SOURCE = 'three_pop'       # 'brunel' or 'allen' or 'three_pop' or''
 ACTIVE_INTERNEURONS = True    # Inhibitory population
-ACTIVE_GABAb = True           # Second inhibitory (slow) population (Wendling-like model)
+ACTIVE_GABAb = False           # Second inhibitory (slow) population (Wendling-like model)
 INHIBIT_INPUT = False         # Excitatory cortical input to inhibitory population
 GAUSSIAN_REFRACTORY = True    # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
 GAUSSIAN_THRESHOLD = True     # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
 SAVE = False                   # Save ground truth data
 PLOT = True                   # Plot results (main Figure)
-PLOT_EXTRA = False             # Plot extra things.
+PLOT_EXTRA = True             # Plot extra things.
 PSP_FR = 0                    # Presynaptic firing rate for TEST_PSP (TEST_PSP needs to be diff to none for this to take effect)                               
 TEST_PSP = 'none'             # Testing the post synaptic potential of given synapses to a specified input firing rate. Options: 'pu', 'pp', 'pi', 'ii', 'ip', 'bp', 'bi', 'pb', 'none'. To prevent neurons spiking, make V_thr large.
 GABA_A_MULTIPLIER = 1         # GABA_A Agonist applied for the whole duration
@@ -68,7 +71,7 @@ input_spike_rate = [1]#[0, 2.5, 5, 7.5]#[0, 1, 3, 5] #[u] #[5] #  [0, 2.5, 5] # 
 input_spike_rate_thalamic = 1.5 # spikes/ms/cell (spontaneous activity)
 
 #%% parameters  --------------------------------------------------------------
-simulation_time = 1 * second
+simulation_time = 2 * second
 dt_ = 100 * usecond
 T = np.linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector for plots (in seconds)
    
@@ -76,18 +79,19 @@ T = np.linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector fo
 N = 2000 # 135 # 675
 N_P = int(N * 4)  # pyramidal neurons
 N_I = int(N * (0.5 ** ACTIVE_GABAb))    # interneurons
-N_B = int(N * 0.5)  # GABAb
+N_B = 0#int(N * 0.5)  # GABAb
 
 # set populations parameters
-params_py = set_params('pyramidal', PARAMS_SOURCE)
-params_in = set_params('inhibitory', PARAMS_SOURCE)
-params_b = set_params('gabab', PARAMS_SOURCE)
+# params_py = set_params('pyramidal', PARAMS_SOURCE)
+# params_in = set_params('inhibitory', PARAMS_SOURCE)
+params_py = cubn.set_params('pyramidal')
+params_in = cubn.set_params('inhibitory')
 
 # Probability of connection
-p_IP = params_py.get('p_IP') # * np.sqrt(1000/N) #0.2 #* 100/N # Inhibitory to Pyramidal
+p_IP = params_py.get('p_IP')/2 # * np.sqrt(1000/N) #0.2 #* 100/N # Inhibitory to Pyramidal
 p_PI = params_py.get('p_PI') # * np.sqrt(1000/N) #0.2 #* 100/N # Pyramidal to Inhibitory
 p_PP = params_py.get('p_PP') # * np.sqrt(1000/N)  #0.2 #* 100/N # recurrent excitation (pyramidal) # Generally less than PI, IP connectivity (Bryson et al., 2021)
-p_II = params_py.get('p_II') # * np.sqrt(1000/N)  #0.2 #* 100/N # recurrent inhibition
+p_II = params_py.get('p_II')/2 # * np.sqrt(1000/N)  #0.2 #* 100/N # recurrent inhibition
 
 # voltage
 V_leak = -70. * mV      # Resting membrane potential
@@ -136,7 +140,7 @@ num_inputs = 800                    # Both thalamo-cortical and cortico-cortical
 # AMPA (excitatory)
 j_AMPA_rec_P = params_py.get('j_AMPA') * 2000/N # * np.sqrt(1000/N)
 j_AMPA_rec_I = params_in.get('j_AMPA') * 2000/N # * np.sqrt(1000/N)
-j_AMPA_B = params_b.get('j_AMPA') * 2000/N # * np.sqrt(1000/N)
+# j_AMPA_B = params_b.get('j_AMPA') * 2000/N # * np.sqrt(1000/N)
     
 j_AMPA_cor_P = params_py.get('j_AMPA_ext')
 j_AMPA_cor_I = params_in.get('j_AMPA_ext')
@@ -145,21 +149,21 @@ j_AMPA_tha_P = params_py.get('j_AMPA_tha')
 j_AMPA_tha_I = params_in.get('j_AMPA_tha')
 
 # GABAergic (inhibitory)
-j_GABA_P = GABA_A_MULTIPLIER * params_py.get('j_GABA') * 2000/N # * np.sqrt(1000/N)
-j_GABAb_P = params_py.get('j_GABAb') * 2000/N # * np.sqrt(1000/N)
-j_GABA_I = GABA_A_MULTIPLIER * params_in.get('j_GABA') * 2000/N # * np.sqrt(1000/N)
-j_GABA_B = GABA_A_MULTIPLIER * params_b.get('j_GABA') * 2000/N # * np.sqrt(1000/N)
+j_GABA_P    = GABA_A_MULTIPLIER * params_py.get('j_GABA') * 2000/N # * np.sqrt(1000/N)
+j_GABAb_P   = params_py.get('j_GABAb') * 2000/N # * np.sqrt(1000/N)
+j_GABA_I    = GABA_A_MULTIPLIER * params_in.get('j_GABA') * 2000/N # * np.sqrt(1000/N)
+# j_GABA_B = GABA_A_MULTIPLIER * params_b.get('j_GABA') * 2000/N # * np.sqrt(1000/N)
 
 # Weight constants. Amplitude of the synaptic input
 # Pyramidal 
-increment_AMPA_P =  params_py.get('weight')
-increment_AMPA_ext_P = params_py.get('external_input_weight')
-increment_GABA_P = params_py.get('weight')
+increment_AMPA_P        = params_py.get('weight')
+increment_AMPA_ext_P    = params_py.get('external_input_weight')
+increment_GABA_P        = params_py.get('weight')
 
 # Inhibitory interneurons
-increment_AMPA_I = params_in.get('weight')
-increment_AMPA_ext_I = params_in.get('external_input_weight')
-increment_GABA_I = params_in.get('weight')
+increment_AMPA_I        = params_in.get('weight')
+increment_AMPA_ext_I    = params_in.get('external_input_weight')
+increment_GABA_I        = params_in.get('weight')
 
 
 # Alpha function's parameter (and double exponential) to fix the units in ds/dt
@@ -167,8 +171,8 @@ k = 1 / ms # Dimmensionless?, check Nicola and Campbell 2013
 
 
 # Injected current
-I_injected = -input_current * pA # Input current to Pyramidal population. Sets a baseline spiking rate
-I_injected_I = -input_current_I * pA # Input current to Pyramidal population. Sets a baseline spiking rate
+I_injected      = -input_current * pA # Input current to Pyramidal population. Sets a baseline spiking rate
+I_injected_I    = -input_current_I * pA # Input current to Pyramidal population. Sets a baseline spiking rate
 
 # I_injected = np.random.normal(loc=-input_current, scale=10, size=int(l))
 # I_injected[:] = I_injected
@@ -176,9 +180,9 @@ I_injected_I = -input_current_I * pA # Input current to Pyramidal population. Se
 
 #%% modeling  ----------------------------------------------------------------
 # model equations
-eqs_P = get_equations('pyramidal')
-eqs_I = get_equations('inhibitory')
-eqs_B = get_equations('gabab')
+eqs_P = cubn.get_equations('pyramidal')
+eqs_I = cubn.get_equations('inhibitory')
+eqs_B = cubn.get_equations('gabab')
 
 
 # Neuron groups
@@ -198,32 +202,32 @@ In_Pop = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='''v = V_reset
                                                                 ''', refractory='ref', method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
 In_Pop.v = V_leak
 
-B_Pop = NeuronGroup(N_I, eqs_B, threshold='v > V_thr', reset='''v = V_reset
-                                                                v_bi = V_reset-V_leak
-                                                                v_bp = V_reset-V_leak
-                                                                ''', refractory='ref', method='rk4', dt=dt_, name='GABAbPop') # Interneuron population
-B_Pop.v = V_leak
+# B_Pop = NeuronGroup(N_I, eqs_B, threshold='v > V_thr', reset='''v = V_reset
+#                                                                 v_bi = V_reset-V_leak
+#                                                                 v_bp = V_reset-V_leak
+#                                                                 ''', refractory='ref', method='rk4', dt=dt_, name='GABAbPop') # Interneuron population
+# B_Pop.v = V_leak
 
 # Refractoriness
 if GAUSSIAN_REFRACTORY:
-    Py_Pop.ref = tau_rp_P + (3*ms * randn(N_P,))
-    In_Pop.ref = tau_rp_I + (3*ms * randn(N_I,))
-    B_Pop.ref = tau_rp_I + (3*ms * randn(N_I,))
+    Py_Pop.ref  = tau_rp_P + (3*ms * randn(N_P,))
+    In_Pop.ref  = tau_rp_I + (3*ms * randn(N_I,))
+    # B_Pop.ref   = tau_rp_I + (3*ms * randn(N_I,))
 else:
-    Py_Pop.ref = tau_rp_P
-    In_Pop.ref = tau_rp_I
-    B_Pop.ref = tau_rp_I
+    Py_Pop.ref  = tau_rp_P
+    In_Pop.ref  = tau_rp_I
+    # B_Pop.ref   = tau_rp_I
     
     
 # Thresholds
 if GAUSSIAN_THRESHOLD:
     Py_Pop.v_th = V_thr + (3*mV * randn(N_P,))
     In_Pop.v_th = V_thr + (3*mV * randn(N_I,))
-    B_Pop.v_th = V_thr + (3*mV * randn(N_I,))
+    # B_Pop.v_th = V_thr + (3*mV * randn(N_I,))
 else:
     Py_Pop.v_th = V_thr
     In_Pop.v_th = V_thr
-    B_Pop.v_th = V_thr
+    # B_Pop.v_th = V_thr
     
     
 
@@ -320,20 +324,21 @@ C_I_P = Synapses(In_Pop, Py_Pop, on_pre=eqs_pre_gaba_P, method='rk4', dt=dt_, de
 C_I_P.connect(p = p_IP)    
 C_I_P.active = ACTIVE_INTERNEURONS
 
-# P to GABAb
-C_P_B = Synapses(Py_Pop, B_Pop, on_pre=eqs_pre_glut_B, method='rk4', dt=dt_, delay=delay, name='synapses_bp')
-C_P_B.connect(p = p_PI)     
-C_P_B.active = ACTIVE_GABAb
-
-# I to GABAb
-C_I_B = Synapses(In_Pop, B_Pop, on_pre=eqs_pre_gaba_B, method='rk4', dt=dt_, delay=delay, name='synapses_bi')
-C_I_B.connect(p = p_II)
-C_I_B.active = ACTIVE_GABAb
-
 # GABAb to P
-C_B_P = Synapses(B_Pop, Py_Pop, on_pre=eqs_pre_gabab_P, method='rk4', dt=dt_, delay=delay, name='synapses_pb')
+C_B_P = Synapses(In_Pop, Py_Pop, on_pre=eqs_pre_gabab_P, method='rk4', dt=dt_, delay=delay, name='synapses_pb')
 C_B_P.connect(p = p_IP)
-C_B_P.active = ACTIVE_GABAb
+C_B_P.active = ACTIVE_INTERNEURONS # ACTIVE_GABAb
+
+# # P to GABAb
+# C_P_B = Synapses(Py_Pop, B_Pop, on_pre=eqs_pre_glut_B, method='rk4', dt=dt_, delay=delay, name='synapses_bp')
+# C_P_B.connect(p = p_PI)     
+# C_P_B.active = ACTIVE_GABAb
+
+# # I to GABAb
+# C_I_B = Synapses(In_Pop, B_Pop, on_pre=eqs_pre_gaba_B, method='rk4', dt=dt_, delay=delay, name='synapses_bi')
+# C_I_B.connect(p = p_II)
+# C_I_B.active = ACTIVE_GABAb
+
 
 # External inputs
 # Poisson input (Cortico-cortical)
@@ -356,7 +361,7 @@ C_Cor_I.active = INHIBIT_INPUT # Innactive cortico-cortical -> interneuron
 # Poisson input (Thalamic, baseline spike rate)
 C_Tha_P = PoissonInput(Py_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_P)
 C_Tha_I = PoissonInput(In_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_I)
-C_Tha_B = PoissonInput(B_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_I)
+# C_Tha_B = PoissonInput(B_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_I)
 
 # Poisson population
 # C_Cor_P = Synapses(Pop_Cor, Py_Pop, model=eqs_cor_P, on_pre=eqs_pre_cor_P, method='rk4', dt=dt_, delay=delay, name='synapses_pext')
@@ -403,12 +408,12 @@ C_Test_PSP.active = ACTIVE_TEST
 N_activity_plot = 30 # How many neurons in the raster plots (too large takes longer to monitor and plot)
 sp_P = SpikeMonitor(Py_Pop[:]) #[:N_activity_plot])
 sp_I = SpikeMonitor(In_Pop[:]) #[:N_activity_plot])
-sp_B = SpikeMonitor(B_Pop[:]) #[:N_activity_plot])
+# sp_B = SpikeMonitor(B_Pop[:]) #[:N_activity_plot])
 
 
 r_P = PopulationRateMonitor(Py_Pop)#[0:N_activity_plot])
 r_I = PopulationRateMonitor(In_Pop)
-r_B = PopulationRateMonitor(B_Pop)
+# r_B = PopulationRateMonitor(B_Pop)
 
 st_AMPA_P = StateMonitor(Py_Pop, ('s_AMPA'), record = 0)
 st_GABA_P = StateMonitor(Py_Pop, 's_GABA', record = 0)
@@ -420,7 +425,7 @@ st_AMPA_cor_I = StateMonitor(In_Pop, 's_AMPA_cor', record = 0)
 
 Py_monitor = StateMonitor(Py_Pop, ['I_AMPA_cor', 'I_AMPA_rec', 'I_GABA_rec', 'I_AMPA_spi', 'I_GABAb', 'v',  'v_pi', 'I_tot'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
 In_monitor = StateMonitor(In_Pop, ['v', 'v_ip', 'I_tot'], record = True)
-B_monitor = StateMonitor(B_Pop, ['v', 'I_tot'], record = True)
+# B_monitor = StateMonitor(B_Pop, ['v', 'I_tot'], record = True)
 
 
 
@@ -487,9 +492,9 @@ if shape(r_I_rate) != shape(r_I.t):
     r_I_rate = r_I_rate[5:]
 
 
-r_B_rate = r_B.smooth_rate(window='gaussian', width=window_size)
-if shape(r_B_rate) != shape(r_B.t):
-    r_B_rate = r_B_rate[5:]
+# r_B_rate = r_B.smooth_rate(window='gaussian', width=window_size)
+# if shape(r_B_rate) != shape(r_B.t):
+#     r_B_rate = r_B_rate[5:]
 
 # r_P_rate2 = r_P.smooth_rate(window='flat', width=window_size2)
 # if shape(r_P_rate2) != shape(r_P.t):
@@ -531,7 +536,7 @@ if PLOT:
     
     axs[0].plot(sp_P.t / ms, sp_P.i + N_I + N_B, '.', markersize=2, label='Pyramidal', c=c_py)
     axs[0].plot(sp_I.t / ms, sp_I.i + N_B, '.', markersize=2, label='GABAa', c=c_inter)
-    axs[0].plot(sp_B.t / ms, sp_B.i, '.', markersize=2, label='GABAb', c=c_b)
+    # axs[0].plot(sp_B.t / ms, sp_B.i, '.', markersize=2, label='GABAb', c=c_b)
     axs[0].legend(loc=1)
             
     axs[1].set_title('Population rates, moving average')
@@ -541,7 +546,7 @@ if PLOT:
         
     axs[1].plot(r_P.t / ms, r_P_rate / Hz, label='Pyramidal', c=c_py)
     axs[1].plot(r_I.t / ms, r_I_rate / Hz, label='GABAa', c=c_inter)
-    axs[1].plot(r_B.t / ms, r_B_rate / Hz, label='GABAb', c=c_b)
+    # axs[1].plot(r_B.t / ms, r_B_rate / Hz, label='GABAb', c=c_b)
     # axs[1].plot(r_Cor.t / ms, r_Cor_rate / Hz, label='Cortico-cortical (OU)', c=c_Cor)
     # axs[1].plot(T_u / ms, u / Hz)
     axs[1].legend(loc=1)
@@ -605,7 +610,7 @@ if PLOT_EXTRA:
     
     axs[1].plot( T*1000, 1000 * (-V_leak + mean(Py_monitor.v,0)),lw=0.5, label='Pyramidal')
     axs[1].plot( T*1000, 1000 * (-V_leak + mean(In_monitor.v,0)),lw=0.5, label='GABA_A')
-    axs[1].plot( T*1000, 1000 * (-V_leak + mean(B_monitor.v,0)),lw=0.5, label='GABA_B')
+    # axs[1].plot( T*1000, 1000 * (-V_leak + mean(B_monitor.v,0)),lw=0.5, label='GABA_B')
     axs[1].legend()
     
     # axs[1].set_title('Inhibitory population (v_xx)')
@@ -647,6 +652,35 @@ if PLOT_EXTRA:
     
     plt.show()    
     
+    #%% Plot ISI distance and synchronization 
+    stp = ast.get_spike_trains(sp_P.t/second, sp_P.i) # Spike trains of Pyramidal neurons
+    sti = ast.get_spike_trains(sp_I.t/second, sp_I.i) # Spike trains of inhibitory neurons
+    
+    # merge spike trains
+    merged_p = spk.merge_spike_trains(stp)
+    merged_i = spk.merge_spike_trains(sti)
+    
+    # Define the same interval for both merged spike trains
+    if merged_p.t_end > merged_i.t_end:
+        merged_p.t_end = merged_i.t_end
+    else:
+        merged_i.t_end = merged_p.t_end
+        
+    # Get the distance between Py and In
+    d = ast.distance(merged_p, merged_i)
+    
+    # PSTH
+    f = plt.figure()
+    ast.plot_psth(stp, fig=f)
+    ast.plot_psth(sti, fig=f)
+    
+    # Spike syncrhony
+    ast.spike_si(stp, 'Py')
+    ast.spike_si(sti, 'In')
+    ast.spike_si([merged_i, merged_p])
+    
+    # Coefficient of variation
+    # TODO
     
 #%% Find Coefficient of Variation of ISI
 isi_P = np.zeros(N_activity_plot)
