@@ -15,28 +15,27 @@ import numpy as np
 from scipy import signal
 import matplotlib.pyplot as plt
 
-def main(sp_P, sp_I):
+# def main(sp_P, sp_I):
     
-    stp = get_spike_trains(sp_P.t/b2.second, sp_P.i) # Spike trains of Pyramidal neurons
-    sti = get_spike_trains(sp_I.t/b2.second, sp_I.i) # Spike trains of inhibitory neurons
+#     stp = get_spike_trains(sp_P.t/b2.second, sp_P.i) # Spike trains of Pyramidal neurons
+#     sti = get_spike_trains(sp_I.t/b2.second, sp_I.i) # Spike trains of inhibitory neurons
     
-    # merge spike trains
-    merged_p = spk.merge_spike_trains(stp)
-    merged_i = spk.merge_spike_trains(sti)
+#     # merge spike trains
+#     merged_p = spk.merge_spike_trains(stp)
+#     merged_i = spk.merge_spike_trains(sti)
     
-    # Define the same interval for both merged spike trains
-    if merged_p.t_end > merged_i.t_end:
-        merged_p.t_end = merged_i.t_end
-    else:
-        merged_i.t_end = merged_p.t_end
+#     # Define the same interval for both merged spike trains
+#     if merged_p.t_end > merged_i.t_end:
+#         merged_p.t_end = merged_i.t_end
+#     else:
+#         merged_i.t_end = merged_p.t_end
         
-    # Get the distance between Py and In
-    d = distance(merged_p, merged_i)
+#     # Get the distance between Py and In
+#     d = distance(merged_p, merged_i)
     
-    return 0  
-
+#     return 0  
   
-def get_spike_trains(t, i):
+def get_spike_trains(t, i, t_start=0):
     
     idx, frequency = np.unique(i, return_counts=True)
     t_end = max(t)
@@ -44,66 +43,81 @@ def get_spike_trains(t, i):
     
     for j in range(len(idx)):
         subset = t[i==idx[j]]
-        spike_train = spk.SpikeTrain(subset, edges=t_end, is_sorted=True)
+        # spike_train = spk.SpikeTrain(subset, edges=t_end, is_sorted=True)
+        spike_train = spk.SpikeTrain(subset, edges=(t_start, t_end), is_sorted=True)
         spike_trains.append(spike_train)    
         
     return spike_trains
             
 
-
-def distance(st1, st2):
-    spike_profile = spk.spike_profile(st1, st2)
-    x, y = spike_profile.get_plottable_data()
+# ISI distance profile
+def isi_distance(spike_trains, population='', fig='', OS='local'):
+    # Check if fig is an input
+    if not fig:
+        plt.figure()
+    else:
+        plt.figure(fig)
+        
     
-    plt.figure()
-    plt.plot(x, y, '--k')
-    print("SPIKE distance: %.8f" % spike_profile.avrg())
-    plt.show()
+    s = spk.isi_profile(spike_trains)
     
-    return spike_profile.avrg()
+    if OS=='local':
+        x, y = s.get_plottable_data()
+        plt.plot(x, y, label=population)
+        plt.title("ISI distance")
+        print("%s ISI distance: %.8f" %(population, s.avrg()))
+        plt.show()
     
+    return s.avrg()
     
-def distance_matrix(spike_trains, population=''):
-    plt.figure()
-    isi_distance = spk.isi_distance_matrix(spike_trains)
-    plt.imshow(isi_distance, interpolation='none')
-    plt.title("ISI-distance %s" %population)
-    
-    return isi_distance
-    
-    
-    
-    
-# Spike synchronization index    
-def spike_si(spike_trains, population=''):
-    plt.figure()
-    spike_sync = spk.spike_sync_matrix(spike_trains)
-    plt.imshow(spike_sync, interpolation='none')
-    plt.title("SPIKE-Sync %s" %population)
-    
-    plt.show()
-    
-    return spike_sync
-    
-
-
-
-# PSTH
-def plot_psth(spike_trains, bins=0.01, fig=""):
-    # TODO, this is weird. How does the funciton know when there is a stimulus?
-    psth = spk.psth(spike_trains, bins)
-    x, y = psth.get_plottable_data()
-    
+# Spike distance profile 
+def spike_distance(spike_trains, population='', fig='', OS='local'):
     # Check if fig is an input
     if not fig:
         plt.figure()
     else:
         plt.figure(fig)
     
-    plt.plot(x,y)
-    plt.show()
+    s = spk.spike_profile(spike_trains)
+    if OS=='local':
+        x,y = s.get_plottable_data()
+        plt.plot(x,y, label=population)
+        plt.title("SPIKE-distance")
+        print("%s SPIKE-distance: %.8f" %(population, s.avrg()))    
+        plt.show()
     
-    return x, y
+    return s.avrg()
+    
+# Spike syncrhonization
+def spike_si(spike_trains, population='', OS='local'):
+    # Spike Sync: 
+    # Computes the spike synchronization value SYNC of the given spike trains.
+    # The spike synchronization value is the computed as the total number of 
+    # coincidences divided by the total number of spikes. The multivariate
+    # SPIKE-Sync is again defined as the overall ratio of all coincidence 
+    # values divided by the total number of spikes.    
+    s = spk.spike_sync(spike_trains)
+    print("%s SPIKE-synchronization: %.8f" %(population, s))
+    
+    return s
+
+# PSTH
+def plot_psth(spike_trains, bins=0.01, fig="", OS='local'):
+    # TODO, this is weird. How does the funciton know when there is a stimulus?
+    psth = spk.psth(spike_trains, bins)
+    x, y = psth.get_plottable_data()
+    
+    if OS=='local':
+        # Check if fig is an input
+        if not fig:
+            plt.figure()
+        else:
+            plt.figure(fig)
+        
+        plt.plot(x,y)
+        plt.show()
+    
+    return x, y, psth
 
 def isi_cv(st):
     # CV(isi) = std_/mean_isi
@@ -115,11 +129,16 @@ def isi_cv(st):
     
     return cv
 
-def mean_isi_cv(spike_trains):
+def mean_isi_cv(spike_trains, ignore_zeros=True, population=''):
     cv_vect = np.zeros(len(spike_trains))
     for i in range(0,len(spike_trains)-1):
         cv_vect[i] = isi_cv(spike_trains[i])
+    
+    if ignore_zeros:
+        cv_vect = np.delete(cv_vect, np.where(cv_vect==0))
         
+    print("%s CV: %.8f +- %.8f" %(population, np.mean(cv_vect), np.std(cv_vect)))
+            
     return np.mean(cv_vect), np.std(cv_vect)
     
     

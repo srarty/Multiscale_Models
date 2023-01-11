@@ -125,13 +125,12 @@ def get_equations(type = 'pyramidal'):
         eqs = '''
             dv / dt = (-v + V_leak - (I_tot/g_m_P)) / tau_m_P : volt (unless refractory)
             
-            dv_pe /dt = (-v_pe - ((I_AMPA_spi + I_AMPA_cor) / g_m_P)) / tau_m_P : volt (unless refractory)
-            dv_pi /dt = (-v_pi - ( I_GABA_rec               / g_m_P)) / tau_m_P : volt (unless refractory)
-            dv_pp /dt = (-v_pp - ( I_AMPA_rec               / g_m_P)) / tau_m_P : volt (unless refractory)
-            dv_pb /dt = (-v_pb - ( I_GABAb               / g_m_P)) / tau_m_P : volt (unless refractory)
-            dv_pu /dt = (-v_pu - ( I_AMPA_cor               / g_m_P)) / tau_m_P : volt (unless refractory)
+            dv_pi /dt = (-v_pi - ( I_GABA_rec / g_m_P)) / tau_m_P : volt (unless refractory)
+            dv_pp /dt = (-v_pp - ( I_AMPA_rec / g_m_P)) / tau_m_P : volt (unless refractory)
+            dv_pb /dt = (-v_pb - ( I_GABAb    / g_m_P)) / tau_m_P : volt (unless refractory)
+            dv_pu /dt = (-v_pu - ( I_AMPA_cor / g_m_P)) / tau_m_P : volt (unless refractory)
         
-            I_tot = I_AMPA_cor + I_AMPA_tha + I_AMPA_rec + I_AMPA_spi + I_GABAb + I_GABA_rec + I_injected : amp
+            I_tot = I_AMPA_cor + I_AMPA_tha + I_AMPA_rec + I_GABAb + I_GABA_rec + I_injected : amp
             
             I_AMPA_cor = j_AMPA_cor_P * s_AMPA_cor : amp
             ds_AMPA_cor / dt = -s_AMPA_cor / tau_s_AMPA_P : 1    
@@ -147,9 +146,6 @@ def get_equations(type = 'pyramidal'):
             
             I_AMPA_rec = j_AMPA_rec_P * s_AMPA : amp
             ds_AMPA / dt = -s_AMPA / tau_s_AMPA_P: 1    
-            
-            I_AMPA_spi = j_AMPA_rec_P * s_AMPA_spi : amp
-            ds_AMPA_spi / dt = -s_AMPA_spi / tau_s_AMPA_P : 1
             
             ref : second
             v_th : volt

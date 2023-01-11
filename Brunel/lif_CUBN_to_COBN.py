@@ -25,9 +25,10 @@ devices.device.size = []
 
 import lif_model_CUBN as cubn
 import lif_model_COBN as cobn
+from lif_plot import plot_results
 import analyse_spike_trains as ast
 
-def lif(MODEL='cobn', k_AMPA_P=0.010258/mV, k_GABA_P=0.057204/mV, k_GABAb_P=0.057204/mV, k_AMPA_I=0.012980/mV, k_GABA_I=0.337967/mV, PLOT = False):    
+def lif(MODEL='cobn', k_AMPA_P=0.01/mV, k_GABA_P=0.05/mV, k_GABAb_P=0.05/mV, k_AMPA_I=0.01/mV, k_GABA_I=0.1/mV, PLOT = False):    
     #%% Options:
     RECURRENT_PYRAMIDAL = True      # Self excitation 
     RECURRENT_INHIBITORY = True     # Self inhibition
@@ -46,7 +47,7 @@ def lif(MODEL='cobn', k_AMPA_P=0.010258/mV, k_GABA_P=0.057204/mV, k_GABAb_P=0.05
     input_spike_rate_thalamic = 1.5 # spikes/ms/cell (spontaneous activity)
     
     #%% parameters  --------------------------------------------------------------
-    simulation_time = 2 * second
+    simulation_time = 1 * second
     dt_ = 100 * usecond
     T = np.linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector for plots (in seconds)
        
@@ -338,7 +339,7 @@ def lif(MODEL='cobn', k_AMPA_P=0.010258/mV, k_GABA_P=0.057204/mV, k_GABAb_P=0.05
     lfp_v = mean_v_Py/volt 
     
     if PLOT:
-        cobn.plot_results(sp_P, sp_I, Py_monitor, In_monitor, r_P, r_I, lfp_v)
+        plot_results(sp_P, sp_I, Py_monitor, In_monitor, r_P, r_I, lfp_v)
     
     vPy = mean(mean(Py_monitor.v[: , 1000:], 0))
     vIn = mean(mean(In_monitor.v[: , 1000:], 0))
