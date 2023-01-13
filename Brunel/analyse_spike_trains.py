@@ -52,16 +52,16 @@ def get_spike_trains(t, i, t_start=0):
 
 # ISI distance profile
 def isi_distance(spike_trains, population='', fig='', OS='local'):
-    # Check if fig is an input
-    if not fig:
-        plt.figure()
-    else:
-        plt.figure(fig)
-        
     
     s = spk.isi_profile(spike_trains)
     
     if OS=='local':
+        # Check if fig is an input
+        if not fig:
+            plt.figure()
+        else:
+            plt.figure(fig)
+            
         x, y = s.get_plottable_data()
         plt.plot(x, y, label=population)
         plt.title("ISI distance")

@@ -12,7 +12,7 @@ import analyse_spike_trains as ast
 import pyspike as spk
 
 #%% Plot 
-def plot_results(T, sp_P, sp_I, r_P, r_I, lfp_v, v_p, v_i, I_GABA, I_GABAb, I_AMPA, N, input_spike_rate, OS='local'):
+def plot_results(T, sp_P, sp_I, r_P, r_I, lfp_v, v_p, v_i, I_GABA, I_GABAb, I_AMPA, N, input_spike_rate, OS='local', folder_path='/data/gpfs/projects/punim0643/artemios/simulations/', save_str='last_results'):
     print('Plotting simulation results ...')
     # spike rates
     window_size = 10*ms#%100.1*ms # Size of the window for the smooth spike rate # 100.1 instead of 100 to avoid an annoying warning at the end of the simulation
@@ -107,8 +107,8 @@ def plot_results(T, sp_P, sp_I, r_P, r_I, lfp_v, v_p, v_i, I_GABA, I_GABAb, I_AM
     if OS=='local':
         plt.show() 
     else:
-        plt.savefig('/data/gpfs/projects/punim0643/artemios/simulations/' + save_str)
-        print('Results saved as:' + save_str)
+        plt.savefig(folder_path + save_str + '.png')
+        print('Results saved as:' + save_str + '.png')
         plt.close('all')
     
 def plot_spike_stats(sp_P, sp_I, t_start=0):

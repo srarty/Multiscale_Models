@@ -533,26 +533,28 @@ def brunel(u = 0, SAVE = True, PLOT = True):
     v_i = np.transpose(In_monitor.v[0:5])*1e3
            
     
+    #%% output location -------------------------------------------------------
     
-    #%% plotting  -----------------------------------------------------------------
-    
-    if PLOT:
-        plot_results(T, sp_P, sp_I, r_P, r_I, lfp_v, v_p, v_i, i_pi, i_pb, i_ip, N, input_spike_rate, OS='spartan')
-        
-    
-    #%% Statistics
-    if STATS:        
-        cv_py, cv_in, si_py, si_in, spkdist_py, spkdist_in, isidist_py, isidist_in = plot_spike_stats(sp_P, sp_I, t_start=0.2)        
-    
-    
-    #%% Save simulation  ------------------------------------------------------------
     folder_path = '/data/gpfs/projects/punim0643/artemios/simulations/2023/'
     
     i = 0
     while os.path.exists(folder_path + 'lfp_%s.mat' % i):
         i += 1
         
-    save_str = format('lfp_%s.mat' %(i))
+    save_str = format('lfp_%s' %(i))
+
+    #%% plotting  -------------------------------------------------------------
+    
+    if PLOT:
+        plot_results(T, sp_P, sp_I, r_P, r_I, lfp_v, v_p, v_i, i_pi, i_pb, i_ip, N, input_spike_rate, OS='spartan', folder_path=folder_path, save_str=save_str)
+        
+    
+    #%% Statistics   ----------------------------------------------------------
+    if STATS:        
+        cv_py, cv_in, si_py, si_in, spkdist_py, spkdist_in, isidist_py, isidist_in = plot_spike_stats(sp_P, sp_I, t_start=0.2)        
+    
+    
+    #%% Save simulation  ------------------------------------------------------
         
     if SAVE:    
         P_ = np.array(list(sp_P.spike_trains().values()))
@@ -585,23 +587,14 @@ def brunel(u = 0, SAVE = True, PLOT = True):
                         'input_spike_rate_thalamic': input_spike_rate_thalamic,
                         'input_current': input_current}   
     	            
-        #                  'isi_P': isi_P,
-        #                   'V_py': Py_monitor.v,
-        #                    'V_in': In_monitor.v,
-        #
-        #                    'Vm': -(I_injected/g_m_P), # To calculate the nonlinearity, need to simulate single cell disconnected network 
-        #                    'Vm_interneurons': -(I_injected_I/g_m_I), # To calculate the nonlinearity, need to simulate single cell disconnected network 
-        #		    'sp_P_i': sp_P.i,
-        #		    'sp_P_t': sp_P.t,
-        #		    'sp_I_i': sp_I.i,
-        #		    'sp_I_t': sp_I.t,
+
     
         # Save as lfp_last
         scipy.io.savemat(folder_path + 'lfp_last.mat', mdict = save_dictionary)
         # Save as save_str
-        scipy.io.savemat(folder_path + save_str, mdict = save_dictionary)
+        scipy.io.savemat(folder_path + save_str + '.mat', mdict = save_dictionary)
         
-        print('Results of simulation saved as: ' + save_str)
+        print('Results of simulation saved as: ' + save_str + '.mat')
     
     
         # scipy.io.savemat('/data/gpfs/projects/punim0643/artemios/simulations/sweep2/alpha2dot5_u_%s_pi_%s.mat' % (i),
@@ -673,8 +666,8 @@ def brunel(u = 0, SAVE = True, PLOT = True):
     
     f.tight_layout() # Fixes the positions of subplots and labels
     
-    plt.savefig(folder_path + save_str)
-    print('Plots saved as:' + save_str)
+    plt.savefig(folder_path + save_str + '.png')
+    print('Plots saved as:' + save_str + '.png')
     plt.close('all')
 
 # ranges = np.arange(0, 2.1, 0.1)
