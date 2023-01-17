@@ -16,7 +16,7 @@ function [x, y, t, f_e, f_i, params] = NMM_diff_equations_DblExp_recursive(varar
         end
     end
     
-    N = 1000; % Number of samples: 1 sample = 1 milisecond
+    N = 2000; % Number of samples: 1 sample = 1 milisecond
     u = 1;
 %     params = set_parameters('seizure', u);
     params = set_parameters('default', u);

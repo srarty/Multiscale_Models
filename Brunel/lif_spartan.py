@@ -45,13 +45,13 @@ from lif_plot import plot_results, plot_spike_stats
 #def brunel(p_II = 0.125):
 #def brunel(p_PP = 0.16, p_II = 0.125):
 #def brunel(p_PP = 0.16, p_II = 0.451, u = 20):
-# def brunel(alpha_pi=0, u=0):
+def brunel(alpha_pi=0, u=0, SAVE=True, PLOT=False):
     
-def brunel(u = 0, SAVE = True, PLOT = True):
+# def brunel(u = 0, SAVE = True, PLOT = True):
     # plt.close('all')
         
     #%% Options:
-    MODEL           = 'cobn'        # cubn vs cobn
+    MODEL           = 'cubn'        # cubn vs cobn
     PARAMS_SOURCE   = 'three_pop'   # 'brunel' or 'allen' or 'three_pop' or''
     
     RECURRENT_PYRAMIDAL     = True  # Self excitation 
@@ -535,7 +535,7 @@ def brunel(u = 0, SAVE = True, PLOT = True):
     
     #%% output location -------------------------------------------------------
     
-    folder_path = '/data/gpfs/projects/punim0643/artemios/simulations/2023/'
+    folder_path = '/data/gpfs/projects/punim0643/artemios/simulations/2023/excitability/'
     
     i = 0
     while os.path.exists(folder_path + 'lfp_%s.mat' % i):
@@ -551,19 +551,29 @@ def brunel(u = 0, SAVE = True, PLOT = True):
     
     #%% Statistics   ----------------------------------------------------------
     if STATS:        
-        cv_py, cv_in, si_py, si_in, spkdist_py, spkdist_in, isidist_py, isidist_in = plot_spike_stats(sp_P, sp_I, t_start=0.2)        
-    
+        cv_py, cvstd_py, cv_in, cvstd_in, si_py, si_in, spkdist_py, spkdist_in, isidist_py, isidist_in = plot_spike_stats(sp_P, sp_I, t_start=0.2)        
+    else:
+        cv_py = 0
+        cvstd_py = 0
+        cv_in = 0
+        cvstd_in = 0
+        si_py = 0
+        si_in = 0
+        spkdist_py = 0
+        spkdist_in = 0
+        isidist_py = 0
+        isidist_in = 0
     
     #%% Save simulation  ------------------------------------------------------
         
     if SAVE:    
-        P_ = np.array(list(sp_P.spike_trains().values()))
-        I_ = np.array(list(sp_I.spike_trains().values()))
-        for i in range(0,shape(P_)[0]):
-            P_[i] = P_[i]/second
+        # P_ = np.array(list(sp_P.spike_trains().values()))
+        # I_ = np.array(list(sp_I.spike_trains().values()))
+        # for i in range(0,shape(P_)[0]):
+        #     P_[i] = P_[i]/second
             
-        for i in range(0,shape(I_)[0]):
-            I_[i] = I_[i]/second
+        # for i in range(0,shape(I_)[0]):
+        #     I_[i] = I_[i]/second
         
         save_dictionary={'LFP': lfp_,
                         'LFP_V': lfp_v,
@@ -577,12 +587,23 @@ def brunel(u = 0, SAVE = True, PLOT = True):
                         'p_II': p_II,
                         'R_py': r_P_rate, # 1/diff(np.array(sp_P.t)).mean(),
                         'R_in': r_I_rate,
-                        'R_py_2': r_P_rate_2,
-                        'R_in_2': r_I_rate_2,
+                        'cv_py': cv_py,
+                        'cv_in': cv_in, 
+                        'si_py': si_py,
+                        'si_in': si_in,
+                        'spkdist_py': spkdist_py, 
+                        'spkdist_in': spkdist_in, 
+                        'isidist_py': isidist_py, 
+                        'isidist_in': isidist_in,
+                        'MODEL': MODEL,
                         'RECURRENT_PYRAMIDAL': RECURRENT_PYRAMIDAL,
                         'RECURRENT_INHIBITORY': RECURRENT_INHIBITORY,
                         'INHIBIT_INPUT': INHIBIT_INPUT,
                         'ACTIVE_INTERNEURONS': ACTIVE_INTERNEURONS,
+                        'ACTIVE_GABAb': ACTIVE_GABAb,
+                        'GAUSSIAN_REFRACTORY': GAUSSIAN_REFRACTORY,
+                        'GAUSSIAN_THRESHOLD': GAUSSIAN_THRESHOLD,
+                        'GABA_A_MULTIPLIER': GABA_A_MULTIPLIER,
                         'input_spike_rate': input_spike_rate,
                         'input_spike_rate_thalamic': input_spike_rate_thalamic,
                         'input_current': input_current}   
@@ -678,3 +699,7 @@ def brunel(u = 0, SAVE = True, PLOT = True):
 # for iterations in ranges:
 #     for iterations2 in ranges2:
 #         brunel(u = round(iterations,2), alpha_pi=round(iterations2,2))
+
+ranges = np.arange(0.1,2.1,0.1)
+for iteration in ranges:
+    brunel(alpha_pi = iteration, SAVE = False, PLOT = True)

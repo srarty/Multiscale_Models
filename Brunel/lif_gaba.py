@@ -87,7 +87,7 @@ def brunel(u = 0, SAVE = False, PLOT = True):
     N = 2000
     N_P = int(N * 4)  # pyramidal neurons
     N_I = int(N * (0.5 ** ACTIVE_GABAb))    # interneurons
-    N_B = 0#int(N * 0.5)  # GABAb
+    N_B = int(N * 0.5)  # GABAb
     
     # set populations parameters
     # set populations parameters
@@ -419,7 +419,7 @@ def brunel(u = 0, SAVE = False, PLOT = True):
     
     Py_monitor = StateMonitor(Py_Pop, ['I_GABA_rec', 'I_GABAb', 'v',  'v_pi', 'I_tot'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
     In_monitor = StateMonitor(In_Pop, ['I_AMPA_rec', 'v', 'v_ip', 'I_tot'], record = True)
-    
+    B_monitor = []
     
     
     
@@ -540,7 +540,7 @@ def brunel(u = 0, SAVE = False, PLOT = True):
     
     #%% Statistics
     if STATS:        
-        cv_py, cv_in, si_py, si_in, spkdist_py, spkdist_in, isidist_py, isidist_in = plot_spike_stats(sp_P, sp_I, t_start=0.1)
+        cv_py, cvstd_py, cv_in, cvstd_in, si_py, si_in, spkdist_py, spkdist_in, isidist_py, isidist_in = plot_spike_stats(sp_P, sp_I, t_start=0.2)
         
         
     #%% Save simulation  ------------------------------------------------------------
@@ -554,32 +554,29 @@ def brunel(u = 0, SAVE = False, PLOT = True):
     
     if SAVE:
             
-        P_ = np.array(list(sp_P.spike_trains().values()))
-        I_ = np.array(list(sp_I.spike_trains().values()))
-        for i in range(0,shape(P_)[0]):
-            P_[i] = P_[i]/second
+        # P_ = np.array(list(sp_P.spike_trains().values()))
+        # I_ = np.array(list(sp_I.spike_trains().values()))
+        # for i in range(0,shape(P_)[0]):
+        #     P_[i] = P_[i]/second
             
-        for i in range(0,shape(I_)[0]):
-            I_[i] = I_[i]/second
+        # for i in range(0,shape(I_)[0]):
+        #     I_[i] = I_[i]/second
         
-        save_dictionary={'LFP': lfp_,
-                        'LFP_V': lfp_v,
+        save_dictionary={'LFP_V': lfp_v,
                         'lfp_dt' : dt_,
                         'v_rest': V_leak,
                         'v_p': mean(Py_monitor.v,0),
                         'v_i': mean(In_monitor.v,0),
-                        'v_b': mean(B_monitor.v,0),
                         'v_pi': mean(Py_monitor.v_pi,0),
                         'v_ip': mean(In_monitor.v_ip,0),
                         'p_PP': p_PP,
                         'p_II': p_II,
                         'R_py': r_P_rate,
                         'R_in': r_I_rate,
-                        'R_b': r_B_rate,
                         'cv_py': cv_py,
                         'cv_in': cv_in, 
-                        'si_py': si_py, 
-                        'si_in': si_in, 
+                        'si_py': si_py,
+                        'si_in': si_in,
                         'spkdist_py': spkdist_py, 
                         'spkdist_in': spkdist_in, 
                         'isidist_py': isidist_py, 
@@ -597,6 +594,8 @@ def brunel(u = 0, SAVE = False, PLOT = True):
                         'input_spike_rate_thalamic': input_spike_rate_thalamic,
                         'input_current': input_current} 
     
+                        # 'v_b': mean(B_monitor.v,0),
+                        # 'R_b': r_B_rate,
         
         # Save as lfp_last
         scipy.io.savemat(folder_path + 'lfp_last.mat',
@@ -619,6 +618,7 @@ def brunel(u = 0, SAVE = False, PLOT = True):
 # for iterations in ranges:
 #     brunel(corriente=iterations)
 
-ranges = np.arange(0,3,1)
+# ranges = np.arange(0,3.1,0.1)
+ranges = np.arange(2.0,3.1,0.1)
 for iteration in ranges:
-    brunel(u = iteration, SAVE = False, PLOT = True)
+    brunel(u = iteration, SAVE = True, PLOT = False)

@@ -111,7 +111,7 @@ def plot_results(T, sp_P, sp_I, r_P, r_I, lfp_v, v_p, v_i, I_GABA, I_GABAb, I_AM
         print('Results saved as:' + save_str + '.png')
         plt.close('all')
     
-def plot_spike_stats(sp_P, sp_I, t_start=0):
+def plot_spike_stats(sp_P, sp_I, t_start=0, OS='local'):
     #%% Plot ISI distance and synchronization 
     stp = ast.get_spike_trains(sp_P.t/second, sp_P.i, t_start=t_start) # Spike trains of Pyramidal neurons
     sti = ast.get_spike_trains(sp_I.t/second, sp_I.i, t_start=t_start) # Spike trains of inhibitory neurons
@@ -122,9 +122,9 @@ def plot_spike_stats(sp_P, sp_I, t_start=0):
     isidist_in = ast.isi_distance(sti, population='In', fig=f1)
     
     # SPIKE distance
-    f2 = plt.figure()
-    spkdist_py = ast.spike_distance(stp, population='Py', fig=f2)
-    spkdist_in = ast.spike_distance(sti, population='In', fig=f2)
+    # f2 = plt.figure()
+    spkdist_py = 0#ast.spike_distance(stp, population='Py', fig=f2)
+    spkdist_in = 0#ast.spike_distance(sti, population='In', fig=f2)
     
     # Spike syncrhony
     si_py = ast.spike_si(stp, 'Py')
@@ -134,4 +134,4 @@ def plot_spike_stats(sp_P, sp_I, t_start=0):
     cv_py, cvstd_py = ast.mean_isi_cv(stp, population='Py')
     cv_in, cvstd_in = ast.mean_isi_cv(sti, population='In')
     
-    return cv_py, cv_in, si_py, si_in, spkdist_py, spkdist_in, isidist_py, isidist_in
+    return cv_py, cvstd_py, cv_in, cvstd_in, si_py, si_in, spkdist_py, spkdist_in, isidist_py, isidist_in
