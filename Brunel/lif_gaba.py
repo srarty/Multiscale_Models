@@ -43,8 +43,8 @@ import lif_model_COBN as cobn
 from lif_plot import plot_results, plot_spike_stats
 
 # def brunel(u=0):
-def brunel(u = 0, SAVE = False, PLOT = True):
-    # plt.close('all')
+def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 'py'):
+    plt.close('all')
         
     #%% Options:
     MODEL           = 'cubn'        # cubn vs cobn
@@ -53,8 +53,8 @@ def brunel(u = 0, SAVE = False, PLOT = True):
     RECURRENT_PYRAMIDAL     = True  # Self excitation 
     RECURRENT_INHIBITORY    = True  # Self inhibition
     ACTIVE_INTERNEURONS     = True  # Inhibitory population
-    ACTIVE_GABAb            = False # Second inhibitory (slow) population (Wendling-like model)
-    INHIBIT_INPUT           = False # Excitatory cortical input to inhibitory population
+    ACTIVE_GABAb            = True # Second inhibitory (slow) population (Wendling-like model)
+    INHIBIT_INPUT           = True # Excitatory cortical input to inhibitory population
     
     GABA_A_MULTIPLIER = 1           # GABA_A Agonist applied for the whole duration
     MIDWAY_MULTIPLIER = 1           # GABA_A Agonist applied midsimulation
@@ -64,13 +64,13 @@ def brunel(u = 0, SAVE = False, PLOT = True):
     
     # SAVE = False                    # Save ground truth data
     # PLOT = True                     # Plot results 
-    STATS = True                    # Calculate spike statistics (ISI distance, CV, etc)
+    STATS = False                    # Calculate spike statistics (ISI distance, CV, etc)
     
     PSP_FR   = 0                    # Presynaptic firing rate for TEST_PSP (TEST_PSP needs to be diff to none for this to take effect)                               
     TEST_PSP = 'none'               # Testing the post synaptic potential of given synapses to a specified input firing rate. Options: 'pu', 'pp', 'pi', 'ii', 'ip', 'bp', 'bi', 'pb', 'none'. To prevent neurons spiking, make V_thr large.
-    RUNTYPE  = 'normal'             # Simulation: 'normal', 'current_pulse' or 'gaba_agonist'
+    RUNTYPE  = 'current_pulse'             # Simulation: 'normal', 'current_pulse' or 'gaba_agonist'
     
-    corriente = 0#50
+    corriente = 500 #50#500
     # Balanced-rate network (?) with input currents: 
     input_current   = corriente    # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
     input_current_I = corriente  # Inhibitory interneurons
@@ -86,8 +86,8 @@ def brunel(u = 0, SAVE = False, PLOT = True):
     # populations
     N = 2000
     N_P = int(N * 4)  # pyramidal neurons
-    N_I = int(N * (0.5 ** ACTIVE_GABAb))    # interneurons
-    N_B = int(N * 0.5)  # GABAb
+    # N_I = int(N * (0.5 ** ACTIVE_GABAb))    # interneurons
+    N_I = int(N)    # interneurons
     
     # set populations parameters
     # set populations parameters
@@ -100,12 +100,24 @@ def brunel(u = 0, SAVE = False, PLOT = True):
         params_in = cobn.set_params('inhibitory')
     else:
         raise Exception('Model %s does not exist (the options are cubn and cobn)' %MODEL)
+        
+    if not(ACTIVE_GABAb):
+        params_py = set_params('pyramidal', 'allen')
+        params_in = set_params('inhibitory', 'allen')
+    
+    # Modify parameter according to the arguments ('parameter' and 'value_')
+    if parameter != '':
+        if pop_=='py':
+            params_py[parameter] = params_py.get(parameter) * value_
+        elif pop_=='in':
+            params_in[parameter] = params_in.get(parameter) * value_
+        
     
     # Probability of connection
-    p_IP = params_py.get('p_IP')/2 # * np.sqrt(1000/N) #0.2 #* 100/N # Inhibitory to Pyramidal
-    p_PI = params_py.get('p_PI') # * np.sqrt(1000/N) #0.2 #* 100/N # Pyramidal to Inhibitory
-    p_PP = params_py.get('p_PP') # * np.sqrt(1000/N)  #0.2 #* 100/N # recurrent excitation (pyramidal) # Generally less than PI, IP connectivity (Bryson et al., 2021)
-    p_II = params_py.get('p_II')/2 # * np.sqrt(1000/N)  #0.2 #* 100/N # recurrent inhibition
+    p_IP = params_py.get('p_IP') * (0.5 ** ACTIVE_GABAb)
+    p_PI = params_py.get('p_PI')
+    p_PP = params_py.get('p_PP')
+    p_II = params_py.get('p_II') * (0.5 ** ACTIVE_GABAb)
     
     # voltage
     V_leak = -70. * mV      # Resting membrane potential
@@ -229,7 +241,7 @@ def brunel(u = 0, SAVE = False, PLOT = True):
     
     # Neuron groups
     Py_Pop = NeuronGroup(N_P, eqs_P, threshold='v > v_th', reset='''v = V_reset
-                                                                    v_pe = V_reset-V_leak
+                                                                    v_pu = V_reset-V_leak
                                                                     v_pi = V_reset-V_leak
                                                                     v_pb = V_reset-V_leak
                                                                     v_pp = V_reset-V_leak
@@ -240,6 +252,7 @@ def brunel(u = 0, SAVE = False, PLOT = True):
     
     In_Pop = NeuronGroup(N_I, eqs_I, threshold='v > V_thr', reset='''v = V_reset
                                                                     v_ip = V_reset-V_leak
+                                                                    v_iu = V_reset-V_leak
                                                                     v_ii = V_reset-V_leak
                                                                     ''', refractory='ref', method='rk4', dt=dt_, name='InhibitoryPop') # Interneuron population
     In_Pop.v = V_leak
@@ -270,7 +283,7 @@ def brunel(u = 0, SAVE = False, PLOT = True):
     elif (TEST_PSP == 'pi') | (TEST_PSP == 'ii') | (TEST_PSP == 'bi'):
         N_PSP_Test = N_I
     elif (TEST_PSP == 'ib') | (TEST_PSP == 'pb'):
-        N_PSP_Test = N_B
+        N_PSP_Test = N_I
     else:
         N_PSP_Test = 0    
     Pop_PSP_Test = PoissonGroup(N_PSP_Test, rates = PSP_FR * Hz, dt=dt_) # poisson input
@@ -327,7 +340,7 @@ def brunel(u = 0, SAVE = False, PLOT = True):
     # GABAa to I
     C_I_I = Synapses(In_Pop, In_Pop, on_pre=eqs_pre_gaba_I, method='rk4', dt=dt_, delay=delay, name='synapses_ii')
     C_I_I.connect('i != j', p = p_II)
-    C_I_I.active = RECURRENT_INHIBITORY #& (not ACTIVE_GABAb)
+    C_I_I.active = RECURRENT_INHIBITORY
     
     # GABAa to P
     C_I_P = Synapses(In_Pop, Py_Pop, on_pre=eqs_pre_gaba_P, method='rk4', dt=dt_, delay=delay, name='synapses_pi')
@@ -337,7 +350,7 @@ def brunel(u = 0, SAVE = False, PLOT = True):
     # GABAb to P
     C_B_P = Synapses(In_Pop, Py_Pop, on_pre=eqs_pre_gabab_P, method='rk4', dt=dt_, delay=delay, name='synapses_pb')
     C_B_P.connect(p = p_IP)
-    C_B_P.active = ACTIVE_INTERNEURONS # ACTIVE_GABAb
+    C_B_P.active = ACTIVE_INTERNEURONS & ACTIVE_GABAb
     
     
     # External inputs
@@ -417,15 +430,15 @@ def brunel(u = 0, SAVE = False, PLOT = True):
     # st_GABA_I = StateMonitor(In_Pop, 's_GABA', record = 0)
     # st_AMPA_cor_I = StateMonitor(In_Pop, 's_AMPA_cor', record = 0)
     
-    Py_monitor = StateMonitor(Py_Pop, ['I_GABA_rec', 'I_GABAb', 'v',  'v_pi', 'I_tot'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
-    In_monitor = StateMonitor(In_Pop, ['I_AMPA_rec', 'v', 'v_ip', 'I_tot'], record = True)
+    Py_monitor = StateMonitor(Py_Pop, ['I_GABA_rec', 'I_GABAb', 'v',  'v_pi', 'I_exc', 'I_inh'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
+    In_monitor = StateMonitor(In_Pop, ['I_AMPA_rec', 'v', 'v_ip', 'I_exc', 'I_inh'], record = True)
     B_monitor = []
     
-    
-    
-    
-    
-    
+    # If TEST_PSP is on, create a new monitor just to observe that PSP
+    if TEST_PSP[0]=='p':
+        PSP_monitor = StateMonitor(Py_Pop, ['v_'+TEST_PSP], record = True)
+    elif TEST_PSP[0]=='i':
+        PSP_monitor = StateMonitor(In_Pop, ['v_'+TEST_PSP], record = True)
     
     #%% simulate  -----------------------------------------------------------------
     
@@ -459,7 +472,7 @@ def brunel(u = 0, SAVE = False, PLOT = True):
         # INJECTED CURRENT PULSE
         I_injected = 0 * pA
         I_injected_I = 0 * pA
-        net.run(1.49 * second, report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+        net.run(0.49 * second, report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
         
         I_injected = -input_current * pA # Input current to Pyramidal population. Sets a baseline spiking rate
         I_injected_I = -input_current_I * pA # Input current to Pyramidal population. Sets a baseline spiking rate
@@ -477,7 +490,8 @@ def brunel(u = 0, SAVE = False, PLOT = True):
         net.run(simulation_time/2, report='stdout')
                 
     else:
-        print(colored('The simulation did not run. RUNTYPE most be one of the three options.', 'yellow'))
+        # print(colored('The simulation did not run. RUNTYPE most be one of the three options.', 'yellow'))
+        raise Exception("The simulation did not run. RUNTYPE most be one of the three options.")
         
         
         
@@ -536,21 +550,37 @@ def brunel(u = 0, SAVE = False, PLOT = True):
     
     if PLOT:
         plot_results(T, sp_P, sp_I, r_P, r_I, lfp_v, v_p, v_i, i_pi, i_pb, i_ip, N, input_spike_rate)
-        
+      
+    # Regardless of PLOT, if TEST_PSP is on, plot the PSP we are testing
+    if TEST_PSP!='none':
+        v_psp = mean( getattr(PSP_monitor, 'v_'+TEST_PSP) , 0)
+        plt.figure()
+        plt.plot(v_psp*1e3)
     
     #%% Statistics
-    if STATS:        
+    if STATS & (TEST_PSP=='none'):
         cv_py, cvstd_py, cv_in, cvstd_in, si_py, si_in, spkdist_py, spkdist_in, isidist_py, isidist_in = plot_spike_stats(sp_P, sp_I, t_start=0.2)
+    else:
+        cv_py = 0
+        cvstd_py = 0
+        cv_in = 0
+        cvstd_in = 0
+        si_py = 0
+        si_in = 0
+        spkdist_py = 0
+        spkdist_in = 0
+        isidist_py = 0
+        isidist_in = 0
         
         
     #%% Save simulation  ------------------------------------------------------------
-    folder_path = 'C://Users/artemios/Documents/Multiscale_Models_Data/2023/'
+    folder_path = 'C://Users/artemios/Documents/Multiscale_Models_Data/2023/excitability/'
     
     i = 0
-    while os.path.exists(folder_path + 'lfp_%s.mat' % i):
+    while os.path.exists(folder_path + 'lfp_%s_%s_%s.mat' % (pop_,parameter,i)):
         i += 1
         
-    save_str = format('lfp_%s.mat' %(i))
+    save_str = format('lfp_%s_%s_%s.mat' %(pop_,parameter, i))
     
     if SAVE:
             
@@ -592,7 +622,10 @@ def brunel(u = 0, SAVE = False, PLOT = True):
                         'GABA_A_MULTIPLIER': GABA_A_MULTIPLIER,
                         'input_spike_rate': input_spike_rate,
                         'input_spike_rate_thalamic': input_spike_rate_thalamic,
-                        'input_current': input_current} 
+                        'input_current': input_current,
+                        'value_': value_,
+                        'pop_': pop_,
+                        'parameter':parameter} 
     
                         # 'v_b': mean(B_monitor.v,0),
                         # 'R_b': r_B_rate,
@@ -619,6 +652,8 @@ def brunel(u = 0, SAVE = False, PLOT = True):
 #     brunel(corriente=iterations)
 
 # ranges = np.arange(0,3.1,0.1)
-ranges = np.arange(2.0,3.1,0.1)
+ranges = np.arange(0,2.1,0.1)
+# ranges =  [1]
 for iteration in ranges:
-    brunel(u = iteration, SAVE = True, PLOT = False)
+    brunel(value_ = iteration, SAVE = True, PLOT = False, parameter = 'j_GABAb', pop_ = 'py')
+# brunel(SAVE=False, PLOT=True)

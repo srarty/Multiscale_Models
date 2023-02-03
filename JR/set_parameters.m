@@ -48,8 +48,8 @@ params.gompertzi.c = 1.738;%1.78;%% Distribution = 1.738    | non_dsitribution =
 params.gompertzi.d = 0.1964;%0.2067;%% Distribution = 0.1964    | non_dsitribution = 0.2067
 
 % time constants
-params.tau_mi = 0.01; %0.009738; % Membrane time constant - Interneurons (decay)
-params.tau_si = 0.0012; %0.001472; % Synaptic time constant - Py->In
+params.tau_mi = 0.01; %0.009738; % Membrane time constant - Interneurons (decay) [Galarreta 2001]
+params.tau_si = 0.0012; %0.001472; % Synaptic time constant - Py->In [Galarreta 2001]
 params.tau_mp = 0.02;%0.01966;  % Decay tau (membrane time constant) - Pyramidal
 params.tau_sp = 0.00525;%0.005608; % Rising tau Pyramidal - In -> Py
 params.tau_mrp = 0.02; %0.01975;  % Decay tau recursive excitation

@@ -9,7 +9,7 @@
 
 %% Options ----------------------------------------------------------------
 
-POPULATION = 'B'; % 'Py' or 'In' of 'B'
+POPULATION = 'Py'; % 'Py' or 'In' of 'B'
 FUNCTION = 'G'; % 'G' (Gompertz) or 'S' (Sigmoid) or 'Ga' (Gaussian) or 'B' (Bas-Jan Zandt 2014)
 
 % -------------------------------------------------------------------------
@@ -22,7 +22,8 @@ C_P = 0.5e-9;
 C_I = 0.2e-9;
 
 %% NMM sigmoid
-params = set_parameters('gabab');       % Chose params.u from a constant value in set_params
+% params = set_parameters('gabab');       % Chose params.u from a constant value in set_params
+params = set_parameters('default');       % Chose params.u from a constant value in set_params
 if strcmp(POPULATION, 'Py'), max_firing_rate = params.e0; elseif strcmp(POPULATION, 'In')||strcmp(POPULATION, 'B'), max_firing_rate = params.e0i; else, error('Wrong POPULATION'); end
     
 x = -20:0.1:100;

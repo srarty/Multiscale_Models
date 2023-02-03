@@ -30,10 +30,11 @@
 % For LIF data, use:
 %   data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_86.mat'; % 500pA current pulse, u=0
 %   data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_89.mat'; % 50pA current pulse, u=0
+%   data_file = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\excitability\lfp_8';
 %   a = load(data_file)
 %   y_lif = a.LFP_V;
 %   t_lif = a.lfp_dt:a.lfp_dt:length(a.LFP_V)*a.lfp_dt;
-%   recovery = analyze_excitability(y_lif', t_lif', 14899, 0)
+%   recovery = analyze_excitability(y_lif', t_lif', 4899, 0)
 %
 function [recovery, y_, t_] = analyze_excitability(y,t,varargin)
 
@@ -59,9 +60,13 @@ idx(idx <= idx_stim+1) = []; % Remove peaks found before the impulse
 idx = min(idx); % only leave smallest idx
 
 y_ = y_(idx:end);
-t_ = t(trim:end-idx+1);
-t_ = t_ - t_(1);
-
+try
+    t_ = t(trim:end-idx+1);
+    t_ = t_ - t_(1);
+catch E
+    disp('No peaks found');
+end
+    
 if ~isempty(y_)
     % If y_ is not empty, idx should have found a peak, here we're
     % measuring the decay time constant by fitting the decay to a single
@@ -76,7 +81,7 @@ if ~isempty(y_)
     fitresult = fit(t_, y_, ft, opts); % With options
     % fitresult = fit(t_, y_, ft); % No options
     
-    fit_time_constant = fitresult.tau * 1000;
+    fit_time_constant = fitresult.tau; % In seconds
 else
     % If y_ is empty, we assume the model saturated, so there's no recovery
     % and we set the recovefry time to infinity.
@@ -92,7 +97,7 @@ end
 
 % Recovery time:
 dt = t(2)-t(1);
-recovery = fit_time_constant + dt*(max(idx) - idx_stim);
+recovery = (6 * fit_time_constant) + dt*(max(idx) - idx_stim); % Multiply by 6 because we calculated the time constant and now we want the actual decay time
 
 % If large negative number, it means (most likely) that the populations are
 % saturated after the probe

@@ -25,9 +25,9 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABA(varargin)
     params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Any other value of CHANGE_U: U changes.
     params.options.CHANGE_AGONIST = 0; % Agonist changes
     
-    CURRENT = 0e-12; % 50
+    CURRENT = 50e-12; % 50
     if exist('injected_current','var'), CURRENT = injected_current; end % If 'CURRENT' was a varargin, ignore previous line
-    params.options.CURRENT_TIME = 1490:1500;
+    params.options.CURRENT_TIME = 1490:1500; %1490:1500;
     params.options.INPUT_CURRENT_PY = 1000 * CURRENT / params.g_m_P; % 1000 for milivolts, then xe-12 A, where x is the amplitude in pA
     params.options.INPUT_CURRENT_IN = 1000 * CURRENT / params.g_m_I;   
     % --------------------------------------------------------- End Options
@@ -42,7 +42,7 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABA(varargin)
                     % The parameter to modify is the injected current
                     params.options.INPUT_CURRENT_PY = 1000 * value{i} / params.g_m_P;
                     params.options.INPUT_CURRENT_IN = 1000 * value{i} / params.g_m_I;
-                    disp('The injected current has been modified by an input argument to the function NMM_GABAb.m')
+                    disp('The injected current has been modified by an input argument to the function NMM_GABA.m')
                 else
                     error(['Couldn''t assign value: ' num2str(value{i}) ' to the parameter: ' parameter{i}]);
                 end
@@ -97,6 +97,8 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABA(varargin)
         alpha_ri;
         alpha_u;
         alpha_b;
+        0;
+        0;
         ];
      
     
@@ -118,7 +120,7 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABA(varargin)
     
     % Calculate firing rate
     f_e = S2(x(:,1) + x(:,5) + x(:,7) + x(:,9) + I_py);
-    f_i = S1(x(:,3) + x(:,11) + I_in); 
+    f_i = S1(x(:,3) + x(:,11) + x(:,19) + I_in); 
     
     if nargin == 0        
         close all
@@ -134,11 +136,11 @@ function dx = ode(t,x,params,dt, S1, S2)
     % them to run it with constant input.
     if isfield(params,'options') & isfield(params.options,'CHANGE_U') & params.options.CHANGE_U
         if t >= 3*params.time/4
-            u = 10;%0.75;
+            u = 2;
         elseif t >= 2*params.time/4
-            u = 5;%0.5;
+            u = 1;
         elseif t >= 1*params.time/4
-            u = 1;%0.25;
+            u = 0.5;
         end
         
     elseif isfield(params,'options') & isfield(params.options,'CHANGE_AGONIST') & params.options.CHANGE_AGONIST
@@ -190,6 +192,7 @@ function dx = ode(t,x,params,dt, S1, S2)
     AmplitudeRE = c3 * x(15) * Tau_coeff(tau_mrp, tau_srp);
     AmplitudeRI = c4 * x(16) * Tau_coeff(tau_mri, tau_sri); % This is the same for GABAa->GABAa and GABAa->GABAb
     AmplitudeU  = c5 * x(17) * Tau_coeff(tau_mrp, tau_srp);
+    AmplitudeU_interneuorns  = 0.3 * AmplitudeU;
     AmplitudeB  = c6 * x(18) * Tau_coeff(tau_mp,  tau_sb);
     
     %% Diff equations ------------------------------------------------------
@@ -198,27 +201,31 @@ function dx = ode(t,x,params,dt, S1, S2)
     % Double exponential from Nicola-Campbell (2013):
     % GABAa->P
     dx(1) = x(2) - x(1)/tau_mp;
-    dx(2) = - x(2)/tau_sp + AmplitudeI * S1(x(3) + x(11) + INPUT_CURRENT_IN);
+    dx(2) = - x(2)/tau_sp + AmplitudeI *  S1(x(3) + x(11) + x(19) + INPUT_CURRENT_IN);
     
-    % P->GABAa
+    % P->I
     dx(3) = x(4) - x(3)/tau_mi;
-    dx(4) = - x(4)/tau_si + AmplitudeE * S2(x(1) + x(5) + x(7) + x(9) + INPUT_CURRENT_PY);
+    dx(4) = - x(4)/tau_si + AmplitudeE *  S2(x(1) + x(5) + x(7) + x(9) + INPUT_CURRENT_PY);
     
     % Recurrent Pyramidal P->P
     dx(5) = x(6) - x(5)/tau_mrp;
-    dx(6) = - x(6)/tau_srp + AmplitudeRE * S2(x(1) + x(5) + x(7)+ x(9) + INPUT_CURRENT_PY );
+    dx(6) = - x(6)/tau_srp + AmplitudeRE *  S2(x(1) + x(5) + x(7)+ x(9) + INPUT_CURRENT_PY );
     
     % External input u->P
     dx(7) = x(8) - x(7)/tau_mrp;
-    dx(8) = - x(8)/tau_srp + AmplitudeU  * (u + (params.options.ADD_NOISE *(sqrt(u).*randn(1,1))));
+    dx(8) = - x(8)/tau_srp + AmplitudeU  *  (u + (params.options.ADD_NOISE *(sqrt(u).*randn(1,1))));
     
     % GABAb -> P
     dx(9) = x(10) - x(9)/tau_mp;
-    dx(10) = - x(10)/tau_sb + AmplitudeB * S1(x(3) + x(11) + INPUT_CURRENT_IN); % S3(x(13) + x(7) + INPUT_CURRENT_B);
+    dx(10) = - x(10)/tau_sb + AmplitudeB *  S1(x(3) + x(11) + x(19) + INPUT_CURRENT_IN); % S3(x(13) + x(7) + INPUT_CURRENT_B);
     
-    % Recurrent Inhibition GABAa -> GABAa
+    % Recurrent Inhibition GABAa -> I
     dx(11) = x(12) - x(11)/tau_mri;
-	dx(12) = - x(12)/tau_sri + AmplitudeRI * S1(x(3) + x(11) + INPUT_CURRENT_IN);
+	dx(12) = - x(12)/tau_sri + AmplitudeRI * S1(x(3) + x(11) + x(19) + INPUT_CURRENT_IN);
+    
+    % External input u->I
+    dx(19) = x(20) - x(19)/tau_mi;
+    dx(20) = - x(20)/tau_si + AmplitudeU_interneuorns  * (u + (params.options.ADD_NOISE *(sqrt(u).*randn(1,1))));
     
     % Parameters:
     dx(13) = 0; % alpha_i
@@ -232,7 +239,7 @@ end
 
 function do_plot(x,t, Vm, LFP_I, f_e, f_i)    
     figure
-    plot(t,x(:,[1 3 5 7 9 11]));
+    plot(t,x(:,[1 3 5 7 9 11 19]));
     legend({'x1' 'x3' 'x5' 'x7' 'x9' 'x11'});
     ylabel('mV');
     xlabel('Time (s)');
@@ -240,7 +247,7 @@ function do_plot(x,t, Vm, LFP_I, f_e, f_i)
     figure
     plot(t, x(:,1) + x(:,5) + x(:,7) + x(:,9));
     hold
-    plot(t, x(:,3) + x(:,11));
+    plot(t, x(:,3) + x(:,11) +  + x(:,19));
     legend({'V_{mp}' 'V_{mi}'});
     ylabel('mV');
     xlabel('Time (s)');
@@ -263,7 +270,7 @@ function do_plot(x,t, Vm, LFP_I, f_e, f_i)
     plot(t, f_i);
     ylabel('Spike rate (Hz)');
     xlabel('Time (s)');
-    legend({'Pyramidal', 'GABA_A', 'GABA_B'}, 'Location', 'best');
+    legend({'Pyramidal', 'Interneurons'}, 'Location', 'best');
     
 %     figure
 %     plot(t, x(:,7));    

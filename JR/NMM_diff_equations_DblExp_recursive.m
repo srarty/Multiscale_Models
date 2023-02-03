@@ -8,24 +8,26 @@
 function [x, y, t, f_e, f_i, params] = NMM_diff_equations_DblExp_recursive(varargin)
     clear option
     if nargin >= 2
-        option = cell(1,nargin/2);
+        parameter = cell(1,nargin/2);
         value = cell(1,nargin/2);
         for i = 2:2:nargin
-            option{round(i/2)} = varargin{i-1};
+            % In case the input is a regular parameter:
+            parameter{round(i/2)} = varargin{i-1};
             value{round(i/2)} = varargin{i};
         end
     end
     
     N = 2000; % Number of samples: 1 sample = 1 milisecond
-    u = 1;
+    u = 0.5;
 %     params = set_parameters('seizure', u);
     params = set_parameters('default', u);
+%     params = set_parameters('gabab', u);
     
     % Options  ------------------------------------------------------------
     params.options.ADD_NOISE = 1; % External input noise (0 = no noise, 1 = noise)
     params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Anyother value of CHANGE_U: U changes.
         
-    CURRENT = 50e-12;
+    CURRENT = 0e-12;
     if exist('injected_current','var'), CURRENT = injected_current; end % If 'CURRENT' was a varargin, ignore previous line
     params.options.CURRENT_TIME = 1490:1500;
     params.options.INPUT_CURRENT_PY = 1000 * CURRENT / params.g_m_P; % 1000 for milivolts, then xe-12 A, where x is the amplitude in pA
@@ -126,8 +128,10 @@ function [x, y, t, f_e, f_i, params] = NMM_diff_equations_DblExp_recursive(varar
     I_py(params.options.CURRENT_TIME) = params.options.INPUT_CURRENT_PY;
     I_in(params.options.CURRENT_TIME) = params.options.INPUT_CURRENT_IN;
     
+    yy = zeros(size(y));
     for i = 1:size(x,1)
         y(i) = x(i,1) + x(i,9) + x(i,5) + I_py(i);
+        yy(i) = (x(i,6) + x(i,10) - x(i,2) - x(i,8) + I_py(i))/params.g_m_P; % Current based LFP
     end
     
     % Calculate firing rate
@@ -155,11 +159,11 @@ function dx = ode(t,x,params,dt, S1, S2)
             u = 0.25;
         end
     end
-    
-    if t >= 0.5
+       
+    if t >=  params.options.CURRENT_TIME(end) * 1e-3
         INPUT_CURRENT_PY = 0;
         INPUT_CURRENT_IN = 0;
-    elseif t >= 0.49
+    elseif t >= params.options.CURRENT_TIME(1) * 1e-3
         INPUT_CURRENT_PY = params.options.INPUT_CURRENT_PY;
         INPUT_CURRENT_IN = params.options.INPUT_CURRENT_IN;
     else
@@ -171,10 +175,10 @@ function dx = ode(t,x,params,dt, S1, S2)
     Tau_coeff = @(m, s) 1/(m*s);% Nicola Campbell
     
     c_constant = params.c_constant;
-    c1 = 70.5575    * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
-    c2 = 29.7217    * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
+    c1 = 29.7217    * c_constant * params.P_inTOpy; % Inhibitory synapses into pyramidal population
+    c2 = 70.5575    * c_constant * params.P_pyTOin; % Excitatory synapses into inhibitory population
     c3 = 141.1007   * c_constant * params.P_pyTOpy; % Recursive excitation to pyramidal cells
-    c4 = 9.5339     * c_constant * params.P_inTOin; % Recursive inhibition to inhibitory cells
+    c4 = 9.5339     * c_constant * params.P_inTOin;	% Recursive inhibition to inhibitory cells
     c5 = 17.8288    * c_constant;                   % External excitatory synapses into pyramidal population
     
     tau_sp = params.tau_sp;
@@ -190,8 +194,8 @@ function dx = ode(t,x,params,dt, S1, S2)
     tau_mri = params.tau_mri;
     
     % Lumped gain parameters
-    AmplitudeI  = c2 * x(11) * Tau_coeff(tau_mp,  tau_sp);
-    AmplitudeE  = c1 * x(12) * Tau_coeff(tau_mi,  tau_si);
+    AmplitudeI  = c1 * x(11) * Tau_coeff(tau_mp,  tau_sp);
+    AmplitudeE  = c2 * x(12) * Tau_coeff(tau_mi,  tau_si);
     AmplitudeRE = c3 * x(13) * Tau_coeff(tau_mrp, tau_srp);
     AmplitudeRI = c4 * x(14) * Tau_coeff(tau_mri, tau_sri);
     AmplitudeU  = c5 * x(15) * Tau_coeff(tau_mrp, tau_srp);
@@ -226,8 +230,8 @@ end
 
 function do_plot(x,t, Vm, f_e, f_i)    
     figure
-    plot(t,x(:,[1 3]));
-    legend({'x1' 'x3'});
+    plot(t,x(:,[1 3 5 7 9]));
+    legend({'x1' 'x3' 'x5' 'x7' 'x9'});
     ylabel('mV');
     xlabel('Time (s)');
     
