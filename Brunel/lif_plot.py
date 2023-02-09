@@ -12,7 +12,7 @@ import analyse_spike_trains as ast
 import pyspike as spk
 
 #%% Plot 
-def plot_results(T, sp_P, sp_I, sp_S, r_P, r_I, r_S, lfp_v, v_p, v_i, I_GABA, I_GABAb, I_AMPA, N, input_spike_rate, OS='local', folder_path='/data/gpfs/projects/punim0643/artemios/simulations/', save_str='last_results'):
+def plot_results(T, sp_P, sp_I, r_P, r_I, lfp_v, v_p, v_i, I_GABA, I_GABAb, I_AMPA, N, input_spike_rate, OS='local', folder_path='/data/gpfs/projects/punim0643/artemios/simulations/', save_str='last_results'):
     print('Plotting simulation results ...')
     # spike rates
     window_size = 10*ms#%100.1*ms # Size of the window for the smooth spike rate # 100.1 instead of 100 to avoid an annoying warning at the end of the simulation
@@ -26,9 +26,9 @@ def plot_results(T, sp_P, sp_I, sp_S, r_P, r_I, r_S, lfp_v, v_p, v_i, I_GABA, I_
     if shape(r_I_rate) != shape(r_I.t):
         r_I_rate = r_I_rate[5:]
     
-    r_S_rate = r_S.smooth_rate(window='gaussian', width=window_size)
-    if shape(r_S_rate) != shape(r_S.t):
-        r_S_rate = r_S_rate[5:]
+    # r_S_rate = r_S.smooth_rate(window='gaussian', width=window_size)
+    # if shape(r_S_rate) != shape(r_S.t):
+    #     r_S_rate = r_S_rate[5:]
     
     f, axs = plt.subplots(4, 1, sharex=True, figsize=(10, 6.25)) # New figure with two subplots
     
@@ -48,7 +48,7 @@ def plot_results(T, sp_P, sp_I, sp_S, r_P, r_I, r_S, lfp_v, v_p, v_i, I_GABA, I_
     
     axs[0].plot(sp_P.t / ms, sp_P.i + N, '.', markersize=2, label='Pyramidal', c=c_py)
     axs[0].plot(sp_I.t / ms, sp_I.i, '.', markersize=2, label='PV', c=c_inter)
-    axs[0].plot(sp_S.t / ms, sp_S.i, '.', markersize=2, label='SST', c=c_sst)
+    # axs[0].plot(sp_S.t / ms, sp_S.i, '.', markersize=2, label='SST', c=c_sst)
     axs[0].legend(loc=1)
             
     axs[1].set_title('Population rates, moving average')
@@ -58,7 +58,7 @@ def plot_results(T, sp_P, sp_I, sp_S, r_P, r_I, r_S, lfp_v, v_p, v_i, I_GABA, I_
         
     axs[1].plot(r_P.t / ms, r_P_rate / Hz, label='Pyramidal', c=c_py)
     axs[1].plot(r_I.t / ms, r_I_rate / Hz, label='PV', c=c_inter)
-    axs[1].plot(r_S.t / ms, r_S_rate / Hz, label='SST', c=c_sst)
+    # axs[1].plot(r_S.t / ms, r_S_rate / Hz, label='SST', c=c_sst)
     axs[1].legend(loc=1)
     
     # synaptic currents
