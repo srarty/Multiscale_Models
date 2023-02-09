@@ -16,7 +16,7 @@ prefs.codegen.target = 'numpy'  # use the Python fallback instead of C compilati
 devices.device.shape = []       # This and the following line remove an annoying warning when brian2 is imported and loaded into RAM
 devices.device.size = []
 
-from lif_model import set_params
+from lif_model_CUBN import set_params, get_equations
 
 # # Save commands:
 # # Pyramidal:
@@ -59,12 +59,12 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     plt.close('all')
     #%% options  --------------------------------------------------------------
     
-    source          = 'three_pop'       # 'brunel', 'allen'  or 'three_pop'
-    synaptic_type   = 'GABAb'        # AMPA (excitatory), GABA (inhibitory) or GABAb
-    neuron_type     = 'pyramidal'  # pyramidal, inhibitory or gabab
+    # source          = 'three_pop'       # 'brunel', 'allen'  or 'three_pop'
+    synaptic_type   = 'GABAs'        # AMPA (excitatory), GABA (inhibitory) or GABAb
+    neuron_type     = 'sst'  # pyramidal, inhibitory or sst
     external        = False         # When AMPA, synapsis can be external or recurrent (local)
     input_spike_rate = 0            # spikes/ms/cell 
-    simulation_time = 0.3 * second
+    simulation_time = 0.15 * second
     
         
     #%% parameters  -----------------------------------------------------------
@@ -83,29 +83,29 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     if alpha_ee != '':
         neuron_type = 'pyramidal'
         synaptic_type = 'AMPA'
-        params = set_params(neuron_type, source)
+        params = set_params(neuron_type)
         params["j_AMPA"] = -1 * alpha_ee * pA
         
     elif alpha_ii != '':        
         neuron_type = 'inhibitory'
         synaptic_type = 'GABA'
-        params = set_params(neuron_type, source)
+        params = set_params(neuron_type)
         params["j_GABA"] = -1 * alpha_ii * pA
         
     elif alpha_ei != '':        
         neuron_type = 'inhibitory'
         synaptic_type = 'AMPA'
-        params = set_params(neuron_type, source)
+        params = set_params(neuron_type)
         params["j_AMPA"] = -1 * alpha_ei * pA
         
     elif alpha_ie != '':
         neuron_type = 'pyramidal'
         synaptic_type = 'GABA'
-        params = set_params(neuron_type, source)
+        params = set_params(neuron_type)
         params["j_GABA"] = -1 * alpha_ie * pA
     
     else:
-        params = set_params(neuron_type, source)
+        params = set_params(neuron_type)
     
     # membrane capacitance
     C_m = params["C"]
@@ -130,7 +130,7 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     
     # Cortical input
     num_inputs = 1                    # Both thalamo-cortical and cortico-cortical 
-    I_input = -300 * pA
+    I_input = -100 * pA#-300 * pA
     
     # Synaptic efficacies
     # AMPA (external)
@@ -144,6 +144,10 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
 
     elif synaptic_type == 'GABAb':
         j =  params["j_GABAb"]
+        alpha_weight = params["weight"]
+
+    elif synaptic_type == 'GABAs':
+        j =  params["j_GABAs"]
         alpha_weight = params["weight"]
 
     else:
@@ -163,58 +167,38 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     
     # Population
     eqs = '''
-    dv / dt = (-v + V_leak - (I_tot/g_m)) / tau_m : volt (unless refractory)
+        dv / dt = (-v + V_leak - (I_AMPA1/g_m)) / tau_m : volt (unless refractory)
     
-    dv1 / dt = (-v1 - (I_AMPA1/g_m)) / tau_m : volt (unless refractory)
-    dv6 / dt = (-v6 - (I_AMPA6/g_m)) / tau_m : volt (unless refractory)
-    
-    I_tot = I_AMPA1 + I_AMPA6: amp
-    
-    I_AMPA1 = j * s_AMPA1 : amp
-    ds_AMPA1 / dt = -s_AMPA1 / (tau_s) : 1    
-    
-    I_AMPA6 = (-896 * pA) * s_AMPA6 : amp
-    s_AMPA6 : 1
+        dv1 /dt = (-v1 -(I_AMPA1 / g_m)) / tau_m : volt (unless refractory)
+        
+        I_AMPA1 = j * s_AMPA1 : amp
+        ds_AMPA1 / dt = - s_AMPA1 / tau_s : 1
     '''
-    
+        
     eqs_pre_ampa1 = '''
     s_AMPA1 += alpha_weight
     ''' 
     
-    eqs_ampa6 ='''
-    s_AMPA6_post = s_AMPA6_syn : 1 (summed)
-    ds_AMPA6_syn / dt = - s_AMPA6_syn / (tau_s) + k * x6 : 1 (clock-driven)
-    dx6 / dt = - x6 / (tau_s) : 1 (clock-driven)
+    reset_str = '''
+    v = V_reset
+    v1 = V_reset-V_leak
     '''
     
-    eqs_pre_ampa6 = '''
-    x6 += 1
-    ''' 
-    
-    Pyramidal = NeuronGroup(N_P, eqs, threshold='v > V_thr', reset='''v = V_reset
-                                                    v1 = V_reset-V_leak
-                                                    v6 = V_reset-V_leak
-                                                    ''',refractory=tau_rp, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
+    Pyramidal = NeuronGroup(N_P, eqs, threshold='v > V_thr', reset=reset_str, refractory=tau_rp, method='rk4', dt=dt_, name='PyramidalPop') # Pyramidal population
     Pyramidal.v = V_leak
     
-  
+      
     if num_inputs > 1:
         Input = PoissonGroup(num_inputs, rates=input_spike_rate * Hz, dt=dt_)
     else:
         Input = NeuronGroup(num_inputs, input_eqs, threshold='v > V_thr', reset='v = V_reset', refractory=tau_rp, method='rk4', dt=dt_) # Pyramidal population
-    
-    # if external:
-    #     AMPA1_synapses = Synapses(Input, Pyramidal, on_pre=eqs_pre_ampa1, method='rk4', clock=Input.clock)
-    #     AMPA1_synapses.connect(p = 1)
+
     
     AMPA1_synapses = Synapses(Input, Pyramidal, on_pre=eqs_pre_ampa1, method='rk4', delay=tau_l)#, dt=10*usecond)
     AMPA1_synapses.connect(p = 1)
-        
-    AMPA6_synapses = Synapses(Input, Pyramidal, model=eqs_ampa6, on_pre=eqs_pre_ampa6, method='rk4')#, dt=10*usecond)
-    AMPA6_synapses.connect(p = 1)
-    AMPA6_synapses.active = False
     
-    Py_monitor = StateMonitor(Pyramidal, ['v', 'v1', 'v6', 'I_AMPA1', 'I_AMPA6', 'I_tot'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
+    
+    Py_monitor = StateMonitor(Pyramidal, ['v', 'v1', 'I_AMPA1'], record = True) # Monitoring the AMPA and GABA currents in the Pyramidal population
 
     #%% Run
     net = Network(collect())
@@ -237,7 +221,7 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
             
         axs[1].set_xlabel('Time (ms)')
         axs[1].set_ylabel('PSC (pA)')
-        axs[1].plot(T * 1e3, np.transpose(Py_monitor.I_AMPA1), lw=1)
+        axs[1].plot(T * 1e3, np.transpose(Py_monitor.I_AMPA1)/pA, lw=1)
         # axs[1].plot(T * 1e3, np.transpose(Py_monitor.I_AMPA6), lw=1, linestyle='dashed')
         # axs[1].plot(T * 1e3, np.transpose(Py_monitor.I_tot), lw=1)
         # if external:

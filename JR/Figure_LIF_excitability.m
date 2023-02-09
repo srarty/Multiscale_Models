@@ -1,4 +1,4 @@
-% Loads all the LIF files from a folder and gets the excitability according
+`% Loads all the LIF files from a folder and gets the excitability according
 % to a varying parameter
 % 
 % It is only for LIF, to get the NMM figure run Figure_excitabilty.m
