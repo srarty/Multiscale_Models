@@ -1,26 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on 8/Dec/2022
+Created on Mon Feb 13 15:44:02 2023
+
 @author: Artemio Soto-Breceda [artemios]
-Current based
-2 populations (Pyramidal and Inhibitory 2 types of GABA receptors)
-References: 
-    
-    [1] BRUNEL, Nicolas et WANG, Xiao-Jing. Effects of neuromodulation in a 
-        cortical network model of object working memory dominated by recurrent 
-        inhibition. Journal of computational neuroscience, 2001, vol. 11, no 1,
-        p. 63-85.
-        
-    [2] MARTINEZ-CANADA, Pablo et al. Computation of the electroencephalogram 
-        (EEG) from network models of point neurons. PLoS Computational Biology,
-        2021, vol. 17, no 4.
-    
-    [3] MAIMON (2009) Experimental firing rates. Mean firing rate = 16.6 Hz,max firing rate ~= 140 spikes/s (monkey, visual and motor cortex)
-    
-    [4] ZIBURKUS (2006) Same as above. Different firing rates for Inhibitory and Pyramidal neurons
-    
-    [5] CAVALLARI, Stefano et al (2014)
 """
+
 import os
 import scipy.io
 import numpy as np
@@ -29,7 +13,7 @@ from scipy import signal
 from termcolor import colored  # Coloured text in the terminal
 import matplotlib.pyplot as plt
 import pyspike as spk
-prefs.codegen.target = 'numpy'  # use the Python fallback instead of C compilation
+prefs.codegen.target = 'cython'  # use the Python fallback instead of C compilation
 devices.device.shape = []       # This and the following line remove an annoying warning when brian2 is imported and loaded into RAM
 devices.device.size = []
 from lif_model import set_params, get_equations
@@ -568,7 +552,7 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
         
         
     #%% Save simulation  ------------------------------------------------------------
-    folder_path = 'C://Users/artemios/Documents/Multiscale_Models_Data/2023/excitability/'
+    folder_path = '/data/gpfs/projects/punim0643/artemios/simulations/2023/excitability/'
     
     i = 0
     while os.path.exists(folder_path + 'lfp_%s_%s_%s_u%s.mat' % (pop_,parameter,i,u)):

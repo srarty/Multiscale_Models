@@ -25,7 +25,7 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABA(varargin)
     params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Any other value of CHANGE_U: U changes.
     params.options.CHANGE_AGONIST = 0; % Agonist changes
     
-    CURRENT = 50e-12; % 50
+    CURRENT = 0;% 50e-12; % 50
     if exist('injected_current','var'), CURRENT = injected_current; end % If 'CURRENT' was a varargin, ignore previous line
     params.options.CURRENT_TIME = 1490:1500; %1490:1500;
     params.options.INPUT_CURRENT_PY = 1000 * CURRENT / params.g_m_P; % 1000 for milivolts, then xe-12 A, where x is the amplitude in pA
