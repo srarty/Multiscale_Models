@@ -526,29 +526,29 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
     
     #%% plotting  -----------------------------------------------------------------
     
-    if PLOT:
-        plot_results(T, sp_P, sp_I, r_P, r_I, lfp_v, v_p, v_i, i_pi, i_pb, i_ip, N, input_spike_rate)
+    # if PLOT:
+    #     plot_results(T, sp_P, sp_I, r_P, r_I, lfp_v, v_p, v_i, i_pi, i_pb, i_ip, N, input_spike_rate)
       
-    # Regardless of PLOT, if TEST_PSP is on, plot the PSP we are testing
-    if TEST_PSP!='none':
-        v_psp = mean( getattr(PSP_monitor, 'v_'+TEST_PSP) , 0)
-        plt.figure()
-        plt.plot(v_psp*1e3)
+    # # Regardless of PLOT, if TEST_PSP is on, plot the PSP we are testing
+    # if TEST_PSP!='none':
+    #     v_psp = mean( getattr(PSP_monitor, 'v_'+TEST_PSP) , 0)
+    #     plt.figure()
+    #     plt.plot(v_psp*1e3)
     
-    #%% Statistics
-    if STATS & (TEST_PSP=='none'):
-        cv_py, cvstd_py, cv_in, cvstd_in, si_py, si_in, spkdist_py, spkdist_in, isidist_py, isidist_in = plot_spike_stats(sp_P, sp_I, t_start=0.2)
-    else:
-        cv_py = 0
-        cvstd_py = 0
-        cv_in = 0
-        cvstd_in = 0
-        si_py = 0
-        si_in = 0
-        spkdist_py = 0
-        spkdist_in = 0
-        isidist_py = 0
-        isidist_in = 0
+    # #%% Statistics
+    # if STATS & (TEST_PSP=='none'):
+    #     cv_py, cvstd_py, cv_in, cvstd_in, si_py, si_in, spkdist_py, spkdist_in, isidist_py, isidist_in = plot_spike_stats(sp_P, sp_I, t_start=0.2)
+    # else:
+    #     cv_py = 0
+    #     cvstd_py = 0
+    #     cv_in = 0
+    #     cvstd_in = 0
+    #     si_py = 0
+    #     si_in = 0
+    #     spkdist_py = 0
+    #     spkdist_in = 0
+    #     isidist_py = 0
+    #     isidist_in = 0
         
         
     #%% Save simulation  ------------------------------------------------------------
