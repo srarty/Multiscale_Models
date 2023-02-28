@@ -45,7 +45,8 @@ def lif(MODEL='cobn', k_AMPA_P=0.01/mV, k_GABA_P=0.05/mV, k_GABAb_P=0.05/mV, k_A
     input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
     
     input_spike_rate = [0]#[0, 2.5, 5, 7.5]#[0, 1, 3, 5] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
-    input_spike_rate_thalamic = 1.5 # spikes/ms/cell (spontaneous activity)
+    input_spike_rate_thalamic = 2 # spikes/ms/cell (spontaneous activity)
+    input_spike_rate_thalamic_in = 1.5 # spikes/ms/cell (spontaneous activity)
     
     #%% parameters  --------------------------------------------------------------
     simulation_time = 1 * second
@@ -101,6 +102,7 @@ def lif(MODEL='cobn', k_AMPA_P=0.01/mV, k_GABA_P=0.05/mV, k_GABAb_P=0.05/mV, k_A
     tau_s_AMPA_I =  cubn_in.get('tau_AMPA_s')  
     tau_s_AMPA_I_ext = cubn_in.get('tau_AMPA_s_ext')  
     tau_s_GABA_I = cubn_in.get('tau_GABA_s')
+    tau_s_GABAb_I = cubn_in.get('tau_GABAb_s')
     
     # refractory period
     tau_rp_P = cubn_py.get('tau_rp')
@@ -229,6 +231,10 @@ def lif(MODEL='cobn', k_AMPA_P=0.01/mV, k_GABA_P=0.05/mV, k_GABAb_P=0.05/mV, k_A
     s_GABA += increment_GABA_P
     '''
     
+    eqs_pre_gabab_P = '''
+    s_GABAb += increment_GABA_P
+    '''
+    
     eqs_pre_glut_I = '''
     s_AMPA += increment_AMPA_I
     '''
@@ -259,7 +265,7 @@ def lif(MODEL='cobn', k_AMPA_P=0.01/mV, k_GABA_P=0.05/mV, k_GABAb_P=0.05/mV, k_A
     C_I_P.active = ACTIVE_INTERNEURONS
     
     # GABAb to P
-    C_B_P = Synapses(In_Pop, Py_Pop, on_pre=eqs_pre_gaba_P, method='rk4', dt=dt_, delay=delay, name='synapses_pb')
+    C_B_P = Synapses(In_Pop, Py_Pop, on_pre=eqs_pre_gabab_P, method='rk4', dt=dt_, delay=delay, name='synapses_pb')
     C_B_P.connect(p = p_IP)
     C_B_P.active = ACTIVE_INTERNEURONS
     
@@ -280,7 +286,7 @@ def lif(MODEL='cobn', k_AMPA_P=0.01/mV, k_GABA_P=0.05/mV, k_GABAb_P=0.05/mV, k_A
         
     # Poisson input (Thalamic, baseline spike rate)
     C_Tha_P = PoissonInput(Py_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_P)
-    C_Tha_I = PoissonInput(In_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_I)
+    C_Tha_I = PoissonInput(In_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic_in*1000/num_inputs) * Hz, increment_AMPA_ext_I)
     
     
     #%% monitors  -----------------------------------------------------------------
@@ -342,8 +348,8 @@ def lif(MODEL='cobn', k_AMPA_P=0.01/mV, k_GABA_P=0.05/mV, k_GABAb_P=0.05/mV, k_A
     if PLOT:
         plot_results(sp_P, sp_I, Py_monitor, In_monitor, r_P, r_I, lfp_v)
     
-    vPy = mean(mean(Py_monitor.v[: , 1000:], 0))
-    vIn = mean(mean(In_monitor.v[: , 1000:], 0))
+    vPy = mean(mean(Py_monitor.v[: , 2500:], 0))
+    vIn = mean(mean(In_monitor.v[: , 2500:], 0))
     
     return vPy, vIn
     
@@ -406,8 +412,19 @@ while not(converged):
     k_GABA_I.append(1/(VguessIn - v_GABA))
     
     
+    
 print("Success. k_AMPA_P=%s, k_GABA_P=%s, k_GABAb_P=%s, k_AMPA_I=%s, k_GABA_I=%s" %(k_AMPA_P[-1], k_GABA_P[-1], k_GABAb_P[-1], k_AMPA_I[-1], k_GABA_I[-1]))
     
+# If on Spartan, save results:
+save_dictionary={'k_AMPA_P': k_AMPA_P,
+                 'k_GABA_P': k_GABA_P,
+                 'k_GABAb_P': k_GABAb_P,
+                 'k_AMPA_I': k_AMPA_I,
+                 'k_GABA_I': k_GABA_I,
+                 } 
+
+folder_path = '/data/gpfs/projects/punim0643/artemios/simulations/'
+scipy.io.savemat(folder_path + 'CUBN_to_COBN_results.mat', mdict = save_dictionary)
 
 
 

@@ -58,11 +58,13 @@ def set_params(type='pyramidal'):
         tau_rpr = 20 * ms #100 * ms # Relative refractory period
         tau_rp = tau_rpa + tau_rpr # Effective refractory period
         tau_m = 20 * ms # Membrane time constant
+        
         tau_GABA_s = 5.25 * ms
         tau_GABAb_s = 52.5 * ms
         tau_AMPA_s = 2.4 * ms
         tau_AMPA_s_ext = 2.4 * ms
         tau_l = 1 * ms # Latency
+        
         # Synaptic efficacies
         j_GABA  = 16.5 * pA # Alone (when j_GABAb is 0): 99 * pA # 18.5 * pA # unitary PSP: 0.64 mV (together with GABAB)
         j_GABAb = j_GABA / 2 # 50*pA # unitary PSP: 0.64 mV (together with GABAA) 
@@ -80,15 +82,18 @@ def set_params(type='pyramidal'):
         #%% Inhibitory. Allen
         g_leak = 20 * nS # Leak conductance
         C = 0.2 * nF # Membrane capacitance
+        
         tau_rpa = 1 * ms # Absolute refractory period
         tau_rpr = 12.5 * ms # 100 * ms # Relative refractory period
         tau_rp = tau_rpa + tau_rpr # Effective refractory period
         tau_m = C/g_leak #10 * ms # Membrane time constant
+        
         tau_GABA_s = 5.25 * ms
         tau_GABAb_s = 0 * ms
         tau_AMPA_s = 1.2 * ms
         tau_AMPA_s_ext = 1.2*ms
         tau_l = 1 * ms # Latency
+        
         # Synaptic efficacies
         j_GABA  = 53 * pA # 22.62 * pA # PSP: 0.68 mV
         j_GABAb  = 0 * pA
@@ -124,7 +129,7 @@ def set_params(type='pyramidal'):
         "p_PP":         p_PP,
         "p_II":         p_II,
         "weight":       weight,
-        "external_input_weight":               external_input_weight
+        "external_input_weight": external_input_weight
     }
     
     return params
