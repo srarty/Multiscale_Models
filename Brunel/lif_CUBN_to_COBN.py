@@ -19,8 +19,8 @@ from scipy import signal
 from termcolor import colored  # Coloured text in the terminal
 import matplotlib.pyplot as plt
 import pyspike as spk
-# prefs.codegen.target = 'numpy'  # use the Python fallback instead of C compilation
-prefs.codegen.target = 'cython'  # use the Python fallback instead of C compilation
+prefs.codegen.target = 'numpy'  # use the Python fallback instead of C compilation
+# prefs.codegen.target = 'cython'  # use the Python fallback instead of C compilation
 devices.device.shape = []       # This and the following line remove an annoying warning when brian2 is imported and loaded into RAM
 devices.device.size = []
 
@@ -34,8 +34,8 @@ def lif(MODEL='cobn', k_AMPA_P=0.01/mV, k_GABA_P=0.05/mV, k_GABAb_P=0.05/mV, k_A
     RECURRENT_PYRAMIDAL = True      # Self excitation 
     RECURRENT_INHIBITORY = True     # Self inhibition
     ACTIVE_INTERNEURONS = True      # Inhibitory population
-    ACTIVE_GABAb = False            # Second inhibitory (slow) population (Wendling-like model)
-    INHIBIT_INPUT = False           # Excitatory cortical input to inhibitory population
+    ACTIVE_GABAb = True            # Second inhibitory (slow) population (Wendling-like model)
+    INHIBIT_INPUT = True           # Excitatory cortical input to inhibitory population
     GAUSSIAN_REFRACTORY = True      # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
     GAUSSIAN_THRESHOLD = True       # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
     
@@ -423,8 +423,8 @@ save_dictionary={'k_AMPA_P': k_AMPA_P,
                  'k_GABA_I': k_GABA_I,
                  } 
 
-folder_path = '/data/gpfs/projects/punim0643/artemios/simulations/'
-scipy.io.savemat(folder_path + 'CUBN_to_COBN_results.mat', mdict = save_dictionary)
+# folder_path = '/data/gpfs/projects/punim0643/artemios/simulations/'
+# scipy.io.savemat(folder_path + 'CUBN_to_COBN_results.mat', mdict = save_dictionary)
 
 
 
