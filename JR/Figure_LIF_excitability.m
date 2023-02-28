@@ -62,8 +62,8 @@ xlabel(title_);
 ylabel('Firing rate (Hz)');
 
 %% Gaba_a into Inhibitory interneurons
-% var_vec = {'py_j_AMPA', 'in_j_AMPA', 'py_j_GABA_', 'py_j_GABAb_', 'in_j_GABA_'};
-var_vec = {'in_j_GABA_'};
+var_vec = {'py_j_AMPA', 'in_j_AMPA', 'py_j_GABA_', 'py_j_GABAb_', 'in_j_GABA_'};
+% var_vec = {'in_j_GABA_'};
 
 for ii = 1:length(var_vec)
     var_ = var_vec{ii};

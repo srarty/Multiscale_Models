@@ -55,7 +55,11 @@ y_ = -y/abs(max(-y));
 % the approximate recovery time given that the decay time constant from 
 % peak to recovery is the same in all recordings and it is almost identical
 % to the membrane time constant of the pyramidal population.
-[~, idx] = findpeaks(y_, 'MinPeakHeight', min_peak);
+try
+    [~, idx] = findpeaks(y_, 'MinPeakHeight', min_peak);
+catch E
+    disp('MinPeakHeight higher than number of samples')
+end
 idx(idx <= idx_stim+1) = []; % Remove peaks found before the impulse
 idx = min(idx); % only leave smallest idx
 
@@ -65,6 +69,10 @@ try
     t_ = t_ - t_(1);
 catch E
     disp('No peaks found');
+    f = figure; plot(t(trim:end), y);
+    response = questdlg('No peaks found, what happened?', 'Manual input', 'Saturation', 'Oscillation', 'Oscillation');
+    switch response, case 'Oscillation', failure_value = 0; case 'Saturation', failure_value = Inf; end
+    close(f);
 end
     
 if ~isempty(y_)
@@ -85,7 +93,11 @@ if ~isempty(y_)
 else
     % If y_ is empty, we assume the model saturated, so there's no recovery
     % and we set the recovefry time to infinity.
-    fit_time_constant = Inf;
+    try
+        fit_time_constant = failure_value;
+    catch E
+        disp('''failure_value'' should have been set in a dialog question. If the question didn''t appear, you need to debug.');
+    end
 end
 
 if PLOT

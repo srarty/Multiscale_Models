@@ -12,7 +12,7 @@ import analyse_spike_trains as ast
 import pyspike as spk
 
 #%% Plot 
-def plot_results(T, sp_P, sp_I, r_P, r_I, lfp_v, v_p, v_i, I_GABA, I_GABAb, I_AMPA, N, input_spike_rate, OS='local', folder_path='/data/gpfs/projects/punim0643/artemios/simulations/', save_str='last_results'):
+def plot_results(T, sp_P, sp_I, r_P, r_I, lfp_v, v_p, v_i, I_GABA, I_GABAb, I_AMPA, N, input_spike_rate, I_exc_py, I_inh_py, I_exc_in, I_inh_in, OS='local', folder_path='/data/gpfs/projects/punim0643/artemios/simulations/', save_str='last_results'):
     print('Plotting simulation results ...')
     # spike rates
     window_size = 10*ms#%100.1*ms # Size of the window for the smooth spike rate # 100.1 instead of 100 to avoid an annoying warning at the end of the simulation
@@ -102,12 +102,23 @@ def plot_results(T, sp_P, sp_I, r_P, r_I, lfp_v, v_p, v_i, I_GABA, I_GABAb, I_AM
     axs[1].set_ylabel('mV')
     axs[1].plot(T*1000, v_i, lw=0.5, c=c_inter)
     
-    # f3.tight_layout()
-   
-    # f4, axs = plt.subplots(1, 1, figsize=(6,6))
-    # axs.plot(np.transpose(v_pi) * 1000, np.transpose(v_ip) * 1000)
-    # axs.set_xlabel('x1 = V_pi')
-    # axs.set_ylabel('x3 = V_ip')
+    # Second figure. PSP
+    f3, axs = plt.subplots(2, 1, sharex=True, figsize=(10, 6.25)) # New figure with two subplots
+    
+    axs[0].set_title('Pyramidal synaptic input')
+    axs[0].set_xlabel('Time (ms)')
+    axs[0].set_ylabel('current (nA)')
+    axs[0].plot(T*1000, I_exc_py / nA, lw=1, c=c_py, label='E')
+    axs[0].plot(T*1000, I_inh_py / nA, lw=1, c=c_inter, label='I')
+    axs[0].plot(T*1000, (I_exc_py + I_inh_py) / nA, lw=2, c=c_gray, label='E+I')
+    axs[0].legend(loc=1)
+    
+    axs[1].set_title('Interneurons synaptic input')
+    axs[1].set_xlabel('Time (ms)')
+    axs[1].set_ylabel('current (nA)')
+    axs[1].plot(T*1000, I_exc_in / nA, lw=1, c=c_py, label='E')
+    axs[1].plot(T*1000, I_inh_in / nA, lw=1, c=c_inter, label='I')
+    axs[1].plot(T*1000, (I_exc_in + I_inh_in) / nA, lw=2, c=c_gray, label='E+I')
     
     if OS=='local':
         plt.show() 

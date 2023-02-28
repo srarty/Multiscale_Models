@@ -9,7 +9,30 @@ References:
     [2] CAVALLARI, Stefano et al (2014) Comparison of the dynamics of neural 
         interactions between current-based and conductance-based integrate-and-
         fire recurrent networks.
+    [3] EDER et al., 2021 : GABAA and GABAB PSP, tau and distribution
 """
+
+## NOTE: These parameters are taken from Billeh and Brunel (ext)
+# The parameters for the GABA_B network are as follows:
+#
+# j_P_GABA_A = 18.5 pA
+# j_P_GABA_B = 2.31 pA
+# j_P_AMPA = -36.75 pA
+# j_P_AMPA_ext = -129.66 pA
+# j_P_AMPA_tha = -129.66 pA
+#
+# j_I_GABA_A = 22.62 pA
+# j_I_AMPA = -41.25 pA
+# j_I_AMPA_ext = 15.58 pA
+# j_I_AMPA_ext = 155.8 pA
+#
+# connectivity (L2/3)
+# P_IP = 0.411
+# P_PI = 0.395
+# P_PP = 0.16
+# P_II = 0.451
+#
+    
 from brian2 import *
 def set_params(type='pyramidal'):
     '''
@@ -20,10 +43,11 @@ def set_params(type='pyramidal'):
     
     #%% Default parameters
     # Connectivity
-    p_IP =  0.411 #* 0.25
-    p_PI =  0.395 #* 0.25
-    p_PP =  0.16 #* 0.25
-    p_II =  0.451 #* 0.25
+    p_IP = 0.437 #* 0.6 #L2/3:0.411 #* 0.25
+    p_BP = 0.437 #* 0.4
+    p_PI = 0.43  #L2/3:0.395 #* 0.25
+    p_PP = 0.243 #L2/3:0.16 #* 0.25
+    p_II = 0.451 #L2/3:0.451 #* 0.25
     
     if type == 'pyramidal':
         #%% Pyramidal. Allen
@@ -35,23 +59,22 @@ def set_params(type='pyramidal'):
         tau_rp = tau_rpa + tau_rpr # Effective refractory period
         tau_m = 20 * ms # Membrane time constant
         tau_GABA_s = 5.25 * ms
-        tau_GABAb_s = 105 * ms
+        tau_GABAb_s = 52.5 * ms
         tau_AMPA_s = 2.4 * ms
         tau_AMPA_s_ext = 2.4 * ms
         tau_l = 1 * ms # Latency
         # Synaptic efficacies
-        j_GABA  = 18.5 * pA
-        j_GABAb = 2.3125 * pA
-        j_AMPA  = -36.75 * pA
-        j_AMPA_ext = -112.75 * pA #1.375 * pA # Too large
-        j_AMPA_tha = -112.75 * pA # too large_
-         
-       
+        j_GABA  = 16.5 * pA # Alone (when j_GABAb is 0): 99 * pA # 18.5 * pA # unitary PSP: 0.64 mV (together with GABAB)
+        j_GABAb = j_GABA / 2 # 50*pA # unitary PSP: 0.64 mV (together with GABAA) 
+        j_AMPA  = -230 * pA # unitary PSP: 0.83 mV
+        j_AMPA_ext = -300 * pA#-112.75 * pA # unitary PSP: 1.09 mV as per Brunel's proportion
+        j_AMPA_tha = -300 * pA#-112.75 * pA # same as above
+        
         # Delta function weight (increment with each input spike)
         # Defined experimentally with 'synaptic_functions.py'. Based on the 
         # unitary increment of the single exponential.
         weight = 1
-        external_input_weight = 1.15
+        external_input_weight = 1 #1.15
         
     elif type == 'inhibitory':            
         #%% Inhibitory. Allen
@@ -64,18 +87,18 @@ def set_params(type='pyramidal'):
         tau_GABA_s = 5.25 * ms
         tau_GABAb_s = 0 * ms
         tau_AMPA_s = 1.2 * ms
-        tau_AMPA_s_ext = 1.2*ms 
+        tau_AMPA_s_ext = 1.2*ms
         tau_l = 1 * ms # Latency
         # Synaptic efficacies
-        j_GABA  = 22.62 * pA #45.24 * pA
+        j_GABA  = 53 * pA # 22.62 * pA # PSP: 0.68 mV
         j_GABAb  = 0 * pA
-        j_AMPA  = -41.25 * pA
-        j_AMPA_ext = -1.9 * pA
-        j_AMPA_tha = -19 * pA
+        j_AMPA  = -290 * pA * 1.5# -41.25 * pA # PSP: 1.29 mV
+        j_AMPA_ext = -390 * pA #-390 * 2 * pA # -15.58 * pA#-1.9 * pA # PSP: 1.74 mV
+        j_AMPA_tha =  -390 * pA #-390 * 2 * pA #-19*pA
         
         # Delta function weight (increment with each input spike)
         weight = 1
-        external_input_weight = 8.2
+        external_input_weight = 1#8.2
         
     else:
         return 0
@@ -96,6 +119,7 @@ def set_params(type='pyramidal'):
         "j_AMPA_ext":   j_AMPA_ext,
         "j_AMPA_tha":   j_AMPA_tha,
         "p_IP":         p_IP,
+        "p_BP":         p_BP,
         "p_PI":         p_PI,
         "p_PP":         p_PP,
         "p_II":         p_II,
@@ -128,6 +152,7 @@ def get_equations(type = 'pyramidal'):
             
             I_GABA_rec = j_GABA_P * s_GABA : amp
             ds_GABA / dt = -s_GABA / tau_s_GABA_P : 1
+            
             I_GABAb = j_GABAb_P * s_GABAb: amp
             ds_GABAb / dt = -s_GABAb / tau_s_GABAb_P : 1
             

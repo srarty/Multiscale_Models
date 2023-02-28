@@ -60,11 +60,11 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     #%% options  --------------------------------------------------------------
     
     # source          = 'three_pop'       # 'brunel', 'allen'  or 'three_pop'
-    synaptic_type   = 'GABAs'        # AMPA (excitatory), GABA (inhibitory) or GABAb
-    neuron_type     = 'sst'  # pyramidal, inhibitory or sst
+    synaptic_type   = 'GABA'        # AMPA (excitatory), GABA (inhibitory) GABAb or both_gaba
+    neuron_type     = 'pyramidal'  # pyramidal, inhibitory or sst
     external        = False         # When AMPA, synapsis can be external or recurrent (local)
     input_spike_rate = 0            # spikes/ms/cell 
-    simulation_time = 0.15 * second
+    simulation_time = 0.5 * second
     
         
     #%% parameters  -----------------------------------------------------------
@@ -120,9 +120,10 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     if synaptic_type == 'AMPA':
         tau_s =  params["tau_AMPA_s"]
     elif synaptic_type == 'GABAb':
-        tau_s = 20 * params["tau_GABA_s"]             
+        tau_s = params["tau_GABAb_s"]             
     else:
         tau_s = params["tau_GABA_s"]             
+        taub_s = params["tau_GABAb_s"]             
         
     
     tau_l = 0.0 * ms
@@ -152,6 +153,7 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
 
     else:
         j =  params["j_GABA"]
+        jb = params["j_GABAb"]
         alpha_weight = params["weight"]
     
     
@@ -166,18 +168,34 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     '''
     
     # Population
-    eqs = '''
-        dv / dt = (-v + V_leak - (I_AMPA1/g_m)) / tau_m : volt (unless refractory)
-    
-        dv1 /dt = (-v1 -(I_AMPA1 / g_m)) / tau_m : volt (unless refractory)
+    if synaptic_type == 'both_gaba':
+        # For GABA_A and GABA_B together
+        eqs = '''
+            dv / dt = (-v + V_leak - (I_AMPA1/g_m)) / tau_m : volt (unless refractory)
         
-        I_AMPA1 = j * s_AMPA1 : amp
-        ds_AMPA1 / dt = - s_AMPA1 / tau_s : 1
-    '''
+            dv1 /dt = (-v1 -(I_AMPA1 / g_m)) / tau_m : volt (unless refractory)
+            
+            I_AMPA1 = (j * s_AMPA1) + (jb * s_AMPA2) : amp
+            ds_AMPA1 / dt = -s_AMPA1 / tau_s : 1
+            ds_AMPA2 / dt = -s_AMPA2 / taub_s : 1
+        '''
         
-    eqs_pre_ampa1 = '''
-    s_AMPA1 += alpha_weight
-    ''' 
+        eqs_pre_ampa1 = '''
+            s_AMPA1 += alpha_weight
+            s_AMPA2 += alpha_weight
+        '''     
+    else:
+        eqs = '''
+            dv / dt = (-v + V_leak - (I_AMPA1/g_m)) / tau_m : volt (unless refractory)
+        
+            dv1 /dt = (-v1 -(I_AMPA1 / g_m)) / tau_m : volt (unless refractory)
+            
+            I_AMPA1 = j * s_AMPA1 : amp
+            ds_AMPA1 / dt = - s_AMPA1 / tau_s : 1
+        '''
+        eqs_pre_ampa1 = '''
+            s_AMPA1 += alpha_weight
+        '''     
     
     reset_str = '''
     v = V_reset
@@ -212,6 +230,8 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
         axs[0].set_title('Neuron type: {} | Synapses: {} | j: {} pA'.format(neuron_type, synaptic_type, j/pA))
         axs[0].set_ylabel('PSP (mV)')
         axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v1) * 1e3), lw=1, label='v1 (single exp)')
+        print('min: %s | max: %s' %(min((np.transpose(Py_monitor.v1))), max((np.transpose(Py_monitor.v1)))))
+        print('Sum: %s' %(sum(Py_monitor.v1)))
         # axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v6) * 1e3), lw=1, label='v6 (alpha)', linestyle='dashed')
         # axs[0].plot(T * 1e3, ((np.transpose(Py_monitor.v) - V_leak) * 1e3), lw=1, label='Vm', linestyle='solid')
         # axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v1 + Py_monitor.v6) * 1e3), lw=1, label='Sum', linestyle='dashed')

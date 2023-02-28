@@ -110,22 +110,16 @@ switch mode
         
         % Nonlinearity
         % Pyramidal:
-        params.e0 =  33.32; % 30.8; % Maximum firing rates
-        params.gompertz.b = 0.9314;% 1.618;
-        params.gompertz.c = 1.024;% 1.457;
-        params.gompertz.d = 0.1726;% 0.2382;
+        params.e0 =  25.65; % Maximum firing rates
+        params.gompertz.b = 0.8736;
+        params.gompertz.c = 0.9686;
+        params.gompertz.d = 0.4128;
         
         % Interneurons:
-        params.e0i = 51.62;% 49.3; % Maximum firing rates
-        params.gompertzi.b = 2.143;% 2.083;
-        params.gompertzi.c = 1.563;% 1.623;
-        params.gompertzi.d = 2.449;% 0.2538;
-        
-        % GABAb:
-        params.e0b = 54.44;% 64.3; % Maximum firing rates
-        params.gompertzb.b = 2.182;% 2.19;
-        params.gompertzb.c = 1.607;% 1.719;
-        params.gompertzb.d = 0.2373;% 0.3111;
+        params.e0i = 65; % Maximum firing rates
+        params.gompertzi.b = 2.381;
+        params.gompertzi.c = 1.79;
+        params.gompertzi.d = 0.2661;
         
     otherwise
         error('%s rythm not implemented, sorry!', mode);

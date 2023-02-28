@@ -25,7 +25,7 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABA(varargin)
     params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Any other value of CHANGE_U: U changes.
     params.options.CHANGE_AGONIST = 0; % Agonist changes
     
-    CURRENT = 0;% 50e-12; % 50
+    CURRENT = 50e-12; % 50
     if exist('injected_current','var'), CURRENT = injected_current; end % If 'CURRENT' was a varargin, ignore previous line
     params.options.CURRENT_TIME = 1490:1500; %1490:1500;
     params.options.INPUT_CURRENT_PY = 1000 * CURRENT / params.g_m_P; % 1000 for milivolts, then xe-12 A, where x is the amplitude in pA
@@ -109,8 +109,11 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABA(varargin)
     % Create injected current vector
     I_py = zeros(size(x,1),1);
     I_in = zeros(size(x,1),1);
-    I_py(params.options.CURRENT_TIME) = params.options.INPUT_CURRENT_PY;
-    I_in(params.options.CURRENT_TIME) = params.options.INPUT_CURRENT_IN;
+    
+    if numel(I_py) > max(params.options.CURRENT_TIME)
+        I_py(params.options.CURRENT_TIME) = params.options.INPUT_CURRENT_PY;
+        I_in(params.options.CURRENT_TIME) = params.options.INPUT_CURRENT_IN;
+    end
     
     yy = zeros(size(y));
     for i = 1:size(x,1)
@@ -165,12 +168,12 @@ function dx = ode(t,x,params,dt, S1, S2)
     Tau_coeff = @(m, s) 1/(m*s);% Nicola Campbell
     
     c_constant = params.c_constant;
-    c1 = 29.7217  * c_constant * params.P_inTOpy;   % Inhibitory synapses into pyramidal population
-    c2 = 70.6482 * c_constant * params.P_pyTOin ;% Excitatory synapses into inhibitory population
-    c3 = 141.1007 * c_constant * params.P_pyTOpy;   % Recursive excitation to pyramidal cells
-    c4 = 9.5   * c_constant * params.P_inTOin;   % Recursive inhibition to inhibitory cells
+    c1 = 58.24  * c_constant * params.P_inTOpy;   % Inhibitory synapses into pyramidal population
+    c2 = 70.65 * c_constant * params.P_pyTOin ;% Excitatory synapses into inhibitory population
+    c3 = 140.4 * c_constant * params.P_pyTOpy;   % Recursive excitation to pyramidal cells
+    c4 = 19   * c_constant * params.P_inTOin;   % Recursive inhibition to inhibitory cells
     c5 = 17.6;                                      % External excitatory synapses into pyramidal population
-    c6 = 170.3 * c_constant * params.P_inTOpy;      % Inhibitory synapses into pyramidal population % 166.4415
+    c6 = 340.6 * c_constant * params.P_inTOpy;      % Inhibitory synapses into pyramidal population % 166.4415
     
     tau_sp = params.tau_sp;
     tau_mp = params.tau_mp;
@@ -201,23 +204,23 @@ function dx = ode(t,x,params,dt, S1, S2)
     % Double exponential from Nicola-Campbell (2013):
     % GABAa->P
     dx(1) = x(2) - x(1)/tau_mp;
-    dx(2) = - x(2)/tau_sp + AmplitudeI *  S1(x(3) + x(11) + x(19) + INPUT_CURRENT_IN);
+    dx(2) = - x(2)/tau_sp + AmplitudeI * S1(x(3) + x(11) + x(19) + INPUT_CURRENT_IN);
     
     % P->I
     dx(3) = x(4) - x(3)/tau_mi;
-    dx(4) = - x(4)/tau_si + AmplitudeE *  S2(x(1) + x(5) + x(7) + x(9) + INPUT_CURRENT_PY);
+    dx(4) = - x(4)/tau_si + AmplitudeE * S2(x(1) + x(5) + x(7) + x(9) + INPUT_CURRENT_PY);
     
     % Recurrent Pyramidal P->P
     dx(5) = x(6) - x(5)/tau_mrp;
-    dx(6) = - x(6)/tau_srp + AmplitudeRE *  S2(x(1) + x(5) + x(7)+ x(9) + INPUT_CURRENT_PY );
+    dx(6) = - x(6)/tau_srp + AmplitudeRE * S2(x(1) + x(5) + x(7)+ x(9) + INPUT_CURRENT_PY );
     
     % External input u->P
     dx(7) = x(8) - x(7)/tau_mrp;
-    dx(8) = - x(8)/tau_srp + AmplitudeU  *  (u + (params.options.ADD_NOISE *(sqrt(u).*randn(1,1))));
+    dx(8) = - x(8)/tau_srp + AmplitudeU  * (u + (params.options.ADD_NOISE *(sqrt(u).*randn(1,1))));
     
     % GABAb -> P
     dx(9) = x(10) - x(9)/tau_mp;
-    dx(10) = - x(10)/tau_sb + AmplitudeB *  S1(x(3) + x(11) + x(19) + INPUT_CURRENT_IN); % S3(x(13) + x(7) + INPUT_CURRENT_B);
+    dx(10) = - x(10)/tau_sb + AmplitudeB * S1(x(3) + x(11) + x(19) + INPUT_CURRENT_IN); % S3(x(13) + x(7) + INPUT_CURRENT_B);
     
     % Recurrent Inhibition GABAa -> I
     dx(11) = x(12) - x(11)/tau_mri;

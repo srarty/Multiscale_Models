@@ -4,10 +4,10 @@
 % Artemio - February 2022
 
 % load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_ipsp.mat'); psp = ipsp; % Inhibitory (GABA) on pyramidal
-% load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_epsp.mat'); psp = epsp; % Excitatory (AMPA) on inhibitory interneurons
+load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_epsp.mat'); psp = epsp; % Excitatory (AMPA) on inhibitory interneurons
 % load('C:\Users\artemios\Documents\Multiscale_Models_Data\gabab_epsp.mat'); psp = epsp; % Excitatory (AMPA) on GABAb interneurons
 % load('C:\Users\artemios\Documents\Multiscale_Models_Data\gabab_ipsp.mat'); psp = ipsp; % Inhibitory (GABA) on GABAb interneurons
-load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidalGabab_ipsp.mat'); psp = ipsp; % GABAb on pyramidal interneurons
+% load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidalGabab_ipsp.mat'); psp = ipsp; % GABAb on pyramidal interneurons
 % load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_epsp.mat'); psp = epsp; % Excitatory (AMPA) on pyramidal (recursive)
 % load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_ipsp.mat'); psp = ipsp; % Inhibitory (GABA) on inhibitory interneurons (recursive)
 % load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_externalEPSP.mat'); psp = epsp; % Excitatory (AMPA_ext) on pyramidal (external input)
@@ -26,9 +26,9 @@ T = linspace(0,0.3,length(psp));
 ft = fittype( 'c*(exp(-t/a)-exp(-t/b))', 'independent', 't', 'dependent', 'y');
 
 opts = fitoptions(ft);
-opts.StartPoint = [0.02 0.01001 1];
-opts.Lower = [0.02 0.105 -10]; %[0.01 0.00525 0]; %0.0024 0];     % opts.Lower = [0.0001 0.006031 0]; 
-opts.Upper = [0.02 0.105 10]; %0.0024 10];    % opts.Upper = [0.1 0.006031 10];    
+opts.StartPoint = [0.01 0.0012 1];
+opts.Lower = [0.01 0.0012 -10]; %[0.01 0.00525 0]; %0.0024 0];     % opts.Lower = [0.0001 0.006031 0]; 
+opts.Upper = [0.01 0.0012 10]; %0.0024 10];    % opts.Upper = [0.1 0.006031 10];    
 opts.Robust = 'Off';
 fitresult = fit(T', psp', ft, opts) % With options
 % fitresult = fit(T', psp', ft) % No options

@@ -5,129 +5,169 @@
 DO_RECOVERY_TIME = true;
 DO_ACFW = false;
 
-%% u (external input rate)
-disp('Varying u...')
-values = 0:0.25:3; 
-w_alpha_i = zeros(size(values));
-tr_u = zeros(size(values));
-fr_in_u = zeros(size(values));
-fr_py_u = zeros(size(values));
-for i = 1:length(values)
-%     [x, y_{i}, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive('alpha_i', values(i));
-    [x, y_{i}, t, f_e, f_i] = NMM_GABA('u', values(i));
-    if DO_ACFW, w_alpha_i(i) = spectrum(x, y_{i}, t, false); end
-    if DO_RECOVERY_TIME, tr_u(i) = analyze_excitability(y_{i},t,1489, -3, 1000, false); end
-    fr_in_u(i) = mean(f_i(400:1400));
-    fr_py_u(i) = mean(f_e(400:1400));
-end
-% Save
-disp('Saving results for ''u''...');
-save 'parameter_sweeps\u.mat' y_ tr_u fr_in_u fr_py_u values
-clear y_ tr_u fr_in_u fr_py_u
+% %% u (external input rate)
+% disp('Varying u...')
+% values = 0:0.25:3; 
+% w_alpha_i = zeros(size(values));
+% tr_u = zeros(size(values));
+% fr_in_u = zeros(size(values));
+% fr_py_u = zeros(size(values));
+% for i = 1:length(values)
+% %     [x, y_{i}, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive('alpha_i', values(i));
+%     [x, y_{i}, t, f_e, f_i] = NMM_GABA('u', values(i));
+%     if DO_ACFW, w_alpha_i(i) = spectrum(x, y_{i}, t, false); end
+%     if DO_RECOVERY_TIME, tr_u(i) = analyze_excitability(y_{i},t,1489, -3, 1000, false); end
+%     fr_in_u(i) = mean(f_i(400:1400));
+%     fr_py_u(i) = mean(f_e(400:1400));
+% end
+% % Save
+% disp('Saving results for ''u''...');
+% save 'parameter_sweeps\u.mat' y_ tr_u fr_in_u fr_py_u values
+% clear y_ tr_u fr_in_u fr_py_u
 
-%% alpha_i
-disp('Varying alpha_i...')
-values = 0.1:0.1:2; 
-w_alpha_i = zeros(size(values));
-tr_alpha_i = zeros(size(values));
-fr_in_alpha_i = zeros(size(values));
-fr_py_alpha_i = zeros(size(values));
-for i = 1:length(values)
-%     [x, y_{i}, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive('alpha_i', values(i));
-    [x, y_{i}, t, f_e, f_i] = NMM_GABA('alpha_i', values(i));
-    if DO_ACFW, w_alpha_i(i) = spectrum(x, y_{i}, t, false); end
-    if DO_RECOVERY_TIME, tr_alpha_i(i) = analyze_excitability(y_{i},t,1489, -3, 1000, false); end
-    fr_in_alpha_i(i) = mean(f_i(400:1400));
-    fr_py_alpha_i(i) = mean(f_e(400:1400));
-end
-% Save
-disp('Saving results for ''alpha_i''...');
-save 'parameter_sweeps\alpha_i.mat' y_ tr_alpha_i fr_in_alpha_i fr_py_alpha_i values
-clear y_ tr_alpha_i fr_in_alpha_i fr_py_alpha_i
+% %% alpha_i
+% disp('Varying alpha_i...')
+% values = 0.1:0.1:2;
+% w_alpha_i = zeros(size(values));
+% tr_alpha_i = zeros(size(values));
+% fr_in_alpha_i = zeros(size(values));
+% fr_py_alpha_i = zeros(size(values));
+% value_ = zeros(size(values));
+% u_ = zeros(size(values));
+% for j = 1:length(values)
+%     for i = 1:length(values)
+%     %     [x, y_{i}, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive('alpha_i', values(i));
+%         [x, y_{i}, t, f_e, f_i] = NMM_GABA('alpha_i', values(i), 'u', values(j));
+%         if DO_ACFW, w_alpha_i(i) = spectrum(x, y_{i}, t, false); end
+%         if DO_RECOVERY_TIME, tr_alpha_i(i) = analyze_excitability(y_{i},t,1489, -3, 1000, false); end
+%         fr_in_alpha_i(i) = mean(f_i(400:1400));
+%         fr_py_alpha_i(i) = mean(f_e(400:1400));
+%         value_(i) = values(i);
+%         u_(i) = values(j);
+%     end
+% 
+%     % Save
+%     disp('Saving results for ''alpha_i''...');
+%     save(['parameter_sweeps\excitability\alpha_i_' num2str(j) '.mat'], 'y_', 'tr_alpha_i', 'fr_in_alpha_i', 'fr_py_alpha_i', 'value_', 'u_');
+%     clear y_ tr_alpha_i fr_in_alpha_i fr_py_alpha_i u_ value_
+% end
+
 
 %% alpha_e
 disp('Varying alpha_e...')
-values = 0.1:0.1:2; 
+values = 0.1:0.1:2;
 w_alpha_e = zeros(size(values));
 tr_alpha_e = zeros(size(values));
 fr_in_alpha_e = zeros(size(values));
 fr_py_alpha_e = zeros(size(values));
-for i = 1:length(values)
-%     [x, y_{i}, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive('alpha_e', values(i));
-    [x, y_{i}, t, f_e, f_i] = NMM_GABA('alpha_e', values(i));
-    if DO_ACFW, w_alpha_e(i) = spectrum(x, y_{i}, t, false); end
-    if DO_RECOVERY_TIME, tr_alpha_e(i) = analyze_excitability(y_{i},t,1489, -3, 1000, false); end
-    fr_in_alpha_e(i) = mean(f_i(400:1400));
-    fr_py_alpha_e(i) = mean(f_e(400:1400));
+value_ = zeros(size(values));
+u_ = zeros(size(values));
+for j = 15:length(values)
+    for i = 1:length(values)
+    %     [x, y_{i}, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive('alpha_e', values(i));
+        [x, y_{i}, t, f_e, f_i] = NMM_GABA('alpha_e', values(i), 'u', values(j));
+        if DO_ACFW, w_alpha_e(i) = spectrum(x, y_{i}, t, false); end
+        if DO_RECOVERY_TIME, tr_alpha_e(i) = analyze_excitability(y_{i},t,1489, -3, 1000, false); end
+        fr_in_alpha_e(i) = mean(f_i(400:1400));
+        fr_py_alpha_e(i) = mean(f_e(400:1400));
+        value_(i) = values(i);
+        u_(i) = values(j);
+        disp(['u: ' num2str(j) '/' num2str(length(values)) ' | alpha_e: ' num2str(i) '/' num2str(length(values))]);
+    end
+
+    % Save
+    disp('Saving results for ''alpha_e''...');
+    save(['parameter_sweeps\excitability\alpha_e_' num2str(j) '.mat'], 'y_', 'tr_alpha_e', 'fr_in_alpha_e', 'fr_py_alpha_e', 'value_', 'u_');
+    clear y_ tr_alpha_e fr_in_alpha_e fr_py_alpha_e u_ value_
 end
-% Save
-disp('Saving results for ''alpha_e''...');
-save 'parameter_sweeps\alpha_e.mat' y_ tr_alpha_e fr_in_alpha_e fr_py_alpha_e values
-clear y_ tr_alpha_e fr_in_alpha_e fr_py_alpha_e
 
 %% alpha_ri
 disp('Varying alpha_ri...')
-values = 0.1:0.1:2; 
+values = 0.1:0.1:2;
 w_alpha_ri = zeros(size(values));
 tr_alpha_ri = zeros(size(values));
 fr_in_alpha_ri = zeros(size(values));
 fr_py_alpha_ri = zeros(size(values));
-for i = 1:length(values)
-%     [x, y_{i}, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive('alpha_ri', values(i));
-    [x, y_{i}, t, f_e, f_i] = NMM_GABA('alpha_ri', values(i));
-    if DO_ACFW, w_alpha_ri(i) = spectrum(x, y_{i}, t, false); end
-    if DO_RECOVERY_TIME, tr_alpha_ri(i) = analyze_excitability(y_{i},t,1489, -3, 1000, false); end
-    fr_in_alpha_ri(i) = mean(f_i(400:1400));
-    fr_py_alpha_ri(i) = mean(f_e(400:1400));
+value_ = zeros(size(values));
+u_ = zeros(size(values));
+for j = 1:length(values)
+    for i = 1:length(values)
+    %     [x, y_{i}, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive('alpha_ri', values(i));
+        [x, y_{i}, t, f_e, f_i] = NMM_GABA('alpha_ri', values(i), 'u', values(j));
+        if DO_ACFW, w_alpha_ri(i) = spectrum(x, y_{i}, t, false); end
+        if DO_RECOVERY_TIME, tr_alpha_ri(i) = analyze_excitability(y_{i},t,1489, -3, 1000, false); end
+        fr_in_alpha_ri(i) = mean(f_i(400:1400));
+        fr_py_alpha_ri(i) = mean(f_e(400:1400));
+        value_(i) = values(i);
+        u_(i) = values(j);
+        disp(['u: ' num2str(j) '/' num2str(length(values)) ' | alpha_ri: ' num2str(i) '/' num2str(length(values))]);
+    end
+
+    % Save
+    disp('Saving results for ''alpha_ri''...');
+    save(['parameter_sweeps\excitability\alpha_ri_' num2str(j) '.mat'], 'y_', 'tr_alpha_ri', 'fr_in_alpha_ri', 'fr_py_alpha_ri', 'value_', 'u_');
+    clear y_ tr_alpha_ri fr_in_alpha_ri fr_py_alpha_ri u_ value_
 end
-% Save
-disp('Varying alpha_ri...')
-disp('Saving results for ''u''...');
-save 'parameter_sweeps\alpha_ri.mat' y_ tr_alpha_ri fr_in_alpha_ri fr_py_alpha_ri values
-clear y_ tr_alpha_ri fr_in_alpha_ri fr_py_alpha_ri
 
 
 %% alpha_re
 disp('Varying alpha_re...')
-values = 0.1:0.1:2; 
+values = 0.1:0.1:2;
 w_alpha_re = zeros(size(values));
 tr_alpha_re = zeros(size(values));
 fr_in_alpha_re = zeros(size(values));
 fr_py_alpha_re = zeros(size(values));
-for i = 1:length(values)
-%     [x, y_{i}, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive('alpha_re', values(i));
-    [x, y_{i}, t, f_e, f_i] = NMM_GABA('alpha_re', values(i));
-    if DO_ACFW, w_alpha_re(i) = spectrum(x, y_{i}, t, false); end
-    if DO_RECOVERY_TIME, tr_alpha_re(i) = analyze_excitability(y_{i},t,1489, -3, 1000, false); end
-    fr_in_alpha_re(i) = mean(f_i(400:1400));
-    fr_py_alpha_re(i) = mean(f_e(400:1400));
+value_ = zeros(size(values));
+u_ = zeros(size(values));
+for j = 1:length(values)
+    for i = 1:length(values)
+    %     [x, y_{i}, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive('alpha_re', values(i));
+        [x, y_{i}, t, f_e, f_i] = NMM_GABA('alpha_re', values(i), 'u', values(j));
+        if DO_ACFW, w_alpha_re(i) = spectrum(x, y_{i}, t, false); end
+        if DO_RECOVERY_TIME, tr_alpha_re(i) = analyze_excitability(y_{i},t,1489, -3, 1000, false); end
+        fr_in_alpha_re(i) = mean(f_i(400:1400));
+        fr_py_alpha_re(i) = mean(f_e(400:1400));
+        value_(i) = values(i);
+        u_(i) = values(j);
+        disp(['u: ' num2str(j) '/' num2str(length(values)) ' | alpha_re: ' num2str(i) '/' num2str(length(values))]);
+    end
+
+    % Save
+    disp('Saving results for ''alpha_re''...');
+    save(['parameter_sweeps\excitability\alpha_re_' num2str(j) '.mat'], 'y_', 'tr_alpha_re', 'fr_in_alpha_re', 'fr_py_alpha_re', 'value_', 'u_');
+    clear y_ tr_alpha_re fr_in_alpha_re fr_py_alpha_re u_ value_
 end
-% Save
-disp('Saving results for ''alpha_re''...');
-save 'parameter_sweeps\alpha_re.mat' y_ tr_alpha_re fr_in_alpha_re fr_py_alpha_re values
-clear y_ tr_alpha_re fr_in_alpha_re fr_py_alpha_re
+
 
 %% alpha_rb
-disp('Varying alpha_rb...')
-values = 0.1:0.1:2; 
-w_alpha_b = zeros(size(values));
+disp('Varying alpha_b...')
+values = 0.1:0.1:2;
+w_alpha_re = zeros(size(values));
 tr_alpha_b = zeros(size(values));
 fr_in_alpha_b = zeros(size(values));
 fr_py_alpha_b = zeros(size(values));
-y_ = cell(size(values));
-for i = 1:length(values)
-%     [x, y_{i}, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive('alpha_re', values(i));
-    [x, y_{i}, t, f_e, f_i] = NMM_GABA('alpha_b', values(i));
-    if DO_ACFW, w_alpha_b(i) = spectrum(x, y_{i}, t, false); end
-    if DO_RECOVERY_TIME, tr_alpha_b(i) = analyze_excitability(y_{i},t,1489, -3, 1000, false); end
-    fr_in_alpha_b(i) = mean(f_i(400:1400));
-    fr_py_alpha_b(i) = mean(f_e(400:1400));
-end
-% Save
-disp('Saving results for ''alpha_rb''...');
-save 'parameter_sweeps\alpha_b.mat' y_ tr_alpha_b fr_in_alpha_b fr_py_alpha_b values
-clear y_ tr_alpha_b fr_in_alpha_b fr_py_alpha_b
+value_ = zeros(size(values));
+u_ = zeros(size(values));
+for j = 1:length(values)
+    for i = 1:length(values)
+    %     [x, y_{i}, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive('alpha_b', values(i));
+        [x, y_{i}, t, f_e, f_i] = NMM_GABA('alpha_b', values(i), 'u', values(j));
+        if DO_ACFW, w_alpha_b(i) = spectrum(x, y_{i}, t, false); end
+        if DO_RECOVERY_TIME, tr_alpha_b(i) = analyze_excitability(y_{i},t,1489, -3, 1000, false); end
+        fr_in_alpha_b(i) = mean(f_i(400:1400));
+        fr_py_alpha_b(i) = mean(f_e(400:1400));
+        value_(i) = values(i);
+        u_(i) = values(j);
+        disp(['u: ' num2str(j) '/' num2str(length(values)) ' | alpha_b: ' num2str(i) '/' num2str(length(values))]);
+    end
 
+    % Save
+    disp('Saving results for ''alpha_b''...');
+    save(['parameter_sweeps\excitability\alpha_b_' num2str(j) '.mat'], 'y_', 'tr_alpha_b', 'fr_in_alpha_b', 'fr_py_alpha_b', 'value_', 'u_');
+    clear y_ tr_alpha_b fr_in_alpha_b fr_py_alpha_b u_ value_
+end
+
+return
 %% Plot
 % ACFW
 figure

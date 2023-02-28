@@ -48,23 +48,24 @@ def brunel(corriente = 0):
     # arguments from sbatch
     # u = float(sys.argv[1])
     	    
-        
-    # Options:
-    RECURRENT_PYRAMIDAL = False    # Self excitation 
-    RECURRENT_INHIBITORY = False   # Self inhibition
-    INHIBIT_INPUT = False         # Excitatory cortical input to inhibitory population
-    ACTIVE_INTERNEURONS = False    # Inhibitory population
-    PARAMS_SOURCE = 'three_pop'       # 'brunel' or 'allen' or 'three_pop'
-    ACTIVE_GABAb = False           # Second inhibitory (slow) population (Wendling-like model)
-    GAUSSIAN_REFRACTORY = True   # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
-    GAUSSIAN_THRESHOLD = True    # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
-    SAVE = True                  # Save ground truth data
-    PLOT = False                   # Plot results (main Figure)
-    PLOT_EXTRA = False             # Plot extra things.
-    PSP_FR = 0                    # Presynaptic firing rate for TEST_PSP (TEST_PSP needs to be diff to none for this to take effect)                               
-    TEST_PSP = 'none'             # Testing the post synaptic potential of given synapses to a specified input firing rate. Options: 'pp', 'pi', 'ii', 'ip', 'none'. To prevent neurons spiking, make V_thr large.
-    GABA_A_MULTIPLIER = 1         # GABA_A Agonist applied for the whole duration
-    MIDWAY_MULTIPLIER = 1         # GABA_A Agonist applied midsimulation
+    #%% Options:
+    MODEL           = 'cubn'        # cubn vs cobn
+    PARAMS_SOURCE   = 'three_pop'   # 'brunel' or 'allen' or 'three_pop' or''
+    
+    RECURRENT_PYRAMIDAL     = True  # Self excitation 
+    RECURRENT_INHIBITORY    = True  # Self inhibition
+    ACTIVE_INTERNEURONS     = True  # Inhibitory population
+    ACTIVE_GABAb            = True # Second inhibitory (slow) population (Wendling-like model)
+    INHIBIT_INPUT           = True # Excitatory cortical input to inhibitory population
+    
+    GABA_A_MULTIPLIER = 1           # GABA_A Agonist applied for the whole duration
+    MIDWAY_MULTIPLIER = 1           # GABA_A Agonist applied midsimulation
+    
+    GAUSSIAN_REFRACTORY = True      # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
+    GAUSSIAN_THRESHOLD  = True      # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
+    
+    SAVE = True                    # Save ground truth data
+    PLOT = False                     # Plot results 
 
     # corriente = 0
     # Balanced-rate network (?) with input currents: Py = 500.01 pA, In = 398 pA
@@ -78,20 +79,27 @@ def brunel(corriente = 0):
     simulation_time = 1 * second
     dt_ = 100 * usecond
     T = np.linspace(0, simulation_time, round(simulation_time/dt_)) # Time vector for plots (in seconds)
-       
+   
     # populations
     N = 2000 # 135 # 675
     N_P = int(N * 4)  # pyramidal neurons
-    if PARAMS_SOURCE == 'three_pop':
-    	N_I = int(N * 0.5)    # interneurons
-    else:
-    	N_I = int(N)    # interneurons
-    N_B = int(N * 0.5)  # GABAb
+    N_I = int(N)    # interneurons
     
     # set populations parameters
-    params_py = set_params('pyramidal', PARAMS_SOURCE)
-    params_in = set_params('inhibitory', PARAMS_SOURCE)
-    params_b = set_params('gabab', PARAMS_SOURCE)
+    if MODEL == 'cubn':
+        params_py = cubn.set_params('pyramidal')
+        params_in = cubn.set_params('inhibitory')
+    
+    elif MODEL == 'cobn':
+        params_py = cobn.set_params('pyramidal')
+        params_in = cobn.set_params('inhibitory')
+    else:
+        raise Exception('Model %s does not exist (the options are cubn and cobn)' %MODEL)
+    
+    if not(ACTIVE_GABAb):
+        params_py = set_params('pyramidal', 'allen')
+        params_in = set_params('inhibitory', 'allen')
+    
     
     # Probability of connection
     p_IP = params_py.get('p_IP') # * np.sqrt(1000/N) #0.2 #* 100/N # Inhibitory to Pyramidal
@@ -721,7 +729,7 @@ def brunel(corriente = 0):
     #print('Results saved as:' + save_str)
     #plt.close('all')
 
-ranges = np.arange(-300, 2500, 25) 
+ranges = np.arange(-300, 1500, 25) 
 for iterations in ranges:
     brunel(corriente = iterations)
 
