@@ -28,7 +28,8 @@ close all;
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_65.mat'; % impulse response (500 pA), j_pi = 21.0666, alpha_i = -0.3
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_66.mat'; % Seizure: j_pi = 21.0666, alpha_i = -0.3 (random LIF th and t_ref)
 
-data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_76.mat'; % Three populations | u = 5
+% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/2023/lfp_py__7_u0.mat';
+data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/2023/lfp_last.mat';
 
 load(data_file);
 tt = lfp_dt:lfp_dt:lfp_dt*length(v_ip);
@@ -38,24 +39,35 @@ plot(t,x(:,[1 3])); hold on;
 plot(tt,v_pi*1e3,'b--');
 plot(tt,v_ip*1e3,'r--');
 legend({'x1' 'x3'});
-ylabel('Membrane Potential (mV)');
+ylabel('Post-synaptic Potential (mV)');
 xlabel('Time (s)');
 legend({'NMM_{x1}' 'NMM_{x3}' 'LIF_{x1}' 'LIF_{x3}'});
+ylim([-70 70])
 
 figure
-plot(t, f_e); hold on;
-plot(t, f_i);
+subplot(211)
+plot(t, f_e,'Color', [0 0.45 0.74]); hold on;
+subplot(212)
+plot(t, f_i,'Color', [0.85 0.33 0.1]);hold on
 try
-    plot(tt,R_py2,'--b');
-    plot(tt,R_in2,'--r');
+    subplot(211)
+    plot(tt,R_py2,'--b', 'LineWidth',2);
+    subplot(212)
+    plot(tt,R_in2,'--r', 'LineWidth',2);
 catch
-    plot(tt,R_py,'--b');
-    plot(tt,R_in,'--r');
+    subplot(211)
+    plot(tt,R_py,'--b', 'LineWidth',2);
+    subplot(212)
+    plot(tt,R_in,'--r', 'LineWidth',2);
 end
-r = movavg(f_i, 'triangular', floor(length(f_i)/10));
-plot(t,r)
-r = movavg(f_e, 'triangular', floor(length(f_e)/10));
-plot(t,r)
+% r = movavg(f_i, 'triangular', floor(length(f_i)/10));
+% plot(t,r)
+% r = movavg(f_e, 'triangular', floor(length(f_e)/10));
+% plot(t,r)
 ylabel('Spike rate (Hz)');
 xlabel('Time (s)');
-legend({'NMM_{Py}' 'NMM_{In}' 'LIF_{Py}' 'LIF_{In}' 'NMM_{Py}_{M.A.}' 'NNM_{In}_{M.A.}'});
+% legend({'NMM_{Py}' 'NMM_{In}' 'LIF_{Py}' 'LIF_{In}' 'NMM_{Py}_{M.A.}' 'NNM_{In}_{M.A.}'});
+subplot(211)
+legend({'NMM_{Py}' 'LIF_{Py}'}); % 'NMM_{Py}_{M.A.}' 'NNM_{In}_{M.A.}'});
+subplot(212)
+legend({'NMM_{In}' 'LIF_{In}'}); % 'NMM_{Py}_{M.A.}' 'NNM_{In}_{M.A.}'});

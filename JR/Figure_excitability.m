@@ -26,31 +26,31 @@ DO_ACFW = false;
 % clear y_ tr_u fr_in_u fr_py_u
 
 % %% alpha_i
-% disp('Varying alpha_i...')
-% values = 0.1:0.1:2;
-% w_alpha_i = zeros(size(values));
-% tr_alpha_i = zeros(size(values));
-% fr_in_alpha_i = zeros(size(values));
-% fr_py_alpha_i = zeros(size(values));
-% value_ = zeros(size(values));
-% u_ = zeros(size(values));
-% for j = 1:length(values)
-%     for i = 1:length(values)
-%     %     [x, y_{i}, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive('alpha_i', values(i));
-%         [x, y_{i}, t, f_e, f_i] = NMM_GABA('alpha_i', values(i), 'u', values(j));
-%         if DO_ACFW, w_alpha_i(i) = spectrum(x, y_{i}, t, false); end
-%         if DO_RECOVERY_TIME, tr_alpha_i(i) = analyze_excitability(y_{i},t,1489, -3, 1000, false); end
-%         fr_in_alpha_i(i) = mean(f_i(400:1400));
-%         fr_py_alpha_i(i) = mean(f_e(400:1400));
-%         value_(i) = values(i);
-%         u_(i) = values(j);
-%     end
-% 
-%     % Save
-%     disp('Saving results for ''alpha_i''...');
-%     save(['parameter_sweeps\excitability\alpha_i_' num2str(j) '.mat'], 'y_', 'tr_alpha_i', 'fr_in_alpha_i', 'fr_py_alpha_i', 'value_', 'u_');
-%     clear y_ tr_alpha_i fr_in_alpha_i fr_py_alpha_i u_ value_
-% end
+disp('Varying alpha_i...')
+values = 0.1:0.1:2;
+w_alpha_i = zeros(size(values));
+tr_alpha_i = zeros(size(values));
+fr_in_alpha_i = zeros(size(values));
+fr_py_alpha_i = zeros(size(values));
+value_ = zeros(size(values));
+u_ = 1;%zeros(size(values));
+for j = 1 %:length(values)
+    for i = 1:length(values)
+    %     [x, y_{i}, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive('alpha_i', values(i));
+        [x, y_{i}, t, f_e, f_i] = NMM_GABA('alpha_i', values(i), 'u', values(j));
+        if DO_ACFW, w_alpha_i(i) = spectrum(x, y_{i}, t, false); end
+        if DO_RECOVERY_TIME, tr_alpha_i(i) = analyze_excitability(y_{i},t,1489, -3, 1000, false); end
+        fr_in_alpha_i(i) = mean(f_i(400:1400));
+        fr_py_alpha_i(i) = mean(f_e(400:1400));
+        value_(i) = values(i);
+        u_(i) = values(j);
+    end
+
+    % Save
+    disp('Saving results for ''alpha_i''...');
+    save(['parameter_sweeps\excitability\alpha_i_' num2str(j) '.mat'], 'y_', 'tr_alpha_i', 'fr_in_alpha_i', 'fr_py_alpha_i', 'value_', 'u_');
+    clear y_ tr_alpha_i fr_in_alpha_i fr_py_alpha_i u_ value_
+end
 
 
 %% alpha_e
@@ -61,8 +61,8 @@ tr_alpha_e = zeros(size(values));
 fr_in_alpha_e = zeros(size(values));
 fr_py_alpha_e = zeros(size(values));
 value_ = zeros(size(values));
-u_ = zeros(size(values));
-for j = 15:length(values)
+u_ = 1;%zeros(size(values));
+for j = 1 %:length(values)15:length(values)
     for i = 1:length(values)
     %     [x, y_{i}, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive('alpha_e', values(i));
         [x, y_{i}, t, f_e, f_i] = NMM_GABA('alpha_e', values(i), 'u', values(j));
@@ -89,8 +89,8 @@ tr_alpha_ri = zeros(size(values));
 fr_in_alpha_ri = zeros(size(values));
 fr_py_alpha_ri = zeros(size(values));
 value_ = zeros(size(values));
-u_ = zeros(size(values));
-for j = 1:length(values)
+u_ = 1;%zeros(size(values));
+for j = 1 %:length(values)15:length(values)1:length(values)
     for i = 1:length(values)
     %     [x, y_{i}, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive('alpha_ri', values(i));
         [x, y_{i}, t, f_e, f_i] = NMM_GABA('alpha_ri', values(i), 'u', values(j));
@@ -118,8 +118,8 @@ tr_alpha_re = zeros(size(values));
 fr_in_alpha_re = zeros(size(values));
 fr_py_alpha_re = zeros(size(values));
 value_ = zeros(size(values));
-u_ = zeros(size(values));
-for j = 1:length(values)
+u_ = 1;%zeros(size(values));
+for j = 1 %1:length(values)
     for i = 1:length(values)
     %     [x, y_{i}, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive('alpha_re', values(i));
         [x, y_{i}, t, f_e, f_i] = NMM_GABA('alpha_re', values(i), 'u', values(j));
@@ -147,8 +147,8 @@ tr_alpha_b = zeros(size(values));
 fr_in_alpha_b = zeros(size(values));
 fr_py_alpha_b = zeros(size(values));
 value_ = zeros(size(values));
-u_ = zeros(size(values));
-for j = 1:length(values)
+u_ = 1;%0;% zeros(size(values));
+for j = 1 %:length(values)
     for i = 1:length(values)
     %     [x, y_{i}, t, f_e, f_i] = NMM_diff_equations_DblExp_recursive('alpha_b', values(i));
         [x, y_{i}, t, f_e, f_i] = NMM_GABA('alpha_b', values(i), 'u', values(j));

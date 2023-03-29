@@ -21,7 +21,12 @@ import lif_model_CUBN as cubn
 import lif_model_COBN as cobn
 from lif_plot import plot_results, plot_spike_stats
 # def brunel(u=0):
+
 def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 'py'):
+    # u=0
+    # parameter = ''
+    # value_ = 1
+    # pop_='py'
     plt.close('all')
         
     #%% Options:
@@ -40,7 +45,7 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
     GAUSSIAN_REFRACTORY = True      # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
     GAUSSIAN_THRESHOLD  = True      # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
     
-    # SAVE = False                    # Save ground truth data
+    # SAVE = True                    # Save ground truth data
     # PLOT = True                     # Plot results 
     STATS = False                    # Calculate spike statistics (ISI distance, CV, etc)
     
@@ -48,13 +53,14 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
     TEST_PSP = 'none'               # Testing the post synaptic potential of given synapses to a specified input firing rate. Options: 'pu', 'pp', 'pi', 'ii', 'ip', 'bp', 'bi', 'pb', 'none'. To prevent neurons spiking, make V_thr large.
     RUNTYPE  = 'normal'             # Simulation: 'normal', 'current_pulse' or 'gaba_agonist'
     
-    corriente = 0 #50#500
+    corriente = 0#500 #50
     # Balanced-rate network (?) with input currents: 
     input_current   = corriente    # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
     input_current_I = corriente  # Inhibitory interneurons
     
-    input_spike_rate = [u]#[0, 2.5, 5, 7.5]#[0, 1, 3, 5] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
-    input_spike_rate_thalamic = 1.5 # spikes/ms/cell (spontaneous activity)
+    input_spike_rate = [u]#[0, 1, 3, 5] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
+    input_spike_rate_thalamic = 1 #1.5#1.5 #1.5 # spikes/ms/cell (spontaneous activity)
+    input_spike_rate_thalamic_in = 1 #1.5#1.5 #1.5 # spikes/ms/cell (spontaneous activity)
     
     #%% parameters  --------------------------------------------------------------
     simulation_time = 1 * second
@@ -67,7 +73,6 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
     # N_I = int(N * (0.5 ** ACTIVE_GABAb))    # interneurons
     N_I = int(N)    # interneurons
     
-    # set populations parameters
     # set populations parameters
     if MODEL == 'cubn':
         params_py = cubn.set_params('pyramidal')
@@ -92,10 +97,11 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
         
     
     # Probability of connection
-    p_IP = params_py.get('p_IP') * (0.5 ** ACTIVE_GABAb)
+    p_IP = params_py.get('p_IP')
+    p_BP = params_py.get('p_BP')
     p_PI = params_py.get('p_PI')
     p_PP = params_py.get('p_PP')
-    p_II = params_py.get('p_II') * (0.5 ** ACTIVE_GABAb)
+    p_II = params_py.get('p_II')
     
     # voltage
     V_leak = -70. * mV      # Resting membrane potential
@@ -140,7 +146,7 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
     delay = 0.0 * ms 
     
     # Cortical input
-    num_inputs = 800                    # Both thalamo-cortical and cortico-cortical 
+    num_inputs = 1000                    # Both thalamo-cortical and cortico-cortical 
     
     
     
@@ -160,7 +166,7 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
         # GABAergic (inhibitory)
         j_GABA_P    = GABA_A_MULTIPLIER * params_py.get('j_GABA') * 2000/N
         j_GABA_I    = GABA_A_MULTIPLIER * params_in.get('j_GABA') * 2000/N 
-        j_GABAb_P   = params_py.get('j_GABAb') * 2000/N 
+        j_GABAb_P   = GABA_A_MULTIPLIER * params_py.get('j_GABAb') * 2000/N 
         
     elif MODEL == 'cobn': 
         # AMPA (excitatory)
@@ -176,7 +182,7 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
         # GABAergic (inhibitory)
         g_GABA_P    = GABA_A_MULTIPLIER * params_py.get('g_GABA') * 2000/N 
         g_GABA_I    = GABA_A_MULTIPLIER * params_in.get('g_GABA') * 2000/N
-        g_GABAb_P   = params_py.get('g_GABAb') * 2000/N
+        g_GABAb_P   = GABA_A_MULTIPLIER * params_py.get('g_GABAb') * 2000/N
         
     else:
         raise Exception('Model %s does not exist' %MODEL)
@@ -204,6 +210,7 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
     # I_injected = np.random.normal(loc=-input_current, scale=10, size=int(l))
     # I_injected[:] = I_injected
     # I_injected = TimedArray(I_injected * pA, dt=dt_)
+    
     
     #%% modeling  ----------------------------------------------------------------
     # model equations
@@ -266,10 +273,10 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
         N_PSP_Test = 0    
     Pop_PSP_Test = PoissonGroup(N_PSP_Test, rates = PSP_FR * Hz, dt=dt_) # poisson input
         
-    # Ornstein-Uhlenbeck process:
-    # sigma_sq_noise = 0.16 * volt * volt   # Ornstein-Uhlenbeck process (cortico-cortical) units need to be volt^2 for units in the population's equation to be consistent. Makes sense, because sigma should be in volts, hence sigma^2 in volts^2. Check cavalleri 2014
-    # tau_noise = 16 * ms                   # Ornstein-Uhlenbeck 
-    # input_cortical = NeuronGroup(num_inputs, 'dv/dt = -v/tau_noise + np.sqrt(2 * sigma_sq_noise/tau_noise) * xi : volt', threshold = 'v >= 0.5 * volt', reset = 'v = 0 * volt', dt=dt_, method='euler')
+    # # Ornstein-Uhlenbeck process:
+    # sigma_sq_noise = 0.025 * volt * volt
+    # tau_noise = 5.6 * ms
+    # input_cortical = NeuronGroup(num_inputs, 'dv/dt = -v/tau_noise + sqrt(2 * sigma_sq_noise/tau_noise) * xi : volt', threshold = 'v >= 0.5 * volt', reset = 'v = 0 * volt', dt=dt_)
     
     #%% synaptic equations -------------------------------------------------------
     
@@ -327,32 +334,47 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
     
     # GABAb to P
     C_B_P = Synapses(In_Pop, Py_Pop, on_pre=eqs_pre_gabab_P, method='rk4', dt=dt_, delay=delay, name='synapses_pb')
-    C_B_P.connect(p = p_IP)
+    C_B_P.connect(p = p_BP)
     C_B_P.active = ACTIVE_INTERNEURONS & ACTIVE_GABAb
     
     
     # External inputs
     # Poisson input (Cortico-cortical)
-    input1 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[0] * 1000/num_inputs) * Hz, increment_AMPA_ext_P)
+    inputP1 = PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[0] * 1000/num_inputs) * Hz, increment_AMPA_ext_P)
+    inputI1 = PoissonInput(In_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[0] * 1000/num_inputs) * Hz, increment_AMPA_ext_I)
+    
     if np.size(input_spike_rate) > 1:
-        input1.active = False
-        input2 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[1] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
-        input2.active = False
-    if np.size(input_spike_rate) > 2:
-        input3 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[2] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
-        input3.active = False
-    if np.size(input_spike_rate) > 3:
-        input4 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[3] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
-        input4.active = False
+        inputP1.active = False
+        inputP2 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[1] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
+        inputP2.active = False
         
-    # Poisson input (Cortico-cortical) input to inhibitory interneurons. Controlled by INHIBIT_INPUT
-    C_Cor_I = PoissonInput(In_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[0]*1000/num_inputs) * Hz, increment_AMPA_ext_I)
-    C_Cor_I.active = INHIBIT_INPUT # Innactive cortico-cortical -> interneuron
+        inputI1.active = False
+        inputI2 =  PoissonInput(In_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[1] *1000/num_inputs) * Hz, increment_AMPA_ext_I)
+        inputI2.active = False
+        
+    if np.size(input_spike_rate) > 2:
+        inputP3 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[2] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
+        inputP3.active = False
+        
+        inputI3 =  PoissonInput(In_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[2] *1000/num_inputs) * Hz, increment_AMPA_ext_I)
+        inputI3.active = False
+        
+    if np.size(input_spike_rate) > 3:
+        inputI4 =  PoissonInput(Py_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[3] *1000/num_inputs) * Hz, increment_AMPA_ext_P)
+        inputI4.active = False
+        
+        inputI4 =  PoissonInput(In_Pop, 's_AMPA_cor', num_inputs, (input_spike_rate[3] *1000/num_inputs) * Hz, increment_AMPA_ext_I)
+        inputI4.active = False
+        
     
     # Poisson input (Thalamic, baseline spike rate)
-    C_Tha_P = PoissonInput(Py_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_P)
-    C_Tha_I = PoissonInput(In_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_I)
-    
+    C_Tha_P = PoissonInput(Py_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic*1000/num_inputs) * Hz, increment_AMPA_ext_P) 
+    C_Tha_I = PoissonInput(In_Pop, 's_AMPA_tha', num_inputs, (input_spike_rate_thalamic_in*1000/num_inputs) * Hz, increment_AMPA_ext_I) 
+    # # Ornstein-Uhlenbeck:
+    # C_Tha_P = Synapses(input_cortical, Py_Pop, on_pre='s_AMPA_tha += increment_AMPA_ext_P', method='rk4', dt=dt_, delay=delay, name='OU_P')
+    # C_Tha_P.connect(p = 1)
+    # C_Tha_I = Synapses(input_cortical, In_Pop, on_pre='s_AMPA_tha += increment_AMPA_ext_I', method='rk4', dt=dt_,delay=delay, name='OU_I') 
+    # C_Tha_I.connect(p = 1)
     
     
     # Testing PSP on chosen synapses
@@ -376,6 +398,10 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
     elif (TEST_PSP == 'bp'):
         C_Test_PSP = Synapses(Pop_PSP_Test, B_Pop, on_pre=eqs_pre_glut_B, method='rk4', dt=dt_, delay=delay, name='synapses_bp_test')
         connection_probability = p_PI
+    
+    elif (TEST_PSP == 'pb'):
+        C_Test_PSP = Synapses(Pop_PSP_Test, Py_Pop, on_pre=eqs_pre_gabab_P, method='rk4', dt=dt_, delay=delay, name='synapses_pb_test')
+        connection_probability = p_IP
     
     else:
         C_Test_PSP = Synapses(Pop_PSP_Test, Pop_PSP_Test, method='rk4', name='none_synapse') # This won't do anything. It's to prevent runtime errors
@@ -428,22 +454,36 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
     
     if RUNTYPE == 'normal':
         ## NORMAL:
-        input1.active = True
+        inputP1.active = True
+        inputI1.active = INHIBIT_INPUT
+        
         net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
         
         if np.size(input_spike_rate) > 1:
-            input1.active = False
-            input2.active = True
+            inputP1.active = False
+            inputI1.active = False
+            
+            inputP2.active = True
+            inputI2.active = INHIBIT_INPUT
+            
             net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
         
         if np.size(input_spike_rate) > 2:    
-            input2.active = False
-            input3.active = True
+            inputP2.active = False
+            inputI2.active = False
+            
+            inputP3.active = True
+            inputI3.active = INHIBIT_INPUT
+            
             net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
                
         if np.size(input_spike_rate) > 3:
-            input3.active = False
-            input4.active = True
+            inputP3.active = False
+            inputI3.active = False
+            
+            inputP4.active = True
+            inputI4.active = INHIBIT_INPUT
+            
             net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
     
     elif RUNTYPE == 'current_pulse':
@@ -524,6 +564,8 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
     
     
     
+    
+    
     #%% plotting  -----------------------------------------------------------------
     
     # if PLOT:
@@ -552,7 +594,7 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
         
         
     #%% Save simulation  ------------------------------------------------------------
-    folder_path = '/data/gpfs/projects/punim0643/artemios/simulations/2023/excitability/'
+    folder_path = '/data/gpfs/projects/punim0643/artemios/simulations/2023/firing_rates/'
     
     i = 0
     while os.path.exists(folder_path + 'lfp_%s_%s_%s_u%s.mat' % (pop_,parameter,i,u)):

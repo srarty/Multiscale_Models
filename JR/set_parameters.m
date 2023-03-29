@@ -66,10 +66,10 @@ params.alpha_u = 0.06152;        % External excitatory gain into pyramidal (U ->
 
 % Connectivity parameters:
 params.c_constant = 1; % Connectivity constant
-params.P_pyTOin = 0.395; 	% Probability of connection between Py -> Interneuron
-params.P_inTOpy = 0.411;    % Probability of connection between In -> Pyramidal
-params.P_pyTOpy = 0.16;    % Probability of connection between Py -> Pyramidal
-params.P_inTOin = 0.451;   % Probability of connection between In -> Interneuron
+params.P_pyTOin = 0.43; % 0.395; 	% Probability of connection between Py -> Interneuron
+params.P_inTOpy = 0.437; % 0.411;    % Probability of connection between In -> Pyramidal
+params.P_pyTOpy = 0.243; % 0.16;    % Probability of connection between Py -> Pyramidal
+params.P_inTOin = 0.451; % 0.451;   % Probability of connection between In -> Interneuron
 
 % Integrate and Fire Morphological parameters:
 params.g_m_P = 25e-9; % Membrane conductance Pyramidal cells
@@ -80,6 +80,7 @@ params.C_I = 0.2e-9; % Membrane conductance Inhibitory cells
 
 % External input
 params.u = mu; % mean input firing rate
+params.u_bkg = 1; % Background input firing rate
 
 params.dt = 0.001;     % sampling time step         
 params.scale = 1; % Scale to fix mismatch in state amplitudes. Not to be confused with the scale in analytic_kalman_filter_2
@@ -92,34 +93,45 @@ switch mode
         params.alpha_i = -0.3;
     case 'gabab'
         % Gains:
-        params.alpha_i = -0.2635;           % Inhibitory -> Pyramidal
-        params.alpha_e = 0.2813;            % Pyramidal -> Inhibitory
-        params.alpha_ri = -1.25; %-0.2501;  % Inhibitory -> GABAb
-        params.alpha_re = 0.2005;%2*0.2005; % Pyramidal -> Pyramidal
-        params.alpha_b = -0.1143;           % GABAb -> Pyramidal %  Note, this is (non-intuituvely) positive during the fit, but should be negative in here.
-        params.alpha_eb = 0.2813; %0.1364;  % Py -> GABAb
-        params.alpha_u = 0.7075; %0.1364;   % Py -> GABAb
+        params.alpha_i = -0.705;%-1.128;%-0.235;% -0.2635;           % Inhibitory -> Pyramidal
+        params.alpha_e = 2.472;% 0.2813;            % Pyramidal -> Inhibitory
+        params.alpha_ri = -3.316;% -1.25; %-0.2501;  % Inhibitory -> GABAb
+        params.alpha_re = 1.255; % 0.2005;%2*0.2005; % Pyramidal -> Pyramidal
+        params.alpha_b = -0.32;%-0.128;%-0.5332;% -0.1143;           % GABAb -> Pyramidal %  Note, this is (non-intuituvely) positive during the fit, but should be negative in here.
+        params.alpha_u = 1.637;%0.7075; %0.1364;   % GABAb
+        params.alpha_uinterneuron = 2.591;
         
         % Probabilities
         params.c_constant = 1;
-        params.P_inTOin = 0.5 * params.P_inTOin;
-        params.P_inTOpy = 0.5 * params.P_inTOpy;
+%         params.P_inTOin = 0.5 * params.P_inTOin;
+%         params.P_inTOpy = 0.5 * params.P_inTOpy;
         
         % Time constants:
-        params.tau_sb = 20 * params.tau_sp;
+        params.tau_sb = 10 * params.tau_sp;
         
         % Nonlinearity
         % Pyramidal:
-        params.e0 =  25.65; % Maximum firing rates
-        params.gompertz.b = 0.8736;
-        params.gompertz.c = 0.9686;
-        params.gompertz.d = 0.4128;
+        params.e0 =         37.4;% 37.87; % 25.65; % Maximum firing rates
+        params.gompertz.b = 4.817;% 0.0882; % 0.8736;
+        params.gompertz.c = 4.072;% 0.3734; % 0.9686;
+        params.gompertz.d = 0.102;% 0.09833; % 0.4128;
         
+        params.naka.M = 41.18;  % Thalamic input: 42.52;    % No thalamic input: 41.18; <- no bias % exponent: 2 -> 42.34
+        params.naka.a = 2.919;  % Thalamic input: 1.988;    % No thalamic input: 2.919; <- no bias % exponent: 2 -> 2
+        params.naka.b = 0;      % Thalamic input: -22.13;   % No thalamic input: 0; <- no bias % exponent: 2 -> 7.558
+        params.naka.s = 24.8;   % Thalamic input: 17.5;     % No thalamic input: 24.8; <- no bias % exponent: 2 -> 17.12
+       
         % Interneurons:
-        params.e0i = 65; % Maximum firing rates
-        params.gompertzi.b = 2.381;
-        params.gompertzi.c = 1.79;
-        params.gompertzi.d = 0.2661;
+        params.e0i =         63.23;% 63.15; % 65; % Maximum firing rates
+        params.gompertzi.b = 4.337;% 0.1725; % 2.381;
+        params.gompertzi.c = 3.964;% 0.9534; % 1.79;
+        params.gompertzi.d = 0.09888;% 0.09868; % 0.2661;
+        
+        params.nakai.M = 69.29; % Thalamic input: 71.03;    % No thalamic input: 69.29; <- no bias % exponent: 2 -> 70.6
+        params.nakai.a = 2.734; % Thalamic input: 1.903;    % No thalamic input: 2.734; <- no bias % exponent: 2 -> 2
+        params.nakai.b = 0;     % Thalamic input: -16.32;   % No thalamic input: 0; <- no bias % exponent: 2 -> 6.957
+        params.nakai.s = 23.94; % Thalamic input: 16.35;    % No thalamic input: 23.94; <- no bias % exponent: 2 -> 16.79
+       
         
     otherwise
         error('%s rythm not implemented, sorry!', mode);

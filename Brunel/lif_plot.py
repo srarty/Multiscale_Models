@@ -63,7 +63,7 @@ def plot_results(T, sp_P, sp_I, r_P, r_I, lfp_v, v_p, v_i, I_GABA, I_GABAb, I_AM
     
     # synaptic currents
     axs[2].set_title('Synaptic currents')
-    axs[2].set_ylabel('Amplitude (unitless)')
+    axs[2].set_ylabel('Amplitude (A)')
     axs[2].set_xlabel('Time (ms)')
     axs[2].spines["top"].set_visible(False)
     axs[2].spines["right"].set_visible(False)

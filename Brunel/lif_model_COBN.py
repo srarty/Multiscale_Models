@@ -51,12 +51,14 @@ def set_params(type='pyramidal'):
         tau_AMPA_s_ext = 2.4 * ms
         tau_l = 1 * ms # Latency
 
+        
         # Synaptic efficacies
-        g_GABA  = 18.5 * 0.04371582 * nS
-        g_GABAb = 2.3125 * 0.03041824 * nS
-        g_AMPA  = -36.75 * -0.01750547 * nS
-        g_AMPA_ext = -112.75 * -0.01750547 * nS
-        g_AMPA_tha = -112.75 * -0.01750547 * nS
+        g_GABA  = 99 * 0.5 * nS * 1e-3 * 59.2
+        g_GABAb = 99 * 0.05 * nS * 1e-3 * 37.18
+        g_AMPA  = -230 * nS * 1e-3 * (-15.85)
+        g_AMPA_ext = -300 * nS * 1e-3 * (-15.85)
+        g_AMPA_tha = -300 * nS * 1e-3 * (-15.85)
+        
          
        
         # Delta function weight (increment with each input spike)
@@ -82,11 +84,11 @@ def set_params(type='pyramidal'):
         tau_l = 1 * ms # Latency
 
         # Synaptic efficacies
-        g_GABA  = 22.62 * 0.04030332 * nS
-        g_GABAb  = 0 * nS
-        g_AMPA  = -41.25 * -0.01811983 * nS
-        g_AMPA_ext = -1.9  * -0.01811983 * nS
-        g_AMPA_tha = -19  * -0.01811983 * nS
+        g_GABA  = 60 * nS * 1e-3 * 46.28
+        g_GABAb  = 0 * nS * 1e-3
+        g_AMPA  = -290 * 1.5 * nS * 1e-3 * (-17.13)
+        g_AMPA_ext = -380 * nS * 1e-3 * (-17.13)
+        g_AMPA_tha =  -380 * nS * 1e-3 * (-17.13)
         
         # Delta function weight (increment with each input spike)
         weight = 1

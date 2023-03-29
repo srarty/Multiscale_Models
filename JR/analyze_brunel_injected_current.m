@@ -10,7 +10,7 @@
 %% Options ----------------------------------------------------------------
 
 POPULATION = 'In'; % 'Py' or 'In' of 'B'
-FUNCTION = 'G'; % 'G' (Gompertz) or 'S' (Sigmoid) or 'Ga' (Gaussian) or 'B' (Bas-Jan Zandt 2014)
+FUNCTION = 'N'; % 'G' (Gompertz) or 'S' (Sigmoid) or 'Ga' (Gaussian) or 'B' (Bas-Jan Zandt 2014) or 'N' (Naka-Rushton)
 
 % -------------------------------------------------------------------------
 
@@ -26,7 +26,7 @@ params = set_parameters('gabab');       % Chose params.u from a constant value i
 % params = set_parameters('default');       % Chose params.u from a constant value in set_params
 if strcmp(POPULATION, 'Py'), max_firing_rate = params.e0; elseif strcmp(POPULATION, 'In')||strcmp(POPULATION, 'B'), max_firing_rate = params.e0i; else, error('Wrong POPULATION'); end
     
-x = -20:0.1:100;
+x = -60:0.1:100;
 nonlinearity = nan(size(x));
 for i = 1:numel(x)
     nonlinearity(i) = max_firing_rate * non_linear_sigmoid(x(i), params.r, params.v0);
@@ -58,7 +58,10 @@ end
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_I_Tha\';
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_distribution\';
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\nonlinearity_three_pop\';
-folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\nonlinearity\';
+% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\nonlinearity\';
+% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\nonlinearity\zero_tha\';
+% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\nonlinearity\onefive_tha\';
+folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\nonlinearity\one_tha\';
 
 
 d = dir([folder '*.mat']);
@@ -70,11 +73,12 @@ potential_integral = zeros(1, no_files);
 for ii = 1:no_files
     data_file = [folder d(ii).name];    
     load(data_file);
-    L = length(LFP);
+    L = length(LFP_V);
     
     if strcmp(POPULATION, 'Py')
         try membrane_potentials(ii) = 1000*v_p; catch, membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_P; end        
-        potential_integral(ii) = -(sum(I_py - I_py_tha)/C_P)/500;
+%         potential_integral(ii) = -(sum(I_py - I_py_tha)/C_P)/500;
+        potential_integral(ii) = -(sum(I_py)/C_P)/500;
         firing_rates(ii) = mean(R_py(0.2*L : 0.8*L));
         
     elseif strcmp(POPULATION, 'In')
@@ -83,7 +87,8 @@ for ii = 1:no_files
         catch
             membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_I; 
         end
-        potential_integral(ii) = -(sum(I_in - I_in_tha)/C_I)/1000;
+%         potential_integral(ii) = -(sum(I_in - I_in_tha)/C_I)/1000;
+        potential_integral(ii) = -(sum(I_in)/C_I)/1000;
         firing_rates(ii) = mean(R_in(0.2*L : 0.8*L));
         
     elseif strcmp(POPULATION, 'B')
@@ -106,13 +111,17 @@ firing_rates(isnan(firing_rates)) = 0;
 
 % Ignore higher values to find a reasonable max_firing_rate (dodgy?).
 % Chosing the best cutoff point according to the gof
-maxin = 60:-1:25;
+if strcmp(POPULATION, 'Py'), maxin = 50:-1:30; % 60:-1:25;
+else, maxin = 80:-1:65; end
 bestrmse = 1;
 clear fitresult gof
 mp = membrane_potentials;
 fr = firing_rates;
 pi_ = potential_integral;
 for ii = 1:length(maxin)
+    
+    max_firing_rate = maxin(bestrmse);
+    
     mp(fr > maxin(ii)) = [];
     pi_(fr > maxin(ii)) = [];
     fr(fr > maxin(ii)) = [];
@@ -166,9 +175,26 @@ for ii = 1:length(maxin)
             opts.Upper =  [max_firing_rate+15 100 100 10];
         end    
 
-    elseif strcmp(FUNCTION, 'Ga')% Gaussian
-        ft = fittype( 'a*exp(-((x-b)/c).^2)', 'independent', 'x', 'dependent', 'y' ); % Gompertz sigmoid
+    elseif strcmp(FUNCTION, 'N')% Naka-Rushton
+        ft = fittype( 'heaviside(x - b) * (M * (x-b)^a / (s^a + (x-b)^a))', 'independent', 'x', 'dependent', 'y' ); % Naka-Rushton function
 
+        if strcmp(POPULATION, 'In')
+            % Naka-Rushton (In)
+            opts = fitoptions(ft);
+            opts.StartPoint =  [60 2 0 10];
+            opts.Lower =  [max_firing_rate-20 2 -20 0];
+            opts.Upper =  [max_firing_rate+20 2 20 100];
+        else
+            % Naka-Rushton (Py)
+            opts = fitoptions(ft);        
+            opts.StartPoint =  [40 2 0 10];
+            opts.Lower =  [max_firing_rate-20 2 -25 0];
+            opts.Upper =  [max_firing_rate+20 2 25 100];
+        end    
+        
+    elseif strcmp(FUNCTION, 'Ga')% Gaussian
+        ft = fittype( 'a*exp(-((x-b)/c).^2)', 'independent', 'x', 'dependent', 'y' ); % Gaussian
+        
         if strcmp(POPULATION, 'In')
             % Gaussian (In)
             opts = fitoptions(ft);
@@ -177,14 +203,14 @@ for ii = 1:length(maxin)
             opts.Upper =  [max_firing_rate+10 100 100 10];
         else
             % Gaussian (Py)
-            opts = fitoptions(ft);        
+            opts = fitoptions(ft);
             opts.StartPoint =  [24 10 7];
             opts.Lower =  [max_firing_rate-10 10 6];
             opts.Upper =  [max_firing_rate+10 10 6];
-        end    
+        end
 
     elseif strcmp(FUNCTION, 'B')    % Bas-Jan Zandt et al 2014
-        ft = fittype( '( 1/(s*sqrt(2*pi)) ) * exp( -0.5*((x-m)/s)^2 )', 'independent', 'x', 'dependent', 'y' ); % Gompertz sigmoid
+        ft = fittype( '( 1/(s*sqrt(2*pi)) ) * exp( -0.5*((x-m)/s)^2 )', 'independent', 'x', 'dependent', 'y' ); % Bas-Jan
 
         if strcmp(POPULATION, 'In')
             % Bas-Jan Zandt (In)
@@ -198,12 +224,14 @@ for ii = 1:length(maxin)
             opts.StartPoint =  [0 0];
             opts.Lower =  [0 0];
             opts.Upper =  [0 0];
-        end    
+        end
+        
     else
         error('Wrong POPULATION');
     end
 
-    [fitresult{ii}, gof{ii}] = fit(mp', fr', ft, opts); % With options
+%     [fitresult{ii}, gof{ii}] = fit(mp', fr', ft, opts); % With options
+    [fitresult{ii}, gof{ii}] = fit(pi_', fr', ft, opts); % With options
     
     if gof{ii}.rmse < gof{bestrmse}.rmse
         bestrmse = ii;
@@ -232,6 +260,8 @@ xlabel('Maximum input');
 %% Define nonlinear function according to population
 if strcmp(FUNCTION, 'S')
     f_nonlinearity = @(x) fitresult{bestrmse}.alpha * non_linear_sigmoid(x, fitresult{bestrmse}.r, fitresult{bestrmse}.v0);
+elseif strcmp(FUNCTION, 'N')
+    f_nonlinearity = @(x) heaviside(x - fitresult{bestrmse}.b) * (fitresult{bestrmse}.M * (x - fitresult{bestrmse}.b)^fitresult{bestrmse}.a / (fitresult{bestrmse}.s^fitresult{bestrmse}.a + (x - fitresult{bestrmse}.b)^fitresult{bestrmse}.a));
 elseif strcmp(FUNCTION, 'G')
     f_nonlinearity = @(x) gompertz(x, fitresult{bestrmse}.a, fitresult{bestrmse}.b, fitresult{bestrmse}.c, fitresult{bestrmse}.d);
 elseif strcmp(FUNCTION, 'Ga')
@@ -242,24 +272,25 @@ end
 
 %% Plot LIF data
 fig = figure;
-scatter(membrane_potentials, firing_rates, 5, 'filled');hold
-scatter(potential_integral, firing_rates, 5, 'x');
+scatter(potential_integral, firing_rates, 5, 'x'); hold
+scatter(membrane_potentials, firing_rates, 5, 'filled');
 xlabel('Membrane potential (mV)');
 ylabel('Firing rate');
 
 %% Plot fit results
 figure(fig);
-yyaxis right
-hold
+% yyaxis right
+% hold
 nonlinearity_post = nan(size(x));
 for i = 1:numel(x)
     nonlinearity_post(i) = f_nonlinearity(x(i));
 end
 % plot(x, max_firing_rate * nonlinearity_post);xlabel('Membrane potential (mV)');
-plot(x, nonlinearity_post);xlabel('Membrane potential (mV)');
+% yyaxis left
+plot(x, nonlinearity_post, 'r', 'LineWidth', 3); xlabel('Membrane potential (mV)');
 ylabel('Firing rate (spikes/s)');
 ylim([0 max_firing_rate+30]);
-yyaxis left
+% yyaxis left
 ylim([0 max_firing_rate+30]);
 % ylim([0 40]);
 % yyaxis left

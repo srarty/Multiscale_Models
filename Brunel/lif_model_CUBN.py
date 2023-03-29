@@ -66,8 +66,8 @@ def set_params(type='pyramidal'):
         tau_l = 1 * ms # Latency
         
         # Synaptic efficacies
-        j_GABA  = 16.5 * pA # Alone (when j_GABAb is 0): 99 * pA # 18.5 * pA # unitary PSP: 0.64 mV (together with GABAB)
-        j_GABAb = j_GABA / 2 # 50*pA # unitary PSP: 0.64 mV (together with GABAA) 
+        j_GABA  = 99*pA * 0.5 #16.5 * pA #  * 0.75 for higher spontaneous rate # Alone (when j_GABAb is 0): 99 * pA # 18.5 * pA # unitary PSP: 0.64 mV (together with GABAB)
+        j_GABAb = 99*pA * 0.05 # 50*pA # unitary PSP: 0.64 mV (together with GABAA) 
         j_AMPA  = -230 * pA # unitary PSP: 0.83 mV
         j_AMPA_ext = -300 * pA#-112.75 * pA # unitary PSP: 1.09 mV as per Brunel's proportion
         j_AMPA_tha = -300 * pA#-112.75 * pA # same as above
@@ -95,11 +95,11 @@ def set_params(type='pyramidal'):
         tau_l = 1 * ms # Latency
         
         # Synaptic efficacies
-        j_GABA  = 53 * pA # 22.62 * pA # PSP: 0.68 mV
+        j_GABA  = 60 * pA # 53 * pA # 22.62 * pA # PSP: 0.68 mV
         j_GABAb  = 0 * pA
-        j_AMPA  = -290 * pA * 1.5# -41.25 * pA # PSP: 1.29 mV
-        j_AMPA_ext = -390 * pA #-390 * 2 * pA # -15.58 * pA#-1.9 * pA # PSP: 1.74 mV
-        j_AMPA_tha =  -390 * pA #-390 * 2 * pA #-19*pA
+        j_AMPA  = -290 * pA * 1.25 # -41.25 * pA # PSP: 1.29 mV
+        j_AMPA_ext = -380 * pA #-390 * 2 * pA # -15.58 * pA#-1.9 * pA # PSP: 1.74 mV
+        j_AMPA_tha =  -380 * pA#-390 * 2 * pA #-19*pA
         
         # Delta function weight (increment with each input spike)
         weight = 1

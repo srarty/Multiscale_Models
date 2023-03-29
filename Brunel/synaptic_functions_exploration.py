@@ -60,7 +60,7 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     #%% options  --------------------------------------------------------------
     
     # source          = 'three_pop'       # 'brunel', 'allen'  or 'three_pop'
-    synaptic_type   = 'GABA'        # AMPA (excitatory), GABA (inhibitory) GABAb or both_gaba
+    synaptic_type   = 'GABAb'        # AMPA (excitatory), GABA (inhibitory) GABAb or both_gaba
     neuron_type     = 'pyramidal'  # pyramidal, inhibitory or sst
     external        = False         # When AMPA, synapsis can be external or recurrent (local)
     input_spike_rate = 0            # spikes/ms/cell 

@@ -45,7 +45,7 @@ def lif(MODEL='cobn', k_AMPA_P=0.01/mV, k_GABA_P=0.05/mV, k_GABAb_P=0.05/mV, k_A
     input_current_I = corriente # 350 # 398 # 400.01     # Inhibitory interneurons
     
     input_spike_rate = [0]#[0, 2.5, 5, 7.5]#[0, 1, 3, 5] #[u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
-    input_spike_rate_thalamic = 2 # spikes/ms/cell (spontaneous activity)
+    input_spike_rate_thalamic = 1.5 # spikes/ms/cell (spontaneous activity)
     input_spike_rate_thalamic_in = 1.5 # spikes/ms/cell (spontaneous activity)
     
     #%% parameters  --------------------------------------------------------------
@@ -421,10 +421,12 @@ save_dictionary={'k_AMPA_P': k_AMPA_P,
                  'k_GABAb_P': k_GABAb_P,
                  'k_AMPA_I': k_AMPA_I,
                  'k_GABA_I': k_GABA_I,
+                 'Py_diff': Py_diff,
+                 'In_diff': In_diff
                  } 
 
 # folder_path = '/data/gpfs/projects/punim0643/artemios/simulations/'
-# scipy.io.savemat(folder_path + 'CUBN_to_COBN_results.mat', mdict = save_dictionary)
+# scipy.io.savemat(folder_path + 'CUBN_to_COBN_results_2.mat', mdict = save_dictionary)
 
 
 

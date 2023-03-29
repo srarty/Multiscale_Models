@@ -70,7 +70,8 @@ try
 catch E
     disp('No peaks found');
     f = figure; plot(t(trim:end), y);
-    response = questdlg('No peaks found, what happened?', 'Manual input', 'Saturation', 'Oscillation', 'Oscillation');
+%     response = questdlg('No peaks found, what happened?', 'Manual input', 'Saturation', 'Oscillation', 'Oscillation');
+    response = 'Oscillation';
     switch response, case 'Oscillation', failure_value = 0; case 'Saturation', failure_value = Inf; end
     close(f);
 end

@@ -3,32 +3,57 @@
 %
 % Artemio - February 2022
 
-% load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_ipsp.mat'); psp = ipsp; % Inhibitory (GABA) on pyramidal
-load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_epsp.mat'); psp = epsp; % Excitatory (AMPA) on inhibitory interneurons
-% load('C:\Users\artemios\Documents\Multiscale_Models_Data\gabab_epsp.mat'); psp = epsp; % Excitatory (AMPA) on GABAb interneurons
-% load('C:\Users\artemios\Documents\Multiscale_Models_Data\gabab_ipsp.mat'); psp = ipsp; % Inhibitory (GABA) on GABAb interneurons
-% load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidalGabab_ipsp.mat'); psp = ipsp; % GABAb on pyramidal interneurons
-% load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_epsp.mat'); psp = epsp; % Excitatory (AMPA) on pyramidal (recursive)
-% load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_ipsp.mat'); psp = ipsp; % Inhibitory (GABA) on inhibitory interneurons (recursive)
-% load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_externalEPSP.mat'); psp = epsp; % Excitatory (AMPA_ext) on pyramidal (external input)
-% load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_thalamicEPSP.mat'); psp = epsp; % Excitatory (AMPA_tha) on pyramidal (external input)
-% load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_thalamicEPSP.mat'); psp = epsp; % Excitatory (AMPA_tha) on inhibitory (external input)
+synapse = 'pb'; % synapses 'ab', where a=post-synaptic and b=pre-synaptic
+
+params = set_parameters('gabab');
 
 % load('C:\Users\artemios\Documents\Multiscale_Models_Data\taus_fit\inhibitory_ipsp_-8.2.mat'); psp = ipsp;
 
+% Loading the appropriate file and time constants
+switch synapse
+    case 'pi'
+        load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_ipsp.mat'); psp = ipsp; % Inhibitory (GABA) on pyramidal
+        tau_s = params.tau_sp;
+        tau_m = params.tau_mp;
+    case 'ip'
+        load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_epsp.mat'); psp = epsp; % Excitatory (AMPA) on inhibitory interneurons
+        tau_s = params.tau_si;
+        tau_m = params.tau_mi;
+    case 'pp'
+        load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_epsp.mat'); psp = epsp; % Excitatory (AMPA) on pyramidal (recursive)
+        tau_s = params.tau_srp;
+        tau_m = params.tau_mrp;
+    case 'ii'
+        load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_ipsp.mat'); psp = ipsp; % Inhibitory (GABA) on inhibitory interneurons (recursive)
+        tau_s = params.tau_sri;
+        tau_m = params.tau_mri;
+    case 'pb'
+        load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidalGabab_ipsp.mat'); psp = ipsp; % GABAb on pyramidal interneurons
+        tau_s = params.tau_sb;
+        tau_m = params.tau_mp;
+    case 'iu'
+        load('C:\Users\artemios\Documents\Multiscale_Models_Data\inhibitory_externalEPSP.mat'); psp = epsp; % Excitatory (AMPA_tha) on inhibitory (external input)
+        tau_s = params.tau_si;
+        tau_m = params.tau_mi;
+    case 'pu'
+        load('C:\Users\artemios\Documents\Multiscale_Models_Data\pyramidal_externalEPSP.mat'); psp = epsp; % Excitatory (AMPA_ext) on pyramidal (external input)
+        tau_s = params.tau_srp;
+        tau_m = params.tau_mp;
+end
+        
+        
+
 % Adjuisting psp to remove the first sample, which is zero in Brian2
 psp(1) = [];
-
-T = linspace(0,0.3,length(psp));
-
+T = linspace(0,0.5,length(psp));
 
 % ft = fittype( 'b*t*exp(-t/a)', 'independent', 't', 'dependent', 'y' ); % Alpha function | a = tau_mn
 ft = fittype( 'c*(exp(-t/a)-exp(-t/b))', 'independent', 't', 'dependent', 'y');
 
 opts = fitoptions(ft);
-opts.StartPoint = [0.01 0.0012 1];
-opts.Lower = [0.01 0.0012 -10]; %[0.01 0.00525 0]; %0.0024 0];     % opts.Lower = [0.0001 0.006031 0]; 
-opts.Upper = [0.01 0.0012 10]; %0.0024 10];    % opts.Upper = [0.1 0.006031 10];    
+opts.StartPoint = [tau_m tau_s 1];
+opts.Lower = [tau_m tau_s -20]; %[0.01 0.00525 0]; %0.0024 0];     % opts.Lower = [0.0001 0.006031 0]; 
+opts.Upper = [tau_m tau_s 20]; %0.0024 10];    % opts.Upper = [0.1 0.006031 10];    
 opts.Robust = 'Off';
 fitresult = fit(T', psp', ft, opts) % With options
 % fitresult = fit(T', psp', ft) % No options
