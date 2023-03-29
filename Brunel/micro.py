@@ -10,7 +10,7 @@ import scipy.io
 import numpy as np
 from brian2 import *
 from scipy import signal
-from termcolor import colored  # Coloured text in the terminal
+# from termcolor import colored  # Coloured text in the terminal
 import matplotlib.pyplot as plt
 import pyspike as spk
 prefs.codegen.target = 'cython'  # use the Python fallback instead of C compilation
@@ -581,16 +581,16 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
     # if STATS & (TEST_PSP=='none'):
     #     cv_py, cvstd_py, cv_in, cvstd_in, si_py, si_in, spkdist_py, spkdist_in, isidist_py, isidist_in = plot_spike_stats(sp_P, sp_I, t_start=0.2)
     # else:
-    #     cv_py = 0
-    #     cvstd_py = 0
-    #     cv_in = 0
-    #     cvstd_in = 0
-    #     si_py = 0
-    #     si_in = 0
-    #     spkdist_py = 0
-    #     spkdist_in = 0
-    #     isidist_py = 0
-    #     isidist_in = 0
+    cv_py = 0
+    cvstd_py = 0
+    cv_in = 0
+    cvstd_in = 0
+    si_py = 0
+    si_in = 0
+    spkdist_py = 0
+    spkdist_in = 0
+    isidist_py = 0
+    isidist_in = 0
         
         
     #%% Save simulation  ------------------------------------------------------------
@@ -619,17 +619,24 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
                         'v_i': mean(In_monitor.v,0),
                         'v_pi': mean(Py_monitor.v_pi,0),
                         'v_ip': mean(In_monitor.v_ip,0),
+                        'i_pe': mean(Py_monitor.I_exc,0),
+                        'i_pi': mean(Py_monitor.I_inh,0),
+                        'i_ie': mean(In_monitor.I_exc,0),
+                        'i_ii': mean(In_monitor.I_inh,0),
                         'p_PP': p_PP,
                         'p_II': p_II,
+                        'p_IP': p_IP,
+                        'p_BP': p_BP,
+                        'p_PI': p_PI,
                         'R_py': r_P_rate,
                         'R_in': r_I_rate,
                         'cv_py': cv_py,
-                        'cv_in': cv_in, 
+                        'cv_in': cv_in,
                         'si_py': si_py,
                         'si_in': si_in,
-                        'spkdist_py': spkdist_py, 
-                        'spkdist_in': spkdist_in, 
-                        'isidist_py': isidist_py, 
+                        'spkdist_py': spkdist_py,
+                        'spkdist_in': spkdist_in,
+                        'isidist_py': isidist_py,
                         'isidist_in': isidist_in,
                         'MODEL': MODEL,
                         'RECURRENT_PYRAMIDAL': RECURRENT_PYRAMIDAL,
@@ -642,6 +649,7 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
                         'GABA_A_MULTIPLIER': GABA_A_MULTIPLIER,
                         'input_spike_rate': input_spike_rate,
                         'input_spike_rate_thalamic': input_spike_rate_thalamic,
+                        'input_spike_rate_thalamic_in': input_spike_rate_thalamic_in,
                         'input_current': input_current,
                         'value_': value_,
                         'pop_': pop_,
@@ -657,10 +665,10 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
         scipy.io.savemat(folder_path + save_str,
                          mdict = save_dictionary)
         
-        print(colored('Results of simulation saved as: ' + save_str, 'green'))
+        print('Results of simulation saved as: ' + save_str)
     
     else:
-        print(colored('Attention! Results of simulation were not saved. SAVE = False', 'yellow'))
+        print('Attention! Results of simulation were not saved. SAVE = False')
     
 # Run iteratively. Need to uncomment the def line at the start of the file.
 # # a = np.arange(500, 501, 0.05)

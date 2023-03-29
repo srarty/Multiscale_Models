@@ -13,7 +13,7 @@
 % range = [0.002:0.001:0.05]; % tau_m_e
 % range2 = [0.005:0.001:0.055]; % tau_m_i
 
-value = 'alpha_b';
+value = 'alpha_ri';
 range = 0:0.1:2;%0:0.1:2;%-1*[0:0.05:3];
 value2 = 'u';
 range2 = 0:0.1:2;%0:0.1:2;%[0:0.05:3];%[0:0.05:1];%
@@ -115,7 +115,8 @@ end
 % if results.range2(end)<0, angle=[0 -90]; else, angle=[0 90]; end
 angle = [0 -90];
 
-figure('Position', [325 404 1112 364]);
+f = figure('Position', [325 404 1112 364]);
+f.Position = [589 411 758 228];
 ax = subplot(1,2,1);
 
 imagesc(results.range, results.range2, results.freqs_py);% , 'FaceColor', 'flat', 'EdgeColor', 'none')
@@ -131,13 +132,13 @@ cmap(end,:) = [0 0 0]; % set values greater than 10 to black
 colormap(cmap);
 c = colorbar;
 c.Label.String = 'Mean firing rate (Hz)';
-caxis([0 0.6]);
-c.Limits = [0 0.6];
-
+caxis([0 0.21]);
+c.Limits = [0 0.2];
 % zlim([0 1]);
 title('Pyramidal')
 %xlim([0 5])
 ax.View = (angle);
+ax.FontSize = 12;
 
 ax = subplot(1,2,2);
 imagesc(results.range, results.range2, results.freqs_in);% , 'FaceColor', 'flat', 'EdgeColor', 'none')
@@ -146,14 +147,14 @@ xlabel(['\' results.value]);%('Input rate');
 ylabel(results.value2);
 zlabel('Firing rate (In)');
 title('Inhibitory');
-
 c = colorbar;
 c.Label.String = 'Mean firing rate (Hz)';
-caxis([0 6]);
-c.Limits = [0 6];
+caxis([0 5.1]);
+c.Limits = [0 5];
 % zlim([0 2]);
 % xlim([0 5])
 ax.View = (angle);
+ax.FontSize = 12;
 
 %%
 %{
