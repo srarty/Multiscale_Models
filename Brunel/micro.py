@@ -146,7 +146,7 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
     delay = 0.0 * ms 
     
     # Cortical input
-    num_inputs = 1000                    # Both thalamo-cortical and cortico-cortical 
+    num_inputs = 800                    # Both thalamo-cortical and cortico-cortical 
     
     
     
@@ -680,7 +680,7 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
 
 ranges = np.arange(0,2.1,0.1)
 # ranges =  [1]
-for jj in ranges[2:]:
+for jj in ranges:
     for ii in ranges:
         brunel(u=jj, value_ = ii, SAVE = True, PLOT = False, parameter = 'j_GABAb', pop_ = 'py')
 # brunel(u=1, SAVE=False, PLOT=True, parameter='j_GABA', value_=1.4, pop_='in')

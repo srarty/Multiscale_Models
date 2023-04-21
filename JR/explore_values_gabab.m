@@ -13,9 +13,9 @@
 % range = [0.002:0.001:0.05]; % tau_m_e
 % range2 = [0.005:0.001:0.055]; % tau_m_i
 
-value = 'alpha_ri';
+value = 'alpha_i';
 range = 0:0.1:2;%0:0.1:2;%-1*[0:0.05:3];
-value2 = 'u';
+value2 = 'u';%'u';
 range2 = 0:0.1:2;%0:0.1:2;%[0:0.05:3];%[0:0.05:1];%
 
 freqs = [];
@@ -61,8 +61,8 @@ results.range2 = range2;
 results.freqs = freqs;
 results.freqs_py = freqs_py;
 results.freqs_in = freqs_in;
-%{
-folder = 'C:\Users\artemios\Dropbox\University of Melbourne\Epilepsy\Resources for meetings\2022 07 14\';
+
+folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\firing_rates_nmm';
 name = [value ' vs ' value2];
 if isempty(dir([folder name]))
     save([folder name '.mat'], 'results');
@@ -70,7 +70,7 @@ if isempty(dir([folder name]))
 else
     disp('Results not saved, file exists');
 end
-%}
+
 
 
 % %% Plot 3d Mesh for oscillations
@@ -132,8 +132,8 @@ cmap(end,:) = [0 0 0]; % set values greater than 10 to black
 colormap(cmap);
 c = colorbar;
 c.Label.String = 'Mean firing rate (Hz)';
-caxis([0 0.21]);
-c.Limits = [0 0.2];
+caxis([0 0.6]);
+c.Limits = [0 0.6];
 % zlim([0 1]);
 title('Pyramidal')
 %xlim([0 5])
@@ -149,8 +149,8 @@ zlabel('Firing rate (In)');
 title('Inhibitory');
 c = colorbar;
 c.Label.String = 'Mean firing rate (Hz)';
-caxis([0 5.1]);
-c.Limits = [0 5];
+caxis([0 6]);
+c.Limits = [0 6];
 % zlim([0 2]);
 % xlim([0 5])
 ax.View = (angle);

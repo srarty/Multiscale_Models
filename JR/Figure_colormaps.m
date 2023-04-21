@@ -1,14 +1,30 @@
-clear
+%% Goes through results from LIF model and plots colormaps of firing rates,
+% run after colormaps_nmm to also plot colormaps from NMM, comment 'return'
+% line at the end of the LIF for NMM colormaps.
+%
+% Artemio updated 05/04/2023
+
+% clear
+close all
+
+% function to calculate maximum value of the color code
+% max_fun = @(a) max(a(a < max(a)));
+max_fun = @(a) max(median(a));
+% max_fun = @(a) max(max(a));
 
 %% LIF
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\excitability_spartan\no_current_pulse\'; 
-folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\excitability_spartan\'; 
+% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\excitability_spartan\'; 
+% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\spartan\firing_rates\jpb\';
+folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\spartan\firing_rates\';
 
-var_vec = {'py_j_AMPA', 'in_j_AMPA', 'py_j_GABA_', 'py_j_GABAb_', 'in_j_GABA_'};
+
+var_vec = {'in_j_AMPA' 'py_j_GABA_' 'py_j_AMPA' 'in_j_GABA_' 'py_j_GABAb_'};
+label_vec = {'j^{AMPA}_i' 'j^{GABAA}_p' 'j^{AMPA}_p' 'j^{GABA}_i' 'j^{GABAB}_p'};
 % var_vec = {'py_j_AMPA'};
-
+max_values = zeros(2,5);
 for ii = 1:length(var_vec)
-    u_vector = 0.1:0.1:2.0;
+    u_vector = 0:0.1:2.0;
     var_ = var_vec{ii};
     for jj = 1:numel(u_vector)
         j = u_vector(jj);
@@ -28,14 +44,15 @@ for ii = 1:length(var_vec)
             y_lif = a.LFP_V;
             t_lif = a.lfp_dt:a.lfp_dt:length(a.LFP_V)*a.lfp_dt;
             % Analyze excitabilty
-            tr(i,jj) = analyze_excitability(y_lif', t_lif', 4899, -1.1, 2500, false);
-            fr_in(i,jj) = mean(a.R_in(1000:4000));
-            fr_py(i,jj) = mean(a.R_py(1000:4000));
+%             tr(i,jj) = analyze_excitability(y_lif', t_lif', 4899, -1.1, 2500, false);
+            L = numel(a.R_in);
+            fr_in(i,jj) = mean(a.R_in(1500:L-500));
+            fr_py(i,jj) = mean(a.R_py(1500:L-500));
             values_(i,jj) = a.value_;
         end
         
         [~, idx] = sort(values_(:,jj));
-        tr(:,jj) = tr(idx,jj);
+%         tr(:,jj) = tr(idx,jj);
         fr_in(:,jj) = fr_in(idx,jj);
         fr_py(:,jj) = fr_py(idx,jj);
         values_(:,jj) = values_(idx,jj);
@@ -43,56 +60,52 @@ for ii = 1:length(var_vec)
     end
 
 
-    %% Plot LIF
-    f_handle = figure;
+    %% Plot spike rates mesh
+    % if results.range2(end)<0, angle=[0 -90]; else, angle=[0 90]; end
+    angle = [0 -90];
     
-    subplot(121)
-    % mesh(values_(:,1), u_vector, fr_py', 'FaceColor', 'flat', 'EdgeColor', 'none')
-    imagesc(values_(:,1), u_vector, fr_py');
-    xlabel(var_);
+    f = figure('Position', [325 404 1112 364]);
+    f.Position = [589 411 758 228];
+    
+    ax = subplot(1,2,1);
+    imagesc(values_(:,1), u_vector, fr_py');% , 'FaceColor', 'flat', 'EdgeColor', 'none')
     ylabel('u');
-    zlabel('fr_{py}');
-    hold
-    title('LIF');
-    colormap cool
-    c = colorbar; % caxis(limits); c.Limits = limits; zlim(limits);
-        
-    subplot(122)
-    imagesc(values_(:,1), u_vector, fr_in');
-    % xlabel('\tau_{m_{i}}');
-    % ylabel('\tau_{m_{e}}');
-    xlabel(var_);%('Input rate');
-    ylabel('u');
-    zlabel('fr_{in}');
-    hold
-    % plot3(0.01638,0.008115,25.6339,'rx','LineWidth',3)
-    %     title('NMM | u = 9');
-    title('LIF');
-    colormap cool
+    xlabel(label_vec{ii});
+    % Define colormap
+    load custom_colormap
+%     cmap = custom_colormap;
+    cmap = colormap(jet(512)); % use flipud(jet) to invert the colors in the colormap, jet can be any colormap
+    cmap(1:50,:) = [];
+%     cmap(end-5:end,:) = [];
+%     cmap(end:end+size(cmap,1),:) = ones(1+size(cmap,1),1) * cmap(end,:);
+    colormap(cmap); % apply custom colormap
     c = colorbar;
-%     caxis(limits);
-%     c.Limits = limits;
-%     zlim(limits);
-%%    
-    figure;
-    mesh(values_(:,1), u_vector, tr', 'FaceColor', 'flat', 'EdgeColor', 'none')
-    % xlabel('\tau_{m_{i}}');
-    % ylabel('\tau_{m_{e}}');
-    xlabel(var_);%('Input rate');
+    c.Label.String = 'Mean firing rate (Hz)';
+    max_values(1,ii) = 3*max_fun(fr_py); % TODO: 
+    caxis([0 1.2*max_values(1,ii)]);
+    c.Limits = [0 max_values(1,ii)];
+    title('Pyramidal')
+    ax.View = (angle);
+    ax.FontSize = 12;
+%     set(gca, 'ColorScale', 'log')
+
+    ax = subplot(1,2,2);
+    imagesc(values_(:,1), u_vector, fr_in');% , 'FaceColor', 'flat', 'EdgeColor', 'none')
     ylabel('u');
-    zlabel('t_{recovery}');
-    hold
-    % plot3(0.01638,0.008115,25.6339,'rx','LineWidth',3)
-    %     title('NMM | u = 9');
-    title('LIF');
-    colormap cool
+    xlabel(label_vec{ii});
+    title('Inhibitory');
     c = colorbar;
-%     c.Label.String = z_label;
-%     caxis(limits);
-%     c.Limits = limits;
-%     zlim(limits);
+    c.Label.String = 'Mean firing rate (Hz)';
+    max_values(2,ii) = 2*max_fun(fr_in);
+    caxis([0 1.2*max_values(2,ii)]);
+    c.Limits = [0 max_values(2,ii)];
+    ax.View = (angle);
+    ax.FontSize = 12;
+%     set(gca, 'ColorScale', 'log')
 
 end
+
+% return
 
 %% NMM
 % Load values
@@ -108,51 +121,49 @@ fr_in_re = zeros(20,20);
 fr_in_ri = zeros(20,20);
 fr_in_b  = zeros(20,20);
 
-values = 0.1:0.1:2;
-for i = 1:length(values)
-    load(['parameter_sweeps/excitability/alpha_e_' num2str(i) '.mat']);
-    load(['parameter_sweeps/excitability/alpha_i_' num2str(i) '.mat']);
-    load(['parameter_sweeps/excitability/alpha_re_' num2str(i) '.mat']);
-    load(['parameter_sweeps/excitability/alpha_ri_' num2str(i) '.mat']);
-    load(['parameter_sweeps/excitability/alpha_b_' num2str(i) '.mat']);
-    
-    fr_py_e(i,:) = fr_py_alpha_e;
-    fr_py_i(i,:) = fr_py_alpha_i;
-    fr_py_re(i,:) = fr_py_alpha_re;
-    fr_py_ri(i,:) = fr_py_alpha_ri;
-    fr_py_b(i,:) = fr_py_alpha_b;
-    
-    fr_in_e(i,:) = fr_in_alpha_e;
-    fr_in_i(i,:) = fr_in_alpha_i;
-    fr_in_re(i,:) = fr_in_alpha_re;
-    fr_in_ri(i,:) = fr_in_alpha_ri;
-    fr_in_b(i,:) = fr_in_alpha_b;
-end
+folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\firing_rates_nmm\';
+
+
+res{1} = load([folder 'alpha_e vs u']);
+res{2} = load([folder 'alpha_i vs u']);
+res{3} = load([folder 'alpha_re vs u']);
+res{4} = load([folder 'alpha_ri vs u']);
+res{5} = load([folder 'alpha_b vs u']);
 
 %% Plot
-f_handle = figure;
+label_vec = {'\alpha_{ip}' '\alpha_{pi}' '\alpha_{pp}' '\alpha_{ii}' '\alpha_{pb}'};
+for j = 1:numel(res)
+    r = res{j}.results;
+    
+    angle = [0 -90];
 
-subplot(121)
-% mesh(values, values, fr_py_b, 'FaceColor', 'flat', 'EdgeColor', 'none')
-imagesc(values, values', fr_py_b');
-% xlabel(var_);
-ylabel('u');
-zlabel('fr_{py}');
-hold
-title('NMM');
-colormap cool
-c = colorbar; % caxis(limits); c.Limits = limits; zlim(limits);
+    f = figure('Position', [325 404 1112 364]);
+    f.Position = [589 760 758 228];
+    ax = subplot(1,2,1);
 
-subplot(122)
-imagesc(values, values', fr_in_b');
-% xlabel('\tau_{m_{i}}');
-% ylabel('\tau_{m_{e}}');
-% xlabel(var_);%('Input rate');
-ylabel('u');
-zlabel('fr_{in}');
-hold
-% plot3(0.01638,0.008115,25.6339,'rx','LineWidth',3)
-%     title('NMM | u = 9');
-title('LIF');
-colormap cool
-c = colorbar;
+    imagesc(r.range, r.range2, r.freqs_py);% , 'FaceColor', 'flat', 'EdgeColor', 'none')
+    ylabel('u');
+    xlabel(label_vec{j});
+    cmap(end,:) = [0 0 0]; % set values greater than the maximum to black
+    colormap(cmap);% apply custom colormap
+    c = colorbar;
+    c.Label.String = 'Mean firing rate (Hz)';
+    caxis([0 1.2*max_values(1,j)]);
+    c.Limits = [0 max_values(1,j)];
+    title('Pyramidal')
+    ax.View = (angle);
+    ax.FontSize = 12;
+
+    ax = subplot(1,2,2);
+    imagesc(r.range, r.range2, r.freqs_in);
+    ylabel('u');
+    xlabel(label_vec{j});
+    title('Inhibitory');
+    c = colorbar;
+    c.Label.String = 'Mean firing rate (Hz)';
+    caxis([0 1.2*max_values(2,j)]);
+    c.Limits = [0 max_values(2,j)];
+    ax.View = (angle);
+    ax.FontSize = 12;
+    
+end

@@ -134,8 +134,8 @@ def plot_spike_stats(sp_P, sp_I, t_start=0, OS='local'):
     
     # ISI distance
     f1 = plt.figure()
-    isidist_py = ast.isi_distance(stp, population='Py', fig=f1)
-    isidist_in = ast.isi_distance(sti, population='In', fig=f1)
+    isidist_py = 0 # ast.isi_distance(stp, population='Py', fig=f1)
+    isidist_in = 0 # ast.isi_distance(sti, population='In', fig=f1)
     
     # SPIKE distance
     # f2 = plt.figure()
@@ -149,5 +149,9 @@ def plot_spike_stats(sp_P, sp_I, t_start=0, OS='local'):
     # ISI-CV
     cv_py, cvstd_py = ast.mean_isi_cv(stp, population='Py')
     cv_in, cvstd_in = ast.mean_isi_cv(sti, population='In')
+    # cv_py = 0
+    # cvstd_py = 0
+    # cv_in = 0
+    # cvstd_in = 0
     
     return cv_py, cvstd_py, cv_in, cvstd_in, si_py, si_in, spkdist_py, spkdist_in, isidist_py, isidist_in

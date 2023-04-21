@@ -14,20 +14,20 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABA(varargin)
     end
     
     N = 2000; % Number of samples: 1 sample = 1 milisecond
-    u = 1;
+    u = 0;
 
 %     params = set_parameters('seizure', u);
     params = set_parameters('gabab', u);
     params.time = N * params.dt;
     
     % Options  ------------------------------------------------------------
-    params.options.ADD_NOISE = 0; % External input noise (0 = no noise, 1 = noise)
+    params.options.ADD_NOISE = 1; % External input noise (0 = no noise, 1 = noise)
     params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Any other value of CHANGE_U: U changes.
     params.options.CHANGE_AGONIST = 0; % Agonist changes
     
-    CURRENT = 0;%50e-12; % 0
+    CURRENT = 0;%50e-12; % When zero, the model runs normal, when a different value, the model runs with a CURRENT perturbation at time CURRENT_TIME
     if exist('injected_current','var'), CURRENT = injected_current; end % If 'CURRENT' was a varargin, ignore previous line
-    params.options.CURRENT_TIME = 1490:1500; %1490:1500;
+    params.options.CURRENT_TIME = 1490:1500;
     
     params.options.INPUT_CURRENT_PY = 1000 * CURRENT / params.g_m_P; % 1000 for milivolts, then xe-12 A, where x is the amplitude in pA
     params.options.INPUT_CURRENT_IN = 1000 * CURRENT / params.g_m_I;   
@@ -92,8 +92,26 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABA(varargin)
     alpha_b = params.alpha_b; 
     alpha_uinterneuron = params.alpha_uinterneuron; 
 
+    
+    % Initial values:
+    
+    % u/z ratios | positive or negative initial value:
+    % pi = 0.02 | > -13
+    % ip = 0.01 | < 9
+    % pp = 0.02 | < 5
+    % ii = 0.01 | > -21
+    % pu = 0.02 | < 40
+    % pb = 0.02 | > -13
+    % iu = 0.01 | < 30
+    
 %     eq = zeros(21,1);
-    eq = -25 * ones(21,1);
+%     eq = -25 * ones(21,1);
+    
+%     eq = -1000 * ones(21,1);
+%     eq = 1e3*[-0.0213 -1.0675 0.0000 -0.0000 -0.0000 0 0.0288 1.4406 -0.0107 -0.5333 -0.0174 -1.7361 1 1 1 1 1 1 0.0228 2.2801 1];
+    eq = [10 10/0.02 -10 -10/0.01 -5 -5/0.02 20 20/0.01 -40 -40/0.02 10 10/0.02 1 1 1 1 1 1 -30 -30/0.01 1];
+%     eq = [-20 -1000 0 0 0 0 30 1500 -10 -50 -20 -2000 1 1 1 1 1 1 20 2000 1]; % initial values for bifurcation analysis (figure saved as bif on 6th of April)
+%     eq = [-21.3 -1068 0 0 0 0 28.8 1441 -10.7 -533.3 -17.4 -1736 alpha_i alpha_e alpha_re alpha_ri alpha_u alpha_b 22.8 2280 alpha_uinterneuron];  
 %     eq = [-1.1922 -59.6110 0.8691 86.917 0.4969 24.8473 0 0 -0.2977 -14.8839 -1.2119 -121.1873 -1.1280 2.4720 1.2550 -3.3160 1.6370 -0.1280 0 0 2.5910];
 %     eq = [-0.8843 -44.2156 2.6645 266.4735 1.5200 75.9992 4.3217 216.0840 -4.4878 -224.3917 -4.2776 -427.7567 -0.2350 2.4720 1.2550 -3.3160 1.6370 -0.5332 3.4201 342.0120 2.5910];
 %     eq = 5*[-1.3759 -68.7946 3.6314 363.1647 2.0715 103.5769 7.2028 360.1400 -6.9826 -349.1289 -6.6554 -665.5426 -0.2350 2.4720 1.2550 -3.3160 1.6370 -0.5332 5.7002 570.0200 2.5910];
@@ -120,11 +138,9 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABA(varargin)
         eq(20);
         alpha_uinterneuron;
         ];
-     
     
     [t,x,y] = ode45(@(t,x) ode(t,x,params,dt, S1, S2), t, x0); % use "t", instead of "[min(t) max(t)]" fix the output time vector
-    %     [t,x,y] = ode23(@(t,x) ode(t,x,params,dt), [min(t) max(t)], x0);
-    %     [t,x,y] = ode113(@(t,x) ode(t,x,params,dt), [min(t) max(t)], x0);
+%     [t,x,y] = ode45(@(t,x) ode(t,x,params,dt, S1, S2), [min(t) max(t)], x0, odeset('RelTol', 1e-6));
     
     % Create injected current vector
     I_py = zeros(size(x,1),1);
@@ -138,7 +154,7 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABA(varargin)
     yy = zeros(size(y));
     for i = 1:size(x,1)
         y(i) = x(i,1) + x(i,5) + x(i,7) + x(i,9) + I_py(i);
-        yy(i) = (x(i,6) + x(i,10) - x(i,2) - x(i,8) + I_py(i))/params.g_m_P; % Current based LFP
+        yy(i) = I_py(i) + 1e-3 * ( params.C_P*(x(i,6) + x(i,10) - x(i,2) - x(i,8) ) ) / params.g_m_P; % Current based LFP
     end
     
     % Calculate firing rate
@@ -221,7 +237,7 @@ function dx = ode(t,x,params,dt, S1, S2)
     
     % Add noise to external input
     U = u + params.u_bkg;
-    U = (U + (params.options.ADD_NOISE *(sqrt(U).*randn(1,1))));
+    U = (U + (params.options.ADD_NOISE *2*(sqrt(U).*randn(1,1))));
     
     %% Diff equations ------------------------------------------------------
     dx = zeros(18,1);

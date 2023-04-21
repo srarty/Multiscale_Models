@@ -47,9 +47,11 @@ if nargin >= 7, NEG = varargin{5}; else, NEG = true; end
 % Trim the first part of the simulation
 y = y(trim:end);
 idx_stim = idx_stim - trim;
+y_at_stim = y(idx_stim);
 
 % Normalize signal
 y_ = -y/abs(max(-y));
+yas = -y_at_stim/abs(max(-y));
 
 % Find peak. The time between idx_stim and the peak (plus 20 ms) will be 
 % the approximate recovery time given that the decay time constant from 
@@ -64,6 +66,7 @@ idx(idx <= idx_stim+1) = []; % Remove peaks found before the impulse
 idx = min(idx); % only leave smallest idx
 
 y_ = y_(idx:end);
+y__ = y_ - yas;
 try
     t_ = t(trim:end-idx+1);
     t_ = t_ - t_(1);
@@ -75,22 +78,35 @@ catch E
     switch response, case 'Oscillation', failure_value = 0; case 'Saturation', failure_value = Inf; end
     close(f);
 end
+
+% normalize y__
+y__ = y__ / max(y__);
+if ~isempty(y__)
     
-if ~isempty(y_)
-    % If y_ is not empty, idx should have found a peak, here we're
-    % measuring the decay time constant by fitting the decay to a single
-    % exponential. This helps us estimate the total recovery time at the
-    % end.
-    ft = fittype( 'a*exp(-t/tau) - b', 'independent', 't', 'dependent', 'y');
-    opts = fitoptions(ft);
-    opts.StartPoint = [1 0 0.1];
-    opts.Lower = [0 -5 0];
-    opts.Upper = [2000 5 10];
-    opts.Robust = 'Off';
-    fitresult = fit(t_, y_, ft, opts); % With options
-    % fitresult = fit(t_, y_, ft); % No options
+    % New method (David's approach at Parvin's meeting)
+    i = 1;
+%     while sum(abs(y__(i:end-1)) > 0.005), i = i + 1; end
+    while sum(abs(y__(i:end-1)) > 0.01), i = i + 1; end
+    t_recovery = i;
     
-    fit_time_constant = fitresult.tau; % In seconds
+    % Old method (fitting a single exponential)
+    
+%     % If y_ is not empty, idx should have found a peak, here we're
+%     % measuring the decay time constant by fitting the decay to a single
+%     % exponential. This helps us estimate the total recovery time at the
+%     % end.
+% %     ft = fittype( 'a*exp(-t/tau) - b', 'independent', 't', 'dependent', 'y');
+%     ft = fittype( 'exp(-t/tau)', 'independent', 't', 'dependent', 'y');
+%     opts = fitoptions(ft);
+%     opts.StartPoint = [0.1];
+%     opts.Lower = [0.001];%[(t(2)-t(1))*t_recovery/2];
+%     opts.Upper = [10];
+%     opts.Robust = 'Off';
+%     fitresult = fit(t_, y_, ft, opts) % With options
+% %     fitresult = fit(t_, y__, ft); % No options
+%     
+%     fit_time_constant = fitresult.tau; % In seconds
+    
 else
     % If y_ is empty, we assume the model saturated, so there's no recovery
     % and we set the recovefry time to infinity.
@@ -101,16 +117,30 @@ else
     end
 end
 
+dt = t(2)-t(1);
+
 if PLOT
     figure; 
-    plot(t_, y_);
+    subplot(211)
+    plot(t_, y__);
     hold;
-    plot(fitresult);
+    ylim([-0.5 1]);
+%     plot(fitresult);
+    plot(t_(i), y__(i), 'or');
+    
+    subplot(212)
+    plot(t(trim:end),y)
 end
 
 % Recovery time:
-dt = t(2)-t(1);
-recovery = (6 * fit_time_constant) + dt*(max(idx) - idx_stim); % Multiply by 6 because we calculated the time constant and now we want the actual decay time
+% recovery = (6 * fit_time_constant) + dt*(max(idx) - idx_stim); % Multiply by 6 because we calculated the time constant and now we want the actual decay time
+try
+    recovery = dt*(max(idx) - idx_stim) + dt*t_recovery;
+catch E
+    if strcmp(E.identifier, 'MATLAB:UndefinedFunction')
+        recovery = 6;
+    end
+end
 
 % If large negative number, it means (most likely) that the populations are
 % saturated after the probe
