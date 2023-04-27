@@ -650,7 +650,7 @@ from lif_plot import plot_results, plot_spike_stats
                         'input_current': input_current,
                         'value_': value_,
                         'pop_': pop_,
-                        'parameter':parameter} 
+                        'parameter':parameter}
     
                         # 'v_b': mean(B_monitor.v,0),
                         # 'R_b': r_B_rate,
@@ -676,8 +676,13 @@ from lif_plot import plot_results, plot_spike_stats
 # ranges = np.arange(0,3.1,0.1)
 
 ranges = np.arange(0,2.1,0.1)
-# ranges =  [1]
 for jj in ranges:
     for ii in ranges:
-        brunel(u=jj, value_ = ii, SAVE = True, PLOT = False, parameter = 'j_GABAb', pop_ = 'py')
+        brunel(e_multiplier = jj, i_multiplier = ii)
+
+# ranges = np.arange(0,2.1,0.1)
+# # ranges =  [1]
+# for jj in ranges:
+#     for ii in ranges:
+#         brunel(u=jj, value_ = ii, SAVE = True, PLOT = False, parameter = 'j_GABAb', pop_ = 'py')
 # brunel(u=1, SAVE=False, PLOT=True, parameter='j_GABA', value_=1.4, pop_='in')
