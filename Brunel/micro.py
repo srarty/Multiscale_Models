@@ -22,11 +22,12 @@ import lif_model_COBN as cobn
 from lif_plot import plot_results, plot_spike_stats
 # def brunel(u=0):
 
-def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 'py'):
-    # u=0
-    # parameter = ''
-    # value_ = 1
-    # pop_='py'
+# def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 'py'):
+    def brunel(e_multiplier = 1, i_multiplier = 1):    
+    u=0
+    parameter = ''
+    value_ = 1
+    pop_='py'
     plt.close('all')
         
     #%% Options:
@@ -45,9 +46,9 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
     GAUSSIAN_REFRACTORY = True      # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
     GAUSSIAN_THRESHOLD  = True      # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
     
-    # SAVE = True                    # Save ground truth data
-    # PLOT = True                     # Plot results 
-    STATS = False                    # Calculate spike statistics (ISI distance, CV, etc)
+    SAVE = True                    # Save ground truth data
+    PLOT = False                     # Plot results 
+    STATS = True                    # Calculate spike statistics (ISI distance, CV, etc)
     
     PSP_FR   = 0                    # Presynaptic firing rate for TEST_PSP (TEST_PSP needs to be diff to none for this to take effect)                               
     TEST_PSP = 'none'               # Testing the post synaptic potential of given synapses to a specified input firing rate. Options: 'pu', 'pp', 'pi', 'ii', 'ip', 'bp', 'bi', 'pb', 'none'. To prevent neurons spiking, make V_thr large.
@@ -146,7 +147,7 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
     delay = 0.0 * ms 
     
     # Cortical input
-    num_inputs = 800                    # Both thalamo-cortical and cortico-cortical 
+    num_inputs = 1000                    # Both thalamo-cortical and cortico-cortical 
     
     
     
@@ -155,7 +156,7 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
     if MODEL == 'cubn':
         # AMPA (excitatory)
         j_AMPA_rec_P = params_py.get('j_AMPA') * 2000/N 
-        j_AMPA_rec_I = params_in.get('j_AMPA') * 2000/N 
+        j_AMPA_rec_I = e_multiplier * params_in.get('j_AMPA') * 2000/N 
             
         j_AMPA_cor_P = params_py.get('j_AMPA_ext')
         j_AMPA_cor_I = params_in.get('j_AMPA_ext')
@@ -165,7 +166,7 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
         
         # GABAergic (inhibitory)
         j_GABA_P    = GABA_A_MULTIPLIER * params_py.get('j_GABA') * 2000/N
-        j_GABA_I    = GABA_A_MULTIPLIER * params_in.get('j_GABA') * 2000/N 
+        j_GABA_I    = i_multiplier * GABA_A_MULTIPLIER * params_in.get('j_GABA') * 2000/N 
         j_GABAb_P   = GABA_A_MULTIPLIER * params_py.get('j_GABAb') * 2000/N 
         
     elif MODEL == 'cobn': 
@@ -559,11 +560,6 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
     
     v_p = np.transpose(Py_monitor.v[0:5])*1e3
     v_i = np.transpose(In_monitor.v[0:5])*1e3
-           
-    
-    
-    
-    
     
     
     #%% plotting  -----------------------------------------------------------------
@@ -577,30 +573,31 @@ def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 
     #     plt.figure()
     #     plt.plot(v_psp*1e3)
     
-    # #%% Statistics
-    # if STATS & (TEST_PSP=='none'):
-    #     cv_py, cvstd_py, cv_in, cvstd_in, si_py, si_in, spkdist_py, spkdist_in, isidist_py, isidist_in = plot_spike_stats(sp_P, sp_I, t_start=0.2)
-    # else:
-    cv_py = 0
-    cvstd_py = 0
-    cv_in = 0
-    cvstd_in = 0
-    si_py = 0
-    si_in = 0
-    spkdist_py = 0
-    spkdist_in = 0
-    isidist_py = 0
-    isidist_in = 0
+    #%% Statistics
+    if STATS & (TEST_PSP=='none'):
+        cv_py, cvstd_py, cv_in, cvstd_in, si_py, si_in, spkdist_py, spkdist_in, isidist_py, isidist_in = plot_spike_stats(sp_P, sp_I, t_start=0.2)
+    else:
+        cv_py = 0
+        cvstd_py = 0
+        cv_in = 0
+        cvstd_in = 0
+        si_py = 0
+        si_in = 0
+        spkdist_py = 0
+        spkdist_in = 0
+        isidist_py = 0
+        isidist_in = 0
         
         
     #%% Save simulation  ------------------------------------------------------------
-    folder_path = '/data/gpfs/projects/punim0643/artemios/simulations/2023/firing_rates/'
+    # folder_path = '/data/gpfs/projects/punim0643/artemios/simulations/2023/firing_rates/'
+    folder_path = '/data/gpfs/projects/punim0643/artemios/simulations/2023/e_vs_i/'
     
     i = 0
-    while os.path.exists(folder_path + 'lfp_%s_%s_%s_u%s.mat' % (pop_,parameter,i,u)):
+    while os.path.exists(folder_path + 'lfp_e%s_i%s.mat' % (e_multiplier,i_multiplier)):
         i += 1
         
-    save_str = format('lfp_%s_%s_%s_u%s.mat' %(pop_,parameter, i,u))
+    save_str = format('lfp_e%s_i%s.mat' % (e_multiplier,i_multiplier))
     
     if SAVE:
             

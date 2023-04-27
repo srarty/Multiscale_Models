@@ -3,7 +3,7 @@
 %
 % Artemio - February 2022
 
-synapse = 'pi'; % synapses 'ab', where a=post-synaptic and b=pre-synaptic
+synapse = 'iu'; % synapses 'ab', where a=post-synaptic and b=pre-synaptic
 
 params = set_parameters('gabab');
 

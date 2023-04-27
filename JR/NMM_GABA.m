@@ -14,14 +14,14 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABA(varargin)
     end
     
     N = 2000; % Number of samples: 1 sample = 1 milisecond
-    u = 0;
+    u = 1;
 
 %     params = set_parameters('seizure', u);
     params = set_parameters('gabab', u);
     params.time = N * params.dt;
     
     % Options  ------------------------------------------------------------
-    params.options.ADD_NOISE = 1; % External input noise (0 = no noise, 1 = noise)
+    params.options.ADD_NOISE = 0; % External input noise (0 = no noise, 1 = noise)
     params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Any other value of CHANGE_U: U changes.
     params.options.CHANGE_AGONIST = 0; % Agonist changes
     
@@ -154,7 +154,7 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABA(varargin)
     yy = zeros(size(y));
     for i = 1:size(x,1)
         y(i) = x(i,1) + x(i,5) + x(i,7) + x(i,9) + I_py(i);
-        yy(i) = I_py(i) + 1e-3 * ( params.C_P*(x(i,6) + x(i,10) - x(i,2) - x(i,8) ) ) / params.g_m_P; % Current based LFP
+        yy(i) = I_py(i) + 1e-3 * ( params.C_P * (x(i,6) + x(i,10) - x(i,2) - x(i,8)) ) / params.g_m_P; % Current based LFP
     end
     
     % Calculate firing rate
@@ -237,7 +237,7 @@ function dx = ode(t,x,params,dt, S1, S2)
     
     % Add noise to external input
     U = u + params.u_bkg;
-    U = (U + (params.options.ADD_NOISE *2*(sqrt(U).*randn(1,1))));
+    U = (U + (params.options.ADD_NOISE * (sqrt(U).*randn(1,1))));
     
     %% Diff equations ------------------------------------------------------
     dx = zeros(18,1);

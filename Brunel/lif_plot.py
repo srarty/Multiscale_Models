@@ -129,11 +129,35 @@ def plot_results(T, sp_P, sp_I, r_P, r_I, lfp_v, v_p, v_i, I_GABA, I_GABAb, I_AM
     
 def plot_spike_stats(sp_P, sp_I, t_start=0, OS='local'):
     #%% Plot ISI distance and synchronization 
-    stp = ast.get_spike_trains(sp_P.t/second, sp_P.i, t_start=t_start) # Spike trains of Pyramidal neurons
-    sti = ast.get_spike_trains(sp_I.t/second, sp_I.i, t_start=t_start) # Spike trains of inhibitory neurons
+    try:
+        stp = ast.get_spike_trains(sp_P.t/second, sp_P.i, t_start=t_start) # Spike trains of Pyramidal neurons
+        # Spike syncrhony
+        si_py = ast.spike_si(stp, 'Py')
+        # ISI-CV
+        cv_py, cvstd_py = ast.mean_isi_cv(stp, population='Py')
+    except:
+        stp = 0
+        si_py = 0
+        cv_py = 0
+        cvstd_py = 0    
+
+    try:
+        sti = ast.get_spike_trains(sp_I.t/second, sp_I.i, t_start=t_start) # Spike trains of inhibitory neurons
+        # Spike syncrhony
+        si_in = ast.spike_si(sti, 'In')
+        # ISI-CV
+        cv_in, cvstd_in = ast.mean_isi_cv(sti, population='In')
+    except:
+        sti = 0
+        si_in = 0
+        cv_in = 0
+        cvstd_in = 0
+        
+        
+            
     
     # ISI distance
-    f1 = plt.figure()
+    # f1 = plt.figure()
     isidist_py = 0 # ast.isi_distance(stp, population='Py', fig=f1)
     isidist_in = 0 # ast.isi_distance(sti, population='In', fig=f1)
     
@@ -142,16 +166,6 @@ def plot_spike_stats(sp_P, sp_I, t_start=0, OS='local'):
     spkdist_py = 0#ast.spike_distance(stp, population='Py', fig=f2)
     spkdist_in = 0#ast.spike_distance(sti, population='In', fig=f2)
     
-    # Spike syncrhony
-    si_py = ast.spike_si(stp, 'Py')
-    si_in = ast.spike_si(sti, 'In')
-    
-    # ISI-CV
-    cv_py, cvstd_py = ast.mean_isi_cv(stp, population='Py')
-    cv_in, cvstd_in = ast.mean_isi_cv(sti, population='In')
-    # cv_py = 0
-    # cvstd_py = 0
-    # cv_in = 0
-    # cvstd_in = 0
+        
     
     return cv_py, cvstd_py, cv_in, cvstd_in, si_py, si_in, spkdist_py, spkdist_in, isidist_py, isidist_in

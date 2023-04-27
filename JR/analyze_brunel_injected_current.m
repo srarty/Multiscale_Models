@@ -10,7 +10,7 @@
 %% Options ----------------------------------------------------------------
 
 POPULATION = 'Py'; % 'Py' or 'In' of 'B'
-FUNCTION = 'G'; % 'G' (Gompertz) or 'S' (Sigmoid) or 'Ga' (Gaussian) or 'B' (Bas-Jan Zandt 2014) or 'N' (Naka-Rushton)
+FUNCTION = 'N'; % 'G' (Gompertz) or 'S' (Sigmoid) or 'Ga' (Gaussian) or 'B' (Bas-Jan Zandt 2014) or 'N' (Naka-Rushton)
 
 % -------------------------------------------------------------------------
 
@@ -61,7 +61,8 @@ end
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\nonlinearity\';
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\nonlinearity\zero_tha\';
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\nonlinearity\onefive_tha\';
-folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\nonlinearity\one_tha\';
+% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\nonlinearity\one_tha\';
+folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\nonlinearity\one_tha_april\';
 
 
 d = dir([folder '*.mat']);
@@ -97,6 +98,7 @@ for ii = 1:no_files
         catch
             membrane_potentials(ii) = 1000 * double(input_current)*1e-12 / g_m_I; 
         end
+%         potential_integral(ii) = -(sum(I_b - I_b_tha)/C_I)/1000;
         potential_integral(ii) = -(sum(I_b - I_b_tha)/C_I)/1000;
         firing_rates(ii) = mean(R_b(0.2*L : 0.8*L));
         
@@ -182,14 +184,14 @@ for ii = 1:length(maxin)
             % Naka-Rushton (In)
             opts = fitoptions(ft);
             opts.StartPoint =  [60 2 0 10];
-            opts.Lower =  [max_firing_rate-20 2 -20 0];
-            opts.Upper =  [max_firing_rate+20 2 20 100];
+            opts.Lower =  [max_firing_rate-30 1 0 0];
+            opts.Upper =  [max_firing_rate+30 5 0 100];
         else
             % Naka-Rushton (Py)
             opts = fitoptions(ft);        
             opts.StartPoint =  [40 2 0 10];
-            opts.Lower =  [max_firing_rate-20 2 -25 0];
-            opts.Upper =  [max_firing_rate+20 2 25 100];
+            opts.Lower =  [max_firing_rate-20 1 0 0];
+            opts.Upper =  [max_firing_rate+20 5 0 100];
         end    
         
     elseif strcmp(FUNCTION, 'Ga')% Gaussian

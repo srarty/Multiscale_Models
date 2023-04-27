@@ -116,10 +116,10 @@ switch mode
         params.gompertz.c = 4.072;% 0.3734; % 0.9686;
         params.gompertz.d = 0.102;% 0.09833; % 0.4128;
         
-        params.naka.M = 41.18;  % Thalamic input: 42.52;    % No thalamic input: 41.18; <- no bias % exponent: 2 -> 42.34
-        params.naka.a = 2.919;  % Thalamic input: 1.988;    % No thalamic input: 2.919; <- no bias % exponent: 2 -> 2
+        params.naka.M = 39.35;  % Thalamic input: 42.52;    % No thalamic input: 41.18; <- no bias % exponent: 2 -> 42.34
+        params.naka.a = 3.397;  % Thalamic input: 1.988;    % No thalamic input: 2.919; <- no bias % exponent: 2 -> 2
         params.naka.b = 0;      % Thalamic input: -22.13;   % No thalamic input: 0; <- no bias % exponent: 2 -> 7.558
-        params.naka.s = 24.8;   % Thalamic input: 17.5;     % No thalamic input: 24.8; <- no bias % exponent: 2 -> 17.12
+        params.naka.s = 23.94;   % Thalamic input: 17.5;     % No thalamic input: 24.8; <- no bias % exponent: 2 -> 17.12
        
         % Interneurons:
         params.e0i =         63.23;% 63.15; % 65; % Maximum firing rates
@@ -127,10 +127,10 @@ switch mode
         params.gompertzi.c = 3.964;% 0.9534; % 1.79;
         params.gompertzi.d = 0.09888;% 0.09868; % 0.2661;
         
-        params.nakai.M = 69.29; % Thalamic input: 71.03;    % No thalamic input: 69.29; <- no bias % exponent: 2 -> 70.6
-        params.nakai.a = 2.734; % Thalamic input: 1.903;    % No thalamic input: 2.734; <- no bias % exponent: 2 -> 2
+        params.nakai.M = 66.81; % Thalamic input: 71.03;    % No thalamic input: 69.29; <- no bias % exponent: 2 -> 70.6
+        params.nakai.a = 3.186; % Thalamic input: 1.903;    % No thalamic input: 2.734; <- no bias % exponent: 2 -> 2
         params.nakai.b = 0;     % Thalamic input: -16.32;   % No thalamic input: 0; <- no bias % exponent: 2 -> 6.957
-        params.nakai.s = 23.94; % Thalamic input: 16.35;    % No thalamic input: 23.94; <- no bias % exponent: 2 -> 16.79
+        params.nakai.s = 23.2; % Thalamic input: 16.35;    % No thalamic input: 23.94; <- no bias % exponent: 2 -> 16.79
        
         
     otherwise

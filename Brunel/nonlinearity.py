@@ -142,7 +142,7 @@ def brunel(corriente=0, PLOT=False, SAVE=True):
     delay = 0.0 * ms 
     
     # Cortical input
-    num_inputs = 800                    # Both thalamo-cortical and cortico-cortical 
+    num_inputs = 1000                    # Both thalamo-cortical and cortico-cortical 
     
     
     
@@ -681,10 +681,10 @@ def brunel(corriente=0, PLOT=False, SAVE=True):
                          mdict = save_dictionary)
         
         i = 0
-        while os.path.exists('C://Users/artemios/Documents/Multiscale_Models_Data/2023/nonlinearity/one_tha/lfp_inputCurrent_%s_%s.mat' % (floor(input_current),i)):
+        while os.path.exists('C://Users/artemios/Documents/Multiscale_Models_Data/2023/nonlinearity/one_tha_april/lfp_inputCurrent_%s_%s.mat' % (floor(input_current),i)):
             i += 1
         
-        scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/2023/nonlinearity/one_tha/lfp_inputCurrent_%s_%s.mat' % (floor(input_current),i),
+        scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/2023/nonlinearity/one_tha_april/lfp_inputCurrent_%s_%s.mat' % (floor(input_current),i),
                           mdict=save_dictionary)
     
         # scipy.io.savemat('C://Users/artemios/Documents/Multiscale_Models_Data/lfp_%s.mat' % i,
@@ -736,7 +736,7 @@ def brunel(corriente=0, PLOT=False, SAVE=True):
 
 # Run iteratively. Need to uncomment the def line at the start of the file.
 # ranges = np.arange(500,500.01,0.001)#(-1500, 1500, 25)#(-300, 1500, 5) 
-ranges = np.arange(-1500, 1500, 5)#(-300, 1500, 5) 
+ranges = np.arange(-1000, 1000, 5)#(-300, 1500, 5) 
 for iterations in ranges:
     brunel(corriente = iterations)
 

@@ -16,29 +16,34 @@
 %
 % Artemio - April 2023
 
-%% Default
+%% Default (no-input, i.e. Spontaneous Activity)
 lif = load(['C://Users/artemios/Documents/Multiscale_Models_Data/' 'lfp_py__5_u0.mat']);
-[~,~,t,f_e,f_i, params, yy]=NMM_GABA('u',0);
-plot_lif_and_nmm(lif, t, f_e, f_i, yy, params, 'Normal');
+[x,~,t,f_e,f_i, params, yy]=NMM_GABA('u',0);
+plot_lif_and_nmm(lif, t, f_e, f_i, yy, x, params, 'Normal');
+
+%% Default (u=1)
+lif = load(['C://Users/artemios/Documents/Multiscale_Models_Data/' 'lfp_py__4_u1.mat']);
+[x,~,t,f_e,f_i, params, yy]=NMM_GABA('u',1);
+plot_lif_and_nmm(lif, t, f_e, f_i, yy, x, params, 'Normal u=1');
 
 %% Normal High Excitability
-lif = load(['C://Users/artemios/Documents/Multiscale_Models_Data/' 'lfp_py__0_u0.mat']);
-[~,~,t,f_e,f_i, params, yy]=NMM_GABA('u',0,'alpha_e',1.3, 'alpha_ri', 1.3);
-plot_lif_and_nmm(lif, t, f_e, f_i, yy, params, 'Normal (high exc)');
+% lif = load(['C://Users/artemios/Documents/Multiscale_Models_Data/' 'lfp_py__0_u0.mat']);
+% [~,~,t,f_e,f_i, params, yy]=NMM_GABA('u',0,'alpha_e',1.3, 'alpha_ri', 1.3);
+% plot_lif_and_nmm(lif, t, f_e, f_i, yy, x, params, 'Normal (high exc)');
 
 %% Oscillations
-lif = load(['C://Users/artemios/Documents/Multiscale_Models_Data/' 'lfp_py__1_u0.mat']);
+lif = load(['C://Users/artemios/Documents/Multiscale_Models_Data/' 'lfp_py__7_u0.mat']);
 [~,~,t,f_e,f_i, params, yy]=NMM_GABA('u',0,'alpha_e',(1.3 * 1.8), 'alpha_ri', 1.3);
-plot_lif_and_nmm(lif, t, f_e, f_i, yy, params, 'Oscillations');
+plot_lif_and_nmm(lif, t, f_e, f_i, yy, x, params, 'Oscillations');
 
 %% Low freq oscillations
 lif = load(['C://Users/artemios/Documents/Multiscale_Models_Data/' 'lfp_py__4_u0.mat']);
 [~,~,t,f_e,f_i, params, yy]=NMM_GABA('u',0,'alpha_e',(1.3 * 0.5), 'alpha_ri', 1.3, 'alpha_i', 1.5);
-plot_lif_and_nmm(lif, t, f_e, f_i, yy, params, 'Low freq oscillations');
+plot_lif_and_nmm(lif, t, f_e, f_i, yy, x, params, 'Low freq oscillations');
 
 %% Saturation
 lif = load(['C://Users/artemios/Documents/Multiscale_Models_Data/' 'lfp_py__2_u0.mat']);
 [~,~,t,f_e,f_i, params, yy]=NMM_GABA('u',0,'alpha_e',(1.3 * 0.5), 'alpha_ri', 1.3);
-plot_lif_and_nmm(lif, t, f_e, f_i, yy, params, 'Saturation');
+plot_lif_and_nmm(lif, t, f_e, f_i, yy, x, params, 'Saturation');
 
 

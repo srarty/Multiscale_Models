@@ -1,8 +1,8 @@
 % var_vec = {'no_drug', 'diazepam', 'baclofen', 'muscimol', 'muscimol_e'};
-var_vec = {'no_drug', 'diazepam', 'muscimol'};
+% var_vec = {'no_drug', 'diazepam', 'muscimol'};
 % var_vec = {'muscimol', 'muscimol_e'};
 % var_vec = {'muscimol'};
-% var_vec = {'no_drug'};
+var_vec = {'no_drug'};
 
 % Key values: Saturation (alpha_i = 1, alpha_e = 0.5), Normal (alpha_i = 1,
 % alpha_e = 1), Oscillation (alpha_i = 1, alpha_e = 1.8) with HIGH_EXC as
@@ -183,12 +183,13 @@ for j = 1:length(var_vec)
     
     figure(f2)
     ax = subplot(1, length(var_vec), j);
-    colormap(jet);    
+    colormap(flipud(jet));    
     imagesc(range_gains, range_gains, balance.(drug));
-%     caxis([0 2]);
+    caxis([-0.5 0.5]);
     ax.View = ([0 -90]);
     xlabel('Excitatory gain');
     ylabel('Inhibitory gain');
+    colorbar
     if (concentration ~= 0) && ~strcmp('no_drug', drug)
         title([drug ' | concentration: ' num2str(concentration)]);
     else 
