@@ -681,7 +681,8 @@ def brunel(e_multiplier = 1, i_multiplier = 1, ri_multiplier = 1):
 ranges = np.arange(0.5,5.1,0.1)
 for jj in ranges:
     for ii in ranges:
-        brunel(e_multiplier = jj*1.3, i_multiplier = ii, ri_multiplier = 1.3)
+        jjj = jj * 1.3
+        brunel(e_multiplier = jjj, i_multiplier = ii, ri_multiplier = 1.3)
         
 # brunel(e_multiplier = 3.9, i_multiplier = 1.3)
 
