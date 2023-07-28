@@ -89,7 +89,7 @@ def plot_results(T, sp_P, sp_I, r_P, r_I, lfp_v, v_p, v_i, I_GABA, I_GABAb, I_AM
 
     f.tight_layout() # Fixes the positions of subplots and labels
 
-    # Second figure. PSP
+    # Second figure. Membrane potentials
     f2, axs = plt.subplots(2, 1, sharex=True, figsize=(10, 6.25)) # New figure with two subplots
     
     axs[0].set_title('Pyramidal Vm (selected cells)')
@@ -102,7 +102,7 @@ def plot_results(T, sp_P, sp_I, r_P, r_I, lfp_v, v_p, v_i, I_GABA, I_GABAb, I_AM
     axs[1].set_ylabel('mV')
     axs[1].plot(T*1000, v_i, lw=0.5, c=c_inter)
     
-    # Second figure. PSP
+    # Third figure. Balance
     f3, axs = plt.subplots(2, 1, sharex=True, figsize=(10, 6.25)) # New figure with two subplots
     
     axs[0].set_title('Pyramidal synaptic input')
@@ -135,11 +135,13 @@ def plot_spike_stats(sp_P, sp_I, t_start=0, OS='local'):
         si_py = ast.spike_si(stp, 'Py')
         # ISI-CV
         cv_py, cvstd_py = ast.mean_isi_cv(stp, population='Py')
+        fano = ast.mean_fano(stp, population = 'Py')
     except:
         stp = 0
         si_py = 0
         cv_py = 0
         cvstd_py = 0    
+        fano = 0
 
     try:
         sti = ast.get_spike_trains(sp_I.t/second, sp_I.i, t_start=t_start) # Spike trains of inhibitory neurons
@@ -161,6 +163,16 @@ def plot_spike_stats(sp_P, sp_I, t_start=0, OS='local'):
     isidist_py = 0 # ast.isi_distance(stp, population='Py', fig=f1)
     isidist_in = 0 # ast.isi_distance(sti, population='In', fig=f1)
     
+    # ISI distance matrix
+    # f2 = plt.figure()
+    # tt = np.concatenate((sp_P.t/second, sp_I.t/second))
+    # ii = np.concatenate((sp_P.i, sp_I.i))
+    # stboth = ast.get_spike_trains(tt, ii, t_start = t_start)
+    # ast.isi_distance_matrix(stboth, population='Both', fig=f2)
+    
+    # f3 = plt.figure()
+    # ast.isi_distance_matrix(sti.append(stp), population='Both', fig=f3)
+    
     # SPIKE distance
     # f2 = plt.figure()
     spkdist_py = 0#ast.spike_distance(stp, population='Py', fig=f2)
@@ -168,4 +180,4 @@ def plot_spike_stats(sp_P, sp_I, t_start=0, OS='local'):
     
         
     
-    return cv_py, cvstd_py, cv_in, cvstd_in, si_py, si_in, spkdist_py, spkdist_in, isidist_py, isidist_in
+    return cv_py, cvstd_py, cv_in, cvstd_in, si_py, si_in, spkdist_py, spkdist_in, isidist_py, isidist_in, fano

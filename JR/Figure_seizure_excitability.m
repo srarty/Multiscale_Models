@@ -11,12 +11,23 @@
 % var_vec = {'diazepam'};
 var_vec = {'no_drug'};
 
-range_gains = 0:0.05:2;
+% NOTE: To run for different gains, use range_gains, to run for different
+% input currents, use range_current (serch for text 'alt' to know where to
+% change the code) (TODO)
+
+% range_gains = 0:0.05:2;
+range_gains = 0.3:0.05:3;
+% range_gains = 0:0.1:2;
 % range_gains = 0:0.25:2;
+% range_gains = 1;
+
+% (alt)
+range_current = 1; % [0:10:400] * 1e-12;
 
 HIGH_EXC = false;
 PLOT_LFP = false;
 PLOT_FFT = false;
+PLOT_EXC = false;
 
 % close all
 f = figure;
@@ -116,7 +127,7 @@ for j = 1:length(var_vec)
             disp([drug ' | ' num2str(i) ' , ' num2str(ii)]);
             [x, ~, t, f_e, f_i, ~, y] = NMM_GABA('CURRENT', 50e-12, ...
                                             'u', 0,...
-                                            'alpha_e', range_gains(ii)*a_e,... 
+                                            'alpha_e', range_gains(ii)*a_e,...
                                             'alpha_i', range_gains(i)*a_i,... 
                                             'alpha_re', 1,... 
                                             'alpha_ri', a_ri,... 
@@ -141,7 +152,7 @@ for j = 1:length(var_vec)
             % Only measure recovery time if there wasn't saturation nor
             % oscillations:
             if ~state.(drug)(i,ii)
-                recovery.(drug)(i,ii) = analyze_excitability(y, t, 1489, -3, 1000, false);
+                recovery.(drug)(i,ii) = analyze_excitability(y, t, 1489, -3, 1000, PLOT_EXC);
             else
                 recovery.(drug)(i,ii) = 6;
             end

@@ -116,10 +116,10 @@ switch mode
         params.gompertz.c = 4.072;% 0.3734; % 0.9686;
         params.gompertz.d = 0.102;% 0.09833; % 0.4128;
         
-        params.naka.M = 39.35;  % Thalamic input: 42.52;    % No thalamic input: 41.18; <- no bias % exponent: 2 -> 42.34
-        params.naka.a = 3.397;  % Thalamic input: 1.988;    % No thalamic input: 2.919; <- no bias % exponent: 2 -> 2
+        params.naka.M = 38.48;  % Thalamic input: 42.52;    % No thalamic input: 41.18; <- no bias % exponent: 2 -> 42.34
+        params.naka.a = 3.528;  % Thalamic input: 1.988;    % No thalamic input: 2.919; <- no bias % exponent: 2 -> 2
         params.naka.b = 0;      % Thalamic input: -22.13;   % No thalamic input: 0; <- no bias % exponent: 2 -> 7.558
-        params.naka.s = 23.94;   % Thalamic input: 17.5;     % No thalamic input: 24.8; <- no bias % exponent: 2 -> 17.12
+        params.naka.s = 23.53;   % Thalamic input: 17.5;     % No thalamic input: 24.8; <- no bias % exponent: 2 -> 17.12
        
         % Interneurons:
         params.e0i =         63.23;% 63.15; % 65; % Maximum firing rates

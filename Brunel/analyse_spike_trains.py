@@ -69,6 +69,21 @@ def isi_distance(spike_trains, population='', fig='', OS='local'):
         plt.show()
     
     return s.avrg()
+
+# ISI distance matrix
+def isi_distance_matrix(spike_trains, population='', fig='', OS='local'):
+    
+    s = spk.isi_distance_matrix(spike_trains)
+    
+    if OS=='local':
+        # Check if fig is an input
+        if not fig:
+            plt.figure()
+        else:
+            plt.figure(fig)
+
+        plt.imshow(s, interpolation='none')
+        plt.title("ISI-distance")
     
 # Spike distance profile 
 def spike_distance(spike_trains, population='', fig='', OS='local'):
@@ -129,6 +144,16 @@ def isi_cv(st):
     
     return cv
 
+def fano(st):
+    # CV(isi) = std_/mean_isi
+    if len(st) > 2:
+        isi = np.diff(st.spikes)
+        fano = (np.std(isi)**2)/np.mean(isi)
+    else:
+        fano = 0
+    
+    return fano
+
 def mean_isi_cv(spike_trains, ignore_zeros=True, population=''):
     cv_vect = np.zeros(len(spike_trains))
     for i in range(0,len(spike_trains)-1):
@@ -140,6 +165,20 @@ def mean_isi_cv(spike_trains, ignore_zeros=True, population=''):
     print("%s CV: %.8f +- %.8f" %(population, np.mean(cv_vect), np.std(cv_vect)))
             
     return np.mean(cv_vect), np.std(cv_vect)
+
+
+def mean_fano(spike_trains, ignore_zeros=True, population=''):
+    fano_vect = np.zeros(len(spike_trains))
+    
+    for i in range(0,len(spike_trains)-1):
+        fano_vect[i] = fano(spike_trains[i])
+    
+    if ignore_zeros:
+        fano_vect = np.delete(fano_vect, np.where(fano_vect==0))
+        
+    print("%s Fanofactor: %.8f" %(population, np.mean(fano_vect)))
+            
+    return np.mean(fano_vect)
     
     
 

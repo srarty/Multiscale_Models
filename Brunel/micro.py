@@ -23,7 +23,7 @@ from lif_plot import plot_results, plot_spike_stats
 # def brunel(u=0):
 
 # def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 'py'):
-    def brunel(e_multiplier = 1, i_multiplier = 1):    
+def brunel(e_multiplier = 1, i_multiplier = 1, ri_multiplier = 1): 
     u=0
     parameter = ''
     value_ = 1
@@ -47,7 +47,7 @@ from lif_plot import plot_results, plot_spike_stats
     GAUSSIAN_THRESHOLD  = True      # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
     
     SAVE = True                    # Save ground truth data
-    PLOT = False                     # Plot results 
+    PLOT = True                     # Plot results 
     STATS = True                    # Calculate spike statistics (ISI distance, CV, etc)
     
     PSP_FR   = 0                    # Presynaptic firing rate for TEST_PSP (TEST_PSP needs to be diff to none for this to take effect)                               
@@ -165,14 +165,14 @@ from lif_plot import plot_results, plot_spike_stats
         j_AMPA_tha_I = params_in.get('j_AMPA_tha')
         
         # GABAergic (inhibitory)
-        j_GABA_P    = GABA_A_MULTIPLIER * params_py.get('j_GABA') * 2000/N
-        j_GABA_I    = i_multiplier * GABA_A_MULTIPLIER * params_in.get('j_GABA') * 2000/N 
+        j_GABA_P    = i_multiplier * GABA_A_MULTIPLIER * params_py.get('j_GABA') * 2000/N
+        j_GABA_I    = ri_multiplier * GABA_A_MULTIPLIER * params_in.get('j_GABA') * 2000/N 
         j_GABAb_P   = GABA_A_MULTIPLIER * params_py.get('j_GABAb') * 2000/N 
         
     elif MODEL == 'cobn': 
         # AMPA (excitatory)
         g_AMPA_rec_P = params_py.get('g_AMPA') * 2000/N
-        g_AMPA_rec_I = params_in.get('g_AMPA') * 2000/N 
+        g_AMPA_rec_I = e_multiplier * params_in.get('g_AMPA') * 2000/N 
             
         g_AMPA_cor_P = params_py.get('g_AMPA_ext')
         g_AMPA_cor_I = params_in.get('g_AMPA_ext')
@@ -181,8 +181,8 @@ from lif_plot import plot_results, plot_spike_stats
         g_AMPA_tha_I = params_in.get('g_AMPA_tha')
         
         # GABAergic (inhibitory)
-        g_GABA_P    = GABA_A_MULTIPLIER * params_py.get('g_GABA') * 2000/N 
-        g_GABA_I    = GABA_A_MULTIPLIER * params_in.get('g_GABA') * 2000/N
+        g_GABA_P    = i_multiplier * GABA_A_MULTIPLIER * params_py.get('g_GABA') * 2000/N 
+        g_GABA_I    = ri_multiplier * GABA_A_MULTIPLIER * params_in.get('g_GABA') * 2000/N
         g_GABAb_P   = GABA_A_MULTIPLIER * params_py.get('g_GABAb') * 2000/N
         
     else:
@@ -591,13 +591,16 @@ from lif_plot import plot_results, plot_spike_stats
         
     #%% Save simulation  ------------------------------------------------------------
     # folder_path = '/data/gpfs/projects/punim0643/artemios/simulations/2023/firing_rates/'
-    folder_path = '/data/gpfs/projects/punim0643/artemios/simulations/2023/e_vs_i/'
+    # folder_path = '/data/gpfs/projects/punim0643/artemios/simulations/2023/e_vs_i/'
+    folder_path = '/data/gpfs/projects/punim0643/artemios/simulations/2023/e_vs_i_highexc/'
+    
     
     i = 0
-    while os.path.exists(folder_path + 'lfp_e%s_i%s.mat' % (e_multiplier,i_multiplier)):
+    while os.path.exists(folder_path + 'lfp_e%s_i%s.mat' % (e_multiplier/1.3,i_multiplier)):
         i += 1
         
     save_str = format('lfp_e%s_i%s.mat' % (e_multiplier,i_multiplier))
+    # save_str = format('epileptic.mat')
     
     if SAVE:
             
@@ -675,10 +678,12 @@ from lif_plot import plot_results, plot_spike_stats
 #     brunel(corriente=iterations)
 # ranges = np.arange(0,3.1,0.1)
 
-ranges = np.arange(0,2.1,0.1)
+ranges = np.arange(0.5,5.1,0.1)
 for jj in ranges:
     for ii in ranges:
-        brunel(e_multiplier = jj, i_multiplier = ii)
+        brunel(e_multiplier = jj*1.3, i_multiplier = ii, ri_multiplier = 1.3)
+        
+# brunel(e_multiplier = 3.9, i_multiplier = 1.3)
 
 # ranges = np.arange(0,2.1,0.1)
 # # ranges =  [1]

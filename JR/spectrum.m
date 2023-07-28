@@ -13,7 +13,7 @@
 
 % NOTES:
 % NMM reduced frequency reponse with increased u, LIF other way around
-function varargout = spectrum(x, y, t, varargin)
+function varargout = spectrum(x, yy, t, varargin)
     global PLOT
 
 %     close all
@@ -60,14 +60,15 @@ function varargout = spectrum(x, y, t, varargin)
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_89.mat'; % GABAb impulse response | 50pA
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_91.mat'; % GABAb injection at t = 1/2
 
-data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/2023/lfp_py__4_u0.mat';
+% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/2023/lfp_py__4_u0.mat';
+data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/2023/lfp_e1.80_i1.00.mat';
 
     if nargin > 3, PLOT = varargin{1}; else, PLOT = true; end
     if nargin > 4, data_file = varargin{2}; end
 
     signal = 'lfp'; % Options: 'vpi', 'vip', 'lfp'
     
-    [x_nmm, x_lif, t_nmm, t_lif, v_pi, v_ip, u_lif, lfp_dt] = get_data(signal, x, y, t, data_file);
+    [x_nmm, x_lif, t_nmm, t_lif, v_pi, v_ip, u_lif, lfp_dt] = get_data(signal, x, yy, t, data_file);
     
     [x_nmm, x_lif, t_nmm] = normalization(x_nmm, x_lif, t_nmm, t_lif);
     

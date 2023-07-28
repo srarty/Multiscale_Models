@@ -43,6 +43,8 @@ if nargin >= 4, min_peak = varargin{2}; else, min_peak = 0.5; end
 if nargin >= 5, trim = varargin{3}; else, trim = 1; end
 if nargin >= 6, PLOT = varargin{4}; else, PLOT = true; end
 if nargin >= 7, NEG = varargin{5}; else, NEG = true; end
+if nargin >= 8, tolerance = varargin{6}; else, tolerance = 0.01; end
+if nargin >= 9, i_start_tolerance = varargin{7}; else, i_start_tolerance = 1; end
 
 % Trim the first part of the simulation
 y = y(trim:end);
@@ -50,8 +52,13 @@ idx_stim = idx_stim - trim;
 y_at_stim = y(idx_stim);
 
 % Normalize signal
-y_ = -y/abs(max(-y));
-yas = -y_at_stim/abs(max(-y));
+if NEG
+    y_ = -y/abs(max(-y));
+    yas = -y_at_stim/abs(max(-y));
+else
+    y_ = y/abs(max(y));
+    yas = y_at_stim/abs(max(y));
+end
 
 % Find peak. The time between idx_stim and the peak (plus 20 ms) will be 
 % the approximate recovery time given that the decay time constant from 
@@ -84,9 +91,9 @@ y__ = y__ / max(y__);
 if ~isempty(y__)
     
     % New method (David's approach at Parvin's meeting)
-    i = 1;
+    i = i_start_tolerance;
 %     while sum(abs(y__(i:end-1)) > 0.005), i = i + 1; end
-    while sum(abs(y__(i:end-1)) > 0.01), i = i + 1; end
+    while sum(abs(y__(i:end-1)) > tolerance), i = i + 1; end
     t_recovery = i;
     
     % Old method (fitting a single exponential)

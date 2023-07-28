@@ -44,7 +44,17 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABA(varargin)
                     % The parameter to modify is the injected current
                     params.options.INPUT_CURRENT_PY = 1000 * value{i} / params.g_m_P;
                     params.options.INPUT_CURRENT_IN = 1000 * value{i} / params.g_m_I;
-                    disp('The injected current has been modified by an input argument to the function NMM_GABA.m')
+                    disp('The injected current has been modified by an input argument to the function NMM_GABA.m');
+                elseif strcmp('MATLAB:nonExistentField', E.identifier) && strcmp('CURRENT_E', parameter{i})
+                    % The parameter to modify is the injected current
+                    params.options.INPUT_CURRENT_PY = 1000 * value{i} / params.g_m_P;
+                    disp('The injected current to PYRAMIDAL population has been modified by an input argument to the function NMM_GABA.m');
+                elseif strcmp('MATLAB:nonExistentField', E.identifier) && strcmp('CURRENT_I', parameter{i})
+                    % The parameter to modify is the injected current
+                    params.options.INPUT_CURRENT_IN = 1000 * value{i} / params.g_m_I;
+                    disp('The injected current to INHIBITORY population has been modified by an input argument to the function NMM_GABA.m');
+                elseif strcmp('MATLAB:nonExistentField', E.identifier) && strcmp('CURRENT_TIME', parameter{i})
+                    params.options.CURRENT_TIME = value{i};
                 else
                     error(['Couldn''t assign value: ' num2str(value{i}) ' to the parameter: ' parameter{i}]);
                 end
@@ -105,11 +115,11 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABA(varargin)
     % iu = 0.01 | < 30
     
 %     eq = zeros(21,1);
+    eq = [10 10/0.02 -10 -10/0.01 -5 -5/0.02 20 20/0.01 -40 -40/0.02 10 10/0.02 1 1 1 1 1 1 -30 -30/0.01 1];
+
 %     eq = -25 * ones(21,1);
-    
 %     eq = -1000 * ones(21,1);
 %     eq = 1e3*[-0.0213 -1.0675 0.0000 -0.0000 -0.0000 0 0.0288 1.4406 -0.0107 -0.5333 -0.0174 -1.7361 1 1 1 1 1 1 0.0228 2.2801 1];
-    eq = [10 10/0.02 -10 -10/0.01 -5 -5/0.02 20 20/0.01 -40 -40/0.02 10 10/0.02 1 1 1 1 1 1 -30 -30/0.01 1];
 %     eq = [-20 -1000 0 0 0 0 30 1500 -10 -50 -20 -2000 1 1 1 1 1 1 20 2000 1]; % initial values for bifurcation analysis (figure saved as bif on 6th of April)
 %     eq = [-21.3 -1068 0 0 0 0 28.8 1441 -10.7 -533.3 -17.4 -1736 alpha_i alpha_e alpha_re alpha_ri alpha_u alpha_b 22.8 2280 alpha_uinterneuron];  
 %     eq = [-1.1922 -59.6110 0.8691 86.917 0.4969 24.8473 0 0 -0.2977 -14.8839 -1.2119 -121.1873 -1.1280 2.4720 1.2550 -3.3160 1.6370 -0.1280 0 0 2.5910];
@@ -177,9 +187,11 @@ function dx = ode(t,x,params,dt, S1, S2)
 %         if t >= 3*params.time/4
 %             u = 1;
         if t >= 2*params.time/3
-            u = 3;
-        elseif t >= 1*params.time/3
             u = 2;
+        elseif t >= 1*params.time/3
+            u = 1;
+        else 
+            u = 0;
         end
         
     elseif isfield(params,'options') & isfield(params.options,'CHANGE_AGONIST') & params.options.CHANGE_AGONIST
@@ -208,7 +220,7 @@ function dx = ode(t,x,params,dt, S1, S2)
     c2 = 70.25 * c_constant * params.P_pyTOin;      % Excitatory synapses into inhibitory population
     c3 = 140.0 * c_constant * params.P_pyTOpy;      % Recursive excitation to pyramidal cells
     c4 = 9.8   * c_constant * params.P_inTOin;      % Recursive inhibition to inhibitory cells
-    c5 = 17.6;                                      % External excitatory synapses into pyramidal population
+    c5 = 17.59;                                      % External excitatory synapses into pyramidal population
     c6 = 64.36 * c_constant * params.P_inTOpy;      % GABA_B synapses into pyramidal population % 166.4415
     c7 = 8.8; % external on inhibitory interneurons
     

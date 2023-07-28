@@ -62,7 +62,7 @@ results.freqs = freqs;
 results.freqs_py = freqs_py;
 results.freqs_in = freqs_in;
 
-folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\firing_rates_nmm';
+folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\firing_rates_nmm2\';
 name = [value ' vs ' value2];
 if isempty(dir([folder name]))
     save([folder name '.mat'], 'results');

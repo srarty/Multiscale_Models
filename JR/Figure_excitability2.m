@@ -10,11 +10,13 @@ DO_ACFW = false;
 f1 = figure();
 f2 = figure();
 
-% var_vec = {'alpha_e', 'alpha_i', 'alpha_re', 'alpha_ri', 'alpha_b'};
-var_vec = {'alpha_e', 'alpha_i', 'alpha_b'};
+var_vec = {'alpha_e', 'alpha_i', 'alpha_re', 'alpha_ri', 'alpha_b'};
+% var_vec = {'alpha_e', 'alpha_i', 'alpha_b'};
 % var_vec = {'alpha_re', 'alpha_ri'};
 % var_vec = {'alpha_e'};
-values = 0.0:0.1:2;
+
+% values = 0.0:0.1:2;
+values = 1:0.1:5;
 %%
 
 for j = 1:length(var_vec)

@@ -3,7 +3,15 @@
 %
 % Artemio - February 2022
 
-synapse = 'iu'; % synapses 'ab', where a=post-synaptic and b=pre-synaptic
+function [fitresult, T, psp] = fit_alpha(varargin)
+
+if nargin > 0
+    synapse = varargin{1};
+    PLOT = false;
+else
+    synapse = 'iu'; % synapses 'ab', where a=post-synaptic and b=pre-synaptic
+    PLOT = true;
+end
 
 params = set_parameters('gabab');
 
@@ -58,11 +66,13 @@ opts.Robust = 'Off';
 fitresult = fit(T', psp', ft, opts) % With options
 % fitresult = fit(T', psp', ft) % No options
 
-figure
-plot(fitresult)
-hold
-plot(T,psp,'b--')
-legend({'fit' 'brunel'})
+if PLOT
+    figure
+    plot(fitresult)
+    hold
+    plot(T,psp,'b--')
+    legend({'fit' 'brunel'}) 
+end
 
 % %%
 % alpha = fitresult.b; % 277; %

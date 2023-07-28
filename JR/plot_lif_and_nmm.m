@@ -13,32 +13,50 @@ function plot_lif_and_nmm(lif, t, f_e, f_i, yy, x, params, title_str)
     lif.R_py = lif.R_py(5000:10000);
     lif.R_in = lif.R_in(5000:10000);
 
-    figure; 
-    subplot(311); 
-    hold; plot(linspace(t(1),t(end),length(lif.i_pe)), -(lif.i_pe - lif.i_pi)/params.g_m_P, '--', 'Color', [0.5 0.5 0.5]); % LIF
-    plot(t, yy, 'k'); % NMM
+    f = figure; 
+    f.Position = [657 252 560 680];
+    subplot(211); 
+    hold; 
+    plot(linspace(t(1),t(end),length(lif.i_pe)), (-(lif.i_pe - lif.i_pi)/params.g_m_P)*1e3, '--', 'Color', [0.5 0.5 0.5]); % LIF
+    plot(t, yy*1e3, 'k'); % NMM
     xlim([0.5 1]);
-    ylabel('LFP (V)');
+    ylabel('LFP (mV)');
     title(title_str);
-    l = legend({'NMM', 'LIF'});
+    l = legend({'LIF', 'NMM'});
     l.Location = 'best';
-    subplot(312); l1=plot(t, f_e); hold; l2=plot(t, f_i);
+    ax = gca;
+    ax.FontSize = 12;
+    
+    subplot(212); l1=plot(t, f_e); hold; l2=plot(t, f_i);
     plot(linspace(t(1),t(end),length(lif.R_py)), lif.R_py, '--', 'Color', l1.Color); plot(linspace(t(1),t(end),length(lif.R_in)), lif.R_in, '--', 'Color', l2.Color);
     xlim([0.5 1]);
     xlabel('Time (s)');
     ylabel('Firing rates (Hz)');
+    l = legend({'Py_{NMM}', 'In_{NMM}', 'Py_{LIF}', 'In_{LIF}'});
+    l.Location = 'best';
+    ax = gca;
+    ax.FontSize = 12;
     
-    subplot(313); 
+    f = figure;
+    f.Position = [1219 253 420 300];
+    % subplot(313); 
     yy_lif = downsample(-(lif.i_pe - lif.i_pi)/params.g_m_P,10);
-    h = histogram(yy_lif, 'FaceColor', [0.5 0.5 0.5]);%, 'BinWidth', 0.01);
+    h = histogram(yy_lif*1e3, 'FaceColor', [0.5 0.5 0.5]);%, 'BinWidth', 0.01);
     hold
-    histogram(yy, 'FaceColor', [0 0 0], 'BinWidth', h.BinWidth);
+    histogram(yy*1e3, 'FaceColor', [0 0 0], 'BinWidth', h.BinWidth);
 %     title(title_str);
     legend({['LIF (k = ' num2str(kurtosis(yy_lif,0)) ')'] ['NMM (k = ' num2str(kurtosis(yy,0)) ')'] });
+    ax = gca;
+    ax.FontSize = 12;
+    xlabel('milivolts');
+    ylabel('Distribution');
+    
     
     %Balance
     % To plot excitation-inhibition balance, run Figure_balance.m 
     Figure_balance(x, params, lif, title_str);
+    f = gcf;
+    f.Position = [1219 645 420 280];
 
     drawnow
 

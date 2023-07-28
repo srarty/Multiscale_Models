@@ -18,7 +18,7 @@ nmm_i_pe = (x(:,5) + x(:,7)) * milivolts_scale * params.g_m_P;
 nmm_i_ie = (x(:,3) + x(:,19)) * milivolts_scale * params.g_m_I;
 nmm_i_ii = (x(:,11)) * milivolts_scale * params.g_m_I;
 
-L = numel(nmm_i_pe);
+L = 2;%numel(nmm_i_pe);
 
 %%
 % load('C:\Users\artemios\Documents\Multiscale_Models_Data\2023\lfp_last.mat')

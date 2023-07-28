@@ -29,7 +29,9 @@ close all;
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_66.mat'; % Seizure: j_pi = 21.0666, alpha_i = -0.3 (random LIF th and t_ref)
 
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/2023/lfp_py__7_u0.mat';
-data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/2023/lfp_last.mat';
+% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/2023/lfp_e1.00_i1.00.mat';
+
+data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/2023/lfp_e1.80_i1.00.mat';
 
 load(data_file);
 tt = lfp_dt:lfp_dt:lfp_dt*length(v_ip);

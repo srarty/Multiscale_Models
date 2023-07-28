@@ -6,13 +6,19 @@
 % clear
 % close all
 
-
+function [x, nonlinearity_post, max_firing_rate, bestrmse, fitresult, gof, fitoutput, potential_integral, firing_rates] = analyze_brunel_injected_current(varargin)
 %% Options ----------------------------------------------------------------
 
 POPULATION = 'Py'; % 'Py' or 'In' of 'B'
-FUNCTION = 'N'; % 'G' (Gompertz) or 'S' (Sigmoid) or 'Ga' (Gaussian) or 'B' (Bas-Jan Zandt 2014) or 'N' (Naka-Rushton)
+FUNCTION = 'N'; % 'G' (Gompertz) or 'S' (Sigmoid) or 'Ga' (Gaussian) or 'B' (Bas-Jan Zandt 2014) or 'N' (Naka-Rushton) or 'L' (logistic)
 
 % -------------------------------------------------------------------------
+
+% Input arguments:
+if nargin > 0
+    POPULATION = varargin{1};
+    FUNCTION = varargin{2};
+end
 
 % LIF parameters
 g_m_P = 25e-9;
@@ -113,8 +119,8 @@ firing_rates(isnan(firing_rates)) = 0;
 
 % Ignore higher values to find a reasonable max_firing_rate (dodgy?).
 % Chosing the best cutoff point according to the gof
-if strcmp(POPULATION, 'Py'), maxin = 50:-1:30; % 60:-1:25;
-else, maxin = 80:-1:65; end
+if strcmp(POPULATION, 'Py'), maxin = 80:-1:20; % 60:-1:25;
+else, maxin = 100:-1:65; end
 bestrmse = 1;
 clear fitresult gof
 mp = membrane_potentials;
@@ -142,7 +148,7 @@ for ii = 1:length(maxin)
 
 
     %% Fit
-    if strcmp(FUNCTION, 'S') % Sigmoid
+    if strcmp(FUNCTION, 'S') % Error-function sigmoid
     %     ft = fittype( '2.^-(a.^-(x-b))', 'independent', 'x', 'dependent', 'y' );                          % Double exponential sigmoid
     %     ft = fittype( 'c/(1+exp(-a*(x-b)))+d', 'independent', 'x', 'dependent','y' );                     % sigmoid
         ft = fittype( 'alpha*(0.5*erf((x - v0) / (sqrt(2) * r)) + 0.5)', 'independent', 'x', 'dependent', 'y' ); % Error function | a = v0 | b = r
@@ -150,14 +156,30 @@ for ii = 1:length(maxin)
             % Error (In)
             opts = fitoptions(ft);
             opts.StartPoint =  [max_firing_rate 10 5]; % [alpha r v0]
-            opts.Lower =   [max_firing_rate 0.1 0];
-            opts.Upper =  [max_firing_rate 50 40];    
+            opts.Lower =   [max_firing_rate-20 0.1 0];
+            opts.Upper =  [max_firing_rate+20 50 40];    
         else
             % Error (Py)
             opts = fitoptions(ft);
             opts.StartPoint =  [max_firing_rate 10 5];
-            opts.Lower =   [25.87 1 0];
-            opts.Upper =  [25.87 30 100];
+            opts.Lower =   [max_firing_rate-20 1 0];
+            opts.Upper =  [max_firing_rate+20 30 100];
+        end
+        
+    elseif strcmp(FUNCTION, 'L') % Logistic
+        ft = fittype( 'L/(1 + exp(-k*(x-x0)))', 'independent', 'x', 'dependent', 'y' ); % Error function | a = v0 | b = r
+        if strcmp(POPULATION, 'In')
+            % Error (In)
+            opts = fitoptions(ft);
+            opts.StartPoint =  [1 max_firing_rate 0]; % [alpha r v0]
+            opts.Lower =   [0 max_firing_rate-30 -10];
+            opts.Upper =  [50 max_firing_rate+30 100];    
+        else
+            % Error (Py)
+            opts = fitoptions(ft);
+            opts.StartPoint =  [max_firing_rate 10 5];
+            opts.Lower =   [max_firing_rate-20 1 0];
+            opts.Upper =  [max_firing_rate+20 30 100];
         end
 
     elseif strcmp(FUNCTION, 'G') % Gompertz
@@ -166,15 +188,15 @@ for ii = 1:length(maxin)
         if strcmp(POPULATION, 'In')
             % Gompertz (In)
             opts = fitoptions(ft);
-            opts.StartPoint =  [10 1 1 0];
-            opts.Lower =  [max_firing_rate-15 -100 -100 -10];
-            opts.Upper =  [max_firing_rate+15 100 100 10];
+            opts.StartPoint =  [max_firing_rate 1 1 0];
+            opts.Lower =  [max_firing_rate-30 -100 -100 -10];
+            opts.Upper =  [max_firing_rate+30 100 100 10];
         else
             % Gompertz (Py)
             opts = fitoptions(ft);        
-            opts.StartPoint =  [10 1 1 0];
-            opts.Lower =  [max_firing_rate-15 -100 -100 -10];
-            opts.Upper =  [max_firing_rate+15 100 100 10];
+            opts.StartPoint =  [max_firing_rate 1 1 0];
+            opts.Lower =  [max_firing_rate-20 -100 -100 -10];
+            opts.Upper =  [max_firing_rate+20 100 100 10];
         end    
 
     elseif strcmp(FUNCTION, 'N')% Naka-Rushton
@@ -189,7 +211,7 @@ for ii = 1:length(maxin)
         else
             % Naka-Rushton (Py)
             opts = fitoptions(ft);        
-            opts.StartPoint =  [40 2 0 10];
+            opts.StartPoint =  [max_firing_rate 2 0 10];
             opts.Lower =  [max_firing_rate-20 1 0 0];
             opts.Upper =  [max_firing_rate+20 5 0 100];
         end    
@@ -217,15 +239,15 @@ for ii = 1:length(maxin)
         if strcmp(POPULATION, 'In')
             % Bas-Jan Zandt (In)
             opts = fitoptions(ft);
-            opts.StartPoint =  [0 0];
+            opts.StartPoint =  [10 1e-3];
             opts.Lower =  [0 0];
-            opts.Upper =  [0 0];
+            opts.Upper =  [100 100];
         else
-            % Bas-Jan Zandt (In)
+            % Bas-Jan Zandt (Py)
             opts = fitoptions(ft);        
-            opts.StartPoint =  [0 0];
+            opts.StartPoint =  [10 1e-3];
             opts.Lower =  [0 0];
-            opts.Upper =  [0 0];
+            opts.Upper =  [100 100];
         end
         
     else
@@ -233,9 +255,10 @@ for ii = 1:length(maxin)
     end
 
 %     [fitresult{ii}, gof{ii}] = fit(mp', fr', ft, opts); % With options
-    [fitresult{ii}, gof{ii}] = fit(pi_', fr', ft, opts); % With options
+    [fitresult{ii}, gof{ii}, fitoutput{ii}] = fit(pi_', fr', ft, opts); % With options
+%     [fitresult{ii}, gof{ii}, fitoutput{ii}] = fit(pi_', fr', ft); % No options
     
-    if gof{ii}.rmse < gof{bestrmse}.rmse
+    if gof{ii}.rmse <= gof{bestrmse}.rmse
         bestrmse = ii;
     end
     % fitresult = fit(potential_integral', firing_rates', ft, opts) % With options
@@ -262,6 +285,8 @@ xlabel('Maximum input');
 %% Define nonlinear function according to population
 if strcmp(FUNCTION, 'S')
     f_nonlinearity = @(x) fitresult{bestrmse}.alpha * non_linear_sigmoid(x, fitresult{bestrmse}.r, fitresult{bestrmse}.v0);
+elseif strcmp(FUNCTION, 'L')
+    f_nonlinearity = @(x) fitresult{bestrmse}.L / (1 + exp(-fitresult{bestrmse}.k * (x - fitresult{bestrmse}.x0)));
 elseif strcmp(FUNCTION, 'N')
     f_nonlinearity = @(x) heaviside(x - fitresult{bestrmse}.b) * (fitresult{bestrmse}.M * (x - fitresult{bestrmse}.b)^fitresult{bestrmse}.a / (fitresult{bestrmse}.s^fitresult{bestrmse}.a + (x - fitresult{bestrmse}.b)^fitresult{bestrmse}.a));
 elseif strcmp(FUNCTION, 'G')
@@ -274,8 +299,8 @@ end
 
 %% Plot LIF data
 fig = figure;
-scatter(potential_integral, firing_rates, 5, 'x'); hold
-scatter(membrane_potentials, firing_rates, 5, 'filled');
+s_ = scatter(potential_integral, firing_rates, 5, 'x'); hold
+ss_ = scatter(membrane_potentials, firing_rates, 5, 'filled');
 xlabel('Membrane potential (mV)');
 ylabel('Firing rate');
 
@@ -289,11 +314,11 @@ for i = 1:numel(x)
 end
 % plot(x, max_firing_rate * nonlinearity_post);xlabel('Membrane potential (mV)');
 % yyaxis left
-plot(x, nonlinearity_post, 'r', 'LineWidth', 3); xlabel('Membrane potential (mV)');
+plot(x, nonlinearity_post, 'r', 'LineWidth', 2); xlabel('Membrane potential (mV)');
 ylabel('Firing rate (spikes/s)');
 ylim([0 max_firing_rate+30]);
 % yyaxis left
-ylim([0 max_firing_rate+30]);
+% ylim([0 max_firing_rate+30]);
 % ylim([0 40]);
 % yyaxis left
 % ylim([0 40]);

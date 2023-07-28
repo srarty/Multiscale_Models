@@ -1,8 +1,10 @@
 % var_vec = {'no_drug', 'diazepam', 'baclofen', 'muscimol', 'muscimol_e'};
-% var_vec = {'no_drug', 'diazepam', 'muscimol'};
+var_vec = {'no_drug', 'diazepam', 'muscimol'};
 % var_vec = {'muscimol', 'muscimol_e'};
 % var_vec = {'muscimol'};
-var_vec = {'no_drug'};
+% var_vec = {'diazepam'};
+% var_vec = {'baclofen'};
+% var_vec = {'no_drug'};
 
 % Key values: Saturation (alpha_i = 1, alpha_e = 0.5), Normal (alpha_i = 1,
 % alpha_e = 1), Oscillation (alpha_i = 1, alpha_e = 1.8) with HIGH_EXC as
@@ -14,10 +16,23 @@ var_vec = {'no_drug'};
 %            Normal: lfp_py__0_u0.mat
 %
 % Run Figure_sample_recordings.m to plot an example of each response type
-range_gains = 0:0.05:2;
+
+
+% NOTE: To run for different gains, use range_gains, to run for different
+% input currents, use range_current (serch for text 'alt' to know where to
+% change the code)
+
+% range_gains = 0:0.05:2;
+range_gains = 0.4:0.1:4;
+% range_gains = 0:0.1:2;
 % range_gains = 0:0.25:2;
-% range_gains = [0.5 1 1.8];
-HIGH_EXC = false;
+% range_gains = 1;
+
+% (alt)
+% range_current = [0:10:400] * 1e-12;
+range_current = 0;
+
+HIGH_EXC = true;
 PLOT_LFP = false;
 PLOT_FFT = false;
 
@@ -27,6 +42,7 @@ f.Position = [300 400 400*length(var_vec) 300];
 f2 = figure;
 cmap =[0 0 1; 1 1 0; 1 0 0];
 
+clear state balance
 for j = 1:length(var_vec)
     
     drug = var_vec{j}; 
@@ -98,7 +114,7 @@ for j = 1:length(var_vec)
     end
     
     if HIGH_EXC
-        a_e = 1.3;
+        a_e = 1.3; %#ok<UNRCH>
         a_ri = 1.3 * a_ri;
         
         title_str = 'High excitability';
@@ -110,19 +126,25 @@ for j = 1:length(var_vec)
     
     state.(drug) = [];
     balance.(drug) = [];
-    for i = 1:length(range_gains) % Varying inhibitory gain
-        for ii = 1:length(range_gains) % Varying excitatory gain
+    for i = 1:length(range_gains) % Varying inhibitory gain (alt)
+        for ii = 1:length(range_gains) % Varying excitatory gain (alt)
+%     for i = 1:length(range_current) % Varying inhibitory gain (alt)
+%         for ii = 1:length(range_current) % Varying excitatory gain (alt)
             disp([drug ' | ' num2str(i) ' , ' num2str(ii)]);
+            % Modify following line for gains or current variation (alt)
             [x, ~, t, f_e, f_i, params, y] = NMM_GABA('u', 0,...
-                                            'alpha_e', range_gains(ii)*a_e,... 
-                                            'alpha_i', range_gains(i)*a_i,... 
+                                            'alpha_e', range_gains(ii) * a_e,... % x axis
+                                            'alpha_i', range_gains(i) * a_i,... % y axis
                                             'alpha_re', 1,... 
                                             'alpha_ri', a_ri,... 
                                             'alpha_b', a_b,... 
                                             'alpha_u', a_u,... 
                                             'alpha_uinterneuron', a_ui,... 
                                             'tau_sp', t_sp,... 
-                                            'tau_sri', t_sri);
+                                            'tau_sri', t_sri,...
+                                            'CURRENT_E', 0,...%range_current(ii),...
+                                            'CURRENT_I', 0,...%range_current(i),...
+                                            'CURRENT_TIME', 1:2000 );
             % Calculate fft to estimate oscillatory activity
             [~, X_] = fft_plot(y(1000:end)-mean(y(1000:end)), t(1000:end),[],PLOT_FFT);
             
@@ -137,7 +159,7 @@ for j = 1:length(var_vec)
             end
             
             if PLOT_LFP
-                figure(100);
+                figure(100); %#ok<UNRCH>
                 
                 subplot(211)
                 cla;
@@ -151,6 +173,8 @@ for j = 1:length(var_vec)
                 xlabel('Time (s)');
                 ylabel('Firing rates (Hz)');
                 legend({'Pyramidal' 'Interneurons'});
+                
+                drawnow
             end
             
             %Balance
@@ -169,32 +193,37 @@ for j = 1:length(var_vec)
     figure(f)
     ax = subplot(1, length(var_vec), j);
     colormap(cmap);    
-    imagesc(range_gains, range_gains, state.(drug));
+    imagesc(range_gains, range_gains, state.(drug));xlabel('Excitatory gain');ylabel('Inhibitory gain'); % (alt)
+%     imagesc(range_current*1e12, range_current*1e12, state.(drug));xlabel('Py input current (pA)');ylabel('In input current (pA)'); % (alt)
     caxis([0 2]);
-    ax.View = ([0 -90]);
     xlabel('Excitatory gain');
     ylabel('Inhibitory gain');
     if (concentration ~= 0) && ~strcmp('no_drug', drug)
         title([drug ' | concentration: ' num2str(concentration)]);
     else 
-        title('No drugs');
+        title('NMM');
     end
+    ax.FontSize = 12;
+    ax.View = ([0 -90]);
     drawnow
     
     figure(f2)
+    f2.Position = [730 400 490 300];
     ax = subplot(1, length(var_vec), j);
     colormap(flipud(jet));    
-    imagesc(range_gains, range_gains, balance.(drug));
+    imagesc(range_gains, range_gains, balance.(drug));xlabel('Excitatory gain');ylabel('Inhibitory gain'); % (alt)
+%     imagesc(range_current*1e12, range_current*1e12, balance.(drug));xlabel('Py input current (pA)');ylabel('In input current (pA)'); % (alt)
     caxis([-0.5 0.5]);
-    ax.View = ([0 -90]);
-    xlabel('Excitatory gain');
-    ylabel('Inhibitory gain');
-    colorbar
     if (concentration ~= 0) && ~strcmp('no_drug', drug)
         title([drug ' | concentration: ' num2str(concentration)]);
     else 
-        title('No drugs');
+        title('NMM');
     end
+    ax.FontSize = 12;
+    ax.View = ([0 -90]);
+    c = colorbar;
+    c.Label.String = 'Input current balance (nA)';
+    c.Label.FontSize = 12;
     drawnow
     
 end
