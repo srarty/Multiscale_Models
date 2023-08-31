@@ -4,13 +4,14 @@
 % Artemio - May 2023
 
 var_vec = {'alpha_i', 'alpha_e', 'alpha_ri', 'alpha_re', 'alpha_b'};
+% var_vec = {'alpha_b'};
 
 for j = 1:length(var_vec)
 
     value = var_vec{j}; %'alpha_i';
-    range = 0:0.1:2;
+    range = 0.4:0.1:4;%0:0.1:2;
     value2 = 'u';
-    range2 = 0:0.1:2;
+    range2 = 0:0.1:2;%0.4:0.1:4;%
 
     freqs = [];
     freqs_py = [];
@@ -56,7 +57,7 @@ for j = 1:length(var_vec)
     results.freqs_py = freqs_py;
     results.freqs_in = freqs_in;
 
-    folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\firing_rates_nmm\';
+    folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\firing_rates_nmm3\';
     name = [value ' vs ' value2];
     if isempty(dir([folder name]))
         save([folder name '.mat'], 'results');

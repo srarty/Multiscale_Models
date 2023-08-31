@@ -61,7 +61,10 @@ function varargout = spectrum(x, yy, t, varargin)
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/lfp_91.mat'; % GABAb injection at t = 1/2
 
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/2023/lfp_py__4_u0.mat';
-data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/2023/lfp_e1.80_i1.00.mat';
+% data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/2023/lfp_e1.80_i1.00.mat';
+
+% data_file = 'C://Users/artemios/Documents/Multiscale_Models_Data/2023/fast_oscillation_0.mat';
+data_file = 'C://Users/artemios/Documents/Multiscale_Models_Data/Spartan/e_vs_i_highexc/lfp_e4.00_i1.00.mat';
 
     if nargin > 3, PLOT = varargin{1}; else, PLOT = true; end
     if nargin > 4, data_file = varargin{2}; end
@@ -190,6 +193,7 @@ function oscillation = do_plot(model, signal, x_, t)
     global PLOT
 
     dt = t(2) - t(1);
+%     dt = 1e-4;
 
     switch signal
         case 'vpi'
@@ -202,10 +206,10 @@ function oscillation = do_plot(model, signal, x_, t)
             error('Wrong options (signal)');
     end
         
-	w = round(length(t)/50); % Window size
-    so = round(w*0.9); % Samples overlap
+	w = round(length(t)/10); % Window size
+    so = round(w*0.5); % Samples overlap
     freqbins = 10 * w; %Evaluate the spectrum at (128/2)+1=65 frequencies and (length(x)−120)/(128−120)=235 time bins.    
-    freqrange = [0 0.2]; % xlim values
+    freqrange = [0 0.2];%[0 1.5]; % xlim values
 
 %     disp(['freq bins = ', num2str( (freqbins/2)+1 )]);
 %     disp(['time bins = ', num2str( (length(x_)-so)/(freqbins-so) )]);
@@ -249,11 +253,12 @@ function oscillation = do_plot(model, signal, x_, t)
 %         f = figure(101);clf;
 %         f.Position([3 4]) = [1230 420];
         if strcmp('lif', model), subplot(2,2,4); else, subplot(2,2,3); end
-        spectrogram(x_, w, so, freqbins, Fs, 'yaxis','power');
+%         spectrogram(x_, w, so, freqbins, Fs, 'yaxis','power');
+        spectrogram(x_, 999, round(999*0.75), 4096, Fs, 'yaxis','power');
 
         title([titlestr, ' (', ystr, ')']);
         ax = gca;
-    %     ax.YScale = 'log';
+%         ax.YScale = 'log';
         ylim(freqrange);
     end
     

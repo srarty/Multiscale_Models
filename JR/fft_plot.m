@@ -9,7 +9,6 @@ if nargin > 3, PLOT = varargin{2}; else, PLOT = false; end
 if size(x,1) > size(x,2), x = transpose(x); end
 
 Fs = 1/diff(t(1:2));
-
 L = length(t);
 n = 2^nextpow2(L);
 X = fft(x,n);
@@ -25,12 +24,16 @@ if PLOT
         disp('Couldn''t hold fig');
     end
     plot(0:(Fs/n):(Fs/2-Fs/n), P1(1:n/2));
+%     plot(0:(Fs/(0.5*n)):(Fs), P1); % This line works for NMM, tested it counting the actual number of peaks.
     xlim([0 200]);
 end
 
+% Need to make sure the following lines make sense for LIF. They have been
+% tested on NMM
 X_ = P1(1:n/2);
 F_ = 0:(Fs/n):(Fs/2-Fs/n);
-
+% X_ = P1; % Tested for NMM
+% F_ = 0:(Fs/(0.5*n)):(Fs); % Tested for NMM
 varargout = {fig, X_, F_};
 
 end

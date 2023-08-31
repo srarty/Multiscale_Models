@@ -36,7 +36,7 @@ lif = load(['C://Users/artemios/Documents/Multiscale_Models_Data/' 'lfp_py__7_u0
 [x,~,t,f_e,f_i, params, yy]=NMM_GABA('u',0,'alpha_e',(1.3 * 1.8), 'alpha_ri', 1.3);
 plot_lif_and_nmm(lif, t, f_e, f_i, yy, x, params, 'Oscillations');
 
-%% Low freq oscillations
+%% Low freq oscillations (edge)
 lif = load(['C://Users/artemios/Documents/Multiscale_Models_Data/' 'lfp_py__4_u0.mat']);
 [x,~,t,f_e,f_i, params, yy]=NMM_GABA('u',0,'alpha_e',(1.3 * 0.5), 'alpha_ri', 1.3, 'alpha_i', 1.5);
 plot_lif_and_nmm(lif, t, f_e, f_i, yy, x, params, 'Low freq oscillations');
@@ -57,11 +57,17 @@ lif = load(['C://Users/artemios/Documents/Multiscale_Models_Data/2023/' 'lfp_e1.
 plot_lif_and_nmm(lif, t, f_e, f_i, yy, x, params, 'Baclofen oscillations');
 
 %% High excitability, no-drugs, high freq oscillations
-lif = load(['C://Users/artemios/Documents/Multiscale_Models_Data/2023/' 'fast_oscillation_0.mat']);
+% lif = load(['C://Users/artemios/Documents/Multiscale_Models_Data/2023/' 'fast_oscillation_0.mat']);
+lif = load(['C://Users/artemios/Documents/Multiscale_Models_Data/Spartan/e_vs_i_highexc/' 'lfp_e4.00_i1.00.mat']);
 [x,~,t,f_e,f_i, params, yy]=NMM_GABA('u',0,'alpha_e', 4.55 , 'alpha_i', 1.1, 'alpha_ri', 1.3);
-plot_lif_and_nmm(lif, t, f_e, f_i, yy, x, params, 'Baclofen oscillations');
+plot_lif_and_nmm(lif, t, f_e, f_i, yy, x, params, 'high freq oscillations');
 
-
+%% COBN
+lif_co = load(['C://Users/artemios/Documents/Multiscale_Models_Data/2023/cobn/' 'cobn_0.mat']);
+lif = load(['C://Users/artemios/Documents/Multiscale_Models_Data/2023/cobn/' 'cubn_0.mat']);
+rng(0);
+[x,~,t,f_e,f_i, params, yy]=NMM_GABA('u',0,'alpha_e', 1 , 'alpha_i', 1, 'alpha_ri', 1);
+plot_lif_and_nmm(lif, t, f_e, f_i, yy, x, params, 'Background activity', lif_co);
 
 %% Loop through a folder
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\e_vs_i\';

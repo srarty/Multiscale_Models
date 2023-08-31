@@ -36,21 +36,32 @@ hold on
 l1 = plot(1, mean(lif.i_pe)*1e9, 'bx', 'MarkerSize', 14, 'LineWidth', 2, 'MarkerFaceColor', 'none'); 
 l2 = plot(1, mean(lif.i_pi)*1e9, 'rx', 'MarkerSize', 14, 'LineWidth', 2, 'MarkerFaceColor', 'none');
 l3 = plot(1, (mean(lif.i_pi) + mean(lif.i_pe))*1e9, 'kx', 'MarkerSize', 14, 'LineWidth', 2, 'MarkerFaceColor', 'none');
-plot(1,-mean(nmm_i_pe(round(L/2):end))*nanoamps_scale, 'b+', 'MarkerSize', 14, 'LineWidth', 2, 'MarkerFaceColor', 'none');
-plot(1,-mean(nmm_i_pi(round(L/2):end))*nanoamps_scale, 'r+', 'MarkerSize', 14, 'LineWidth', 2, 'MarkerFaceColor', 'none');
-plot(1,-(mean(nmm_i_pi(round(L/2):end)) + mean(nmm_i_pe(round(L/2):end)))*nanoamps_scale, 'k+', 'MarkerSize', 14, 'LineWidth', 2, 'MarkerFaceColor', 'none');
+if nargin == 5
+    lif_co = varargin{2};
+    plot(1, mean(lif_co.i_pe)*1e9, 'b+', 'MarkerSize', 14, 'LineWidth', 2, 'MarkerFaceColor', 'none'); 
+    plot(1, mean(lif_co.i_pi)*1e9, 'r+', 'MarkerSize', 14, 'LineWidth', 2, 'MarkerFaceColor', 'none');
+    l7=plot(1, (mean(lif_co.i_pi) + mean(lif_co.i_pe))*1e9, 'k+', 'MarkerSize', 14, 'LineWidth', 2, 'MarkerFaceColor', 'none');
+end
+plot(1,-mean(nmm_i_pe(round(L/2):end))*nanoamps_scale, 'bo', 'MarkerSize', 10, 'LineWidth', 2, 'MarkerFaceColor', 'none');
+plot(1,-mean(nmm_i_pi(round(L/2):end))*nanoamps_scale, 'ro', 'MarkerSize', 10, 'LineWidth', 2, 'MarkerFaceColor', 'none');
+plot(1,-(mean(nmm_i_pi(round(L/2):end)) + mean(nmm_i_pe(round(L/2):end)))*nanoamps_scale, 'ko', 'MarkerSize', 10, 'LineWidth', 2, 'MarkerFaceColor', 'none');
 
 % Interneurons
 plot(2, mean(lif.i_ie)*1e9, 'bx', 'MarkerSize', 14, 'LineWidth', 2, 'MarkerFaceColor', 'none');
 plot(2, mean(lif.i_ii)*1e9, 'rx', 'MarkerSize', 14, 'LineWidth', 2, 'MarkerFaceColor', 'none');
 plot(2, (mean(lif.i_ii) + mean(lif.i_ie))*1e9, 'kx', 'MarkerSize', 14, 'LineWidth', 2, 'MarkerFaceColor', 'none');
-l4 = plot(2,-mean(nmm_i_ie(round(L/2):end))*nanoamps_scale, 'b+', 'MarkerSize', 14, 'LineWidth', 2, 'MarkerFaceColor', 'none');
-l5 = plot(2,-mean(nmm_i_ii(round(L/2):end))*nanoamps_scale, 'r+', 'MarkerSize', 14, 'LineWidth', 2, 'MarkerFaceColor', 'none');
-l6 = plot(2,-(mean(nmm_i_ii(round(L/2):end)) + mean(nmm_i_ie(round(L/2):end)))*nanoamps_scale, 'k+', 'MarkerSize', 14, 'LineWidth', 2, 'MarkerFaceColor', 'none');
+if nargin == 5
+    plot(2, mean(lif_co.i_ie)*1e9, 'b+', 'MarkerSize', 14, 'LineWidth', 2, 'MarkerFaceColor', 'none');
+    plot(2, mean(lif_co.i_ii)*1e9, 'r+', 'MarkerSize', 14, 'LineWidth', 2, 'MarkerFaceColor', 'none');
+    plot(2, (mean(lif_co.i_ii) + mean(lif_co.i_ie))*1e9, 'k+', 'MarkerSize', 14, 'LineWidth', 2, 'MarkerFaceColor', 'none');
+end
+l4 = plot(2,-mean(nmm_i_ie(round(L/2):end))*nanoamps_scale, 'bo', 'MarkerSize', 10, 'LineWidth', 2, 'MarkerFaceColor', 'none');
+l5 = plot(2,-mean(nmm_i_ii(round(L/2):end))*nanoamps_scale, 'ro', 'MarkerSize', 10, 'LineWidth', 2, 'MarkerFaceColor', 'none');
+l6 = plot(2,-(mean(nmm_i_ii(round(L/2):end)) + mean(nmm_i_ie(round(L/2):end)))*nanoamps_scale, 'ko', 'MarkerSize', 10, 'LineWidth', 2, 'MarkerFaceColor', 'none');
 
 xlim([0.5 2.5])
 % l=legend([l1 l2 l3 l4 l5 l6],{'E_p' 'I_p' '(E + I)_p' 'E_i' 'I_i' '(E + I)_i'});
-l=legend([l3 l6],{'LIF' 'NMM'});
+if nargin == 5, l=legend([l3 l7 l6],{'CUBN' 'COBN' 'NMM'}); else, l=legend([l3 l6],{'LIF' 'NMM'}); end
 l.Location = 'eastoutside';
 xticks([1 2]);
 % xticklabels({'Py_{LIF}' 'In_{LIF}' 'Py_{NMM}' 'In_{NMM}'});

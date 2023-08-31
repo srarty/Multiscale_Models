@@ -47,7 +47,7 @@ def brunel(e_multiplier = 1, i_multiplier = 1, ri_multiplier = 1):
     GAUSSIAN_THRESHOLD  = True      # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
     
     SAVE = True                    # Save ground truth data
-    PLOT = True                     # Plot results 
+    PLOT = False                     # Plot results 
     STATS = True                    # Calculate spike statistics (ISI distance, CV, etc)
     
     PSP_FR   = 0                    # Presynaptic firing rate for TEST_PSP (TEST_PSP needs to be diff to none for this to take effect)                               
@@ -575,7 +575,7 @@ def brunel(e_multiplier = 1, i_multiplier = 1, ri_multiplier = 1):
     
     #%% Statistics
     if STATS & (TEST_PSP=='none'):
-        cv_py, cvstd_py, cv_in, cvstd_in, si_py, si_in, spkdist_py, spkdist_in, isidist_py, isidist_in = plot_spike_stats(sp_P, sp_I, t_start=0.2)
+        cv_py, cvstd_py, cv_in, cvstd_in, si_py, si_in, spkdist_py, spkdist_in, isidist_py, isidist_in, fano = plot_spike_stats(sp_P, sp_I, t_start=0.2)
     else:
         cv_py = 0
         cvstd_py = 0

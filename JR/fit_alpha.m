@@ -9,7 +9,7 @@ if nargin > 0
     synapse = varargin{1};
     PLOT = false;
 else
-    synapse = 'iu'; % synapses 'ab', where a=post-synaptic and b=pre-synaptic
+    synapse = 'pi'; % synapses 'ab', where a=post-synaptic and b=pre-synaptic
     PLOT = true;
 end
 
