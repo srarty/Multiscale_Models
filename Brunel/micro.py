@@ -5,12 +5,13 @@ Created on Mon Feb 13 15:44:02 2023
 @author: Artemio Soto-Breceda [artemios]
 """
 
+from multiprocessing import Pool#  Parallel processing
 import os
 import scipy.io
 import numpy as np
 from brian2 import *
 from scipy import signal
-# from termcolor import colored  # Coloured text in the terminal
+from termcolor import colored  # Coloured text in the terminal
 import matplotlib.pyplot as plt
 import pyspike as spk
 prefs.codegen.target = 'cython'  # use the Python fallback instead of C compilation
@@ -23,7 +24,7 @@ from lif_plot import plot_results, plot_spike_stats
 # def brunel(u=0):
 
 # def brunel(u = 1, SAVE = False, PLOT = True, parameter = '', value_ = 1, pop_ = 'py'):
-def brunel(e_multiplier = 1, i_multiplier = 1, ri_multiplier = 1): 
+def brunel(e_multiplier = 1, i_multiplier = 1, ri_multiplier = 1, MODEL='cubn', iteration_par_comp = 0): 
     u=0
     parameter = ''
     value_ = 1
@@ -31,7 +32,7 @@ def brunel(e_multiplier = 1, i_multiplier = 1, ri_multiplier = 1):
     plt.close('all')
         
     #%% Options:
-    MODEL           = 'cubn'        # cubn vs cobn
+    # MODEL           = 'cubn'        # cubn vs cobn
     PARAMS_SOURCE   = 'three_pop'   # 'brunel' or 'allen' or 'three_pop' or''
     
     RECURRENT_PYRAMIDAL     = True  # Self excitation 
@@ -458,7 +459,7 @@ def brunel(e_multiplier = 1, i_multiplier = 1, ri_multiplier = 1):
         inputP1.active = True
         inputI1.active = INHIBIT_INPUT
         
-        net.run(simulation_time/size(input_spike_rate), report='stdout') # Run first segment, if running more segments, run for a fraction of simulation_time
+        net.run(simulation_time/size(input_spike_rate), report='stdout', report_period=60*second) # Run first segment, if running more segments, run for a fraction of simulation_time
         
         if np.size(input_spike_rate) > 1:
             inputP1.active = False
@@ -587,19 +588,26 @@ def brunel(e_multiplier = 1, i_multiplier = 1, ri_multiplier = 1):
         spkdist_in = 0
         isidist_py = 0
         isidist_in = 0
+        fano = 0
         
         
     #%% Save simulation  ------------------------------------------------------------
     # folder_path = '/data/gpfs/projects/punim0643/artemios/simulations/2023/firing_rates/'
     # folder_path = '/data/gpfs/projects/punim0643/artemios/simulations/2023/e_vs_i/'
-    folder_path = '/data/gpfs/projects/punim0643/artemios/simulations/2023/e_vs_i_highexc/'
+    # folder_path = '/data/gpfs/projects/punim0643/artemios/simulations/2023/e_vs_i_highexc/'
+    if MODEL=='cubn':
+        # folder_path = '/home/unimelb.edu.au/artemios/simulations/e_vs_i_cubn/'
+        folder_path = '/home/unimelb.edu.au/artemios/simulations/ri_vs_i_cubn/'
+    else:
+        # folder_path = '/home/unimelb.edu.au/artemios/simulations/e_vs_i_cobn/'
+        folder_path = '/home/unimelb.edu.au/artemios/simulations/ri_vs_i_cobn/'
     
     
-    i = 0
-    while os.path.exists(folder_path + 'lfp_e%s_i%s.mat' % (e_multiplier/1.3,i_multiplier)):
+    i = 0#iteration_par_comp
+    while os.path.exists(folder_path + 'lfp_ri%.2f_i%.2f_%s.mat' % (ri_multiplier,i_multiplier,i)):
         i += 1
         
-    save_str = format('lfp_e%s_i%s.mat' % (e_multiplier,i_multiplier))
+    save_str = format('lfp_ri%.2f_i%.2f_%s.mat' % (ri_multiplier,i_multiplier,i))
     # save_str = format('epileptic.mat')
     
     if SAVE:
@@ -638,6 +646,7 @@ def brunel(e_multiplier = 1, i_multiplier = 1, ri_multiplier = 1):
                         'spkdist_in': spkdist_in,
                         'isidist_py': isidist_py,
                         'isidist_in': isidist_in,
+                        'fano': fano,
                         'MODEL': MODEL,
                         'RECURRENT_PYRAMIDAL': RECURRENT_PYRAMIDAL,
                         'RECURRENT_INHIBITORY': RECURRENT_INHIBITORY,
@@ -659,16 +668,19 @@ def brunel(e_multiplier = 1, i_multiplier = 1, ri_multiplier = 1):
                         # 'R_b': r_B_rate,
         
         # Save as lfp_last
-        scipy.io.savemat(folder_path + 'lfp_last.mat',
-                         mdict = save_dictionary)
+        #scipy.io.savemat(folder_path + 'lfp_last.mat',
+        #                 mdict = save_dictionary)
         
         scipy.io.savemat(folder_path + save_str,
                          mdict = save_dictionary)
         
-        print('Results of simulation saved as: ' + save_str)
+        print(colored('Results of simulation ' + MODEL + ' saved as: ' + save_str, 'green'))
     
     else:
-        print('Attention! Results of simulation were not saved. SAVE = False')
+        print(colored('Attention! Results of simulation were not saved. SAVE = False','yellow'))
+
+    dummy = 0
+    return dummy
     
 # Run iteratively. Need to uncomment the def line at the start of the file.
 # # a = np.arange(500, 501, 0.05)
@@ -678,13 +690,45 @@ def brunel(e_multiplier = 1, i_multiplier = 1, ri_multiplier = 1):
 #     brunel(corriente=iterations)
 # ranges = np.arange(0,3.1,0.1)
 
-ranges = np.arange(0.5,5.1,0.1)
-for jj in ranges:
-    for ii in ranges:
-        jjj = jj * 1.3
-        brunel(e_multiplier = jjj, i_multiplier = ii, ri_multiplier = 1.3)
-        
-# brunel(e_multiplier = 3.9, i_multiplier = 1.3)
+#reps = 100
+#ranges = np.arange(0.5,5.1,0.1)
+#for idx_rep in range(reps):
+#    print('\n----- iteration: %s -----' %(idx_rep))
+#    for jj in ranges:
+#        for ii in ranges:
+#            folder_path = '/home/unimelb.edu.au/artemios/simulations/e_vs_i_cubn/'
+#            if not os.path.exists(folder_path + 'lfp_e%.2f_i%.2f_%s.mat' % (jj,ii,idx_rep)):
+#                brunel(e_multiplier = jj, i_multiplier = ii, ri_multiplier = 1)
+
+
+# ---------------- Parallel loop: 
+#def your_function(idx_rep):
+def your_function(ii):
+    MODEL = 'cubn'
+    ranges = np.arange(0.5,2.1,0.1)
+    for jj in ranges:
+        #for ii in ranges:
+        for idx_rep in range(50):
+            if MODEL=='cobn':
+                # folder_path = '/home/unimelb.edu.au/artemios/simulations/e_vs_i_cubn/'
+                folder_path = '/home/unimelb.edu.au/artemios/simulations/ri_vs_i_cubn/'
+            else:
+                # folder_path = '/home/unimelb.edu.au/artemios/simulations/e_vs_i_cobn/'
+                folder_path = '/home/unimelb.edu.au/artemios/simulations/ri_vs_i_cobn/'
+
+            idx_existing = idx_rep
+            while os.path.exists(folder_path + 'lfp_ri%.2f_i%.2f_%s.mat' % (jj,ii,idx_existing)):
+                idx_existing+=1
+            
+            if (not os.path.exists(folder_path + 'lfp_ri%.2f_i%.2f_%s.mat' % (jj,ii,idx_rep))) & idx_existing < 50:
+                brunel(ri_multiplier = jj, i_multiplier = ii, MODEL=MODEL, iteration_par_comp=idx_rep)
+
+pool = Pool(5)
+ranges = np.arange(0.5,2.1,0.1)
+#out1 = zip(*pool.map(your_function, range(50)))
+out1 = zip(*pool.map(your_function, ranges))
+
+# brunel(e_multiplier = 1, i_multiplier = 1)
 
 # ranges = np.arange(0,2.1,0.1)
 # # ranges =  [1]
