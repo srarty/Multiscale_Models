@@ -72,7 +72,7 @@ ax.YTick = [];
 ax.FontSize = 12;
 
 
-%% -CUBN-------------------------------------------------------------------
+%% -CUBN locally saved files ----------------------------------------------
 folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\e_vs_i_fano\'; 
 type_of_LIF = 'CUBN';
 params = set_parameters('gabab');
@@ -229,4 +229,135 @@ ax = gca;
 ax.YTick = [];
 ax.FontSize = 12;
 
+
+
+%% -CUBN average stored on cloud ------------------------------------------
+folder = 'C:\Users\artemios\Dropbox\University of Melbourne\LinuxRemoteDesktop\averages_cubn\';
+type_of_LIF = 'CUBN';
+params = set_parameters('gabab');
+cmap =[0 0 0; 0 0 1; 1 0 1; 1 0.8 0; 1 0 0];
+f_ = @(F_,X_,colour_) plot(F_,X_/mean(X_), 'Color', cmap(colour_,:), 'LineWidth', 1);
+f3 = figure; hold
+f4 = figure; hold
+
+% %% Down
+colour_ = 1;
+
+% load
+dt = 1e-4;
+lif = load([folder 'rivsilfp_avg.mat']);
+y = lif.ri080_i140;
+t = 2501*dt : dt : (2500 + numel(y)) * dt;
+
+% plot
+figure(f3)
+plot(t,(y - y(1))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
+ylabel('LFP (mV)');
+xlabel('Time (s)');
+xlim([0.5 1]);
+ylim([0 500]);
+ax = gca;
+ax.FontSize = 12;
+
+[~, X_, F_] = fft_plot(y-mean(y), t,[],false);
+figure(f4)
+f_(F_,X_,colour_);
+xlim([0 100]);
+xlabel('Frequency (Hz)');
+ylabel('Normalized |X| (a.u.)');
+ax = gca;
+ax.YTick = [];
+ax.FontSize = 12;
+
+
+
+% %% Normal
+colour_ = 2;
+
+% load
+dt = 1e-4;
+lif = load([folder 'rivsilfp_avg.mat']);
+y = lif.ri100_i100;
+t = 2501*dt : dt : (2500 + numel(y)) * dt;
+
+% plot
+figure(f3)
+plot(t,(y - y(1))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
+ylabel('LFP (mV)');
+xlabel('Time (s)');
+xlim([0.5 1]);
+ylim([0 500]);
+ax = gca;
+ax.FontSize = 12;
+
+[~, X_, F_] = fft_plot(y-mean(y), t,[],false);
+figure(f4)
+f_(F_,X_,colour_);
+xlim([0 100]);
+xlabel('Frequency (Hz)');
+ylabel('Normalized |X| (a.u.)');
+ax = gca;
+ax.YTick = [];
+ax.FontSize = 12;
+
+
+% %% LFO
+colour_ = 3;
+
+% load
+dt = 1e-4;
+lif = load([folder 'rivsilfp_avg.mat']);
+y = lif.ri140_i080;
+t = 2501*dt : dt : (2500 + numel(y)) * dt;
+
+% plor
+figure(f3)
+plot(t,(y - y(1))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
+ylabel('LFP (mV)');
+xlabel('Time (s)');
+% xlim([0.5 2]);
+% ylim([-70 350]);
+ax = gca;
+ax.FontSize = 12;
+
+[~, X_, F_] = fft_plot(y-mean(y), t,[],false);
+figure(f4)
+f_(F_,X_,colour_);
+xlim([0 100]);
+xlabel('Frequency (Hz)');
+ylabel('Normalized |X| (a.u.)');
+ax = gca;
+ax.YTick = [];
+ax.FontSize = 12;
+
+
+% %% HFO
+colour_ = 4;
+
+% load
+dt = 1e-4;
+lif = load([folder 'rivsilfp_avg.mat']);
+y = lif.ri200_i150;
+t = 2501*dt : dt : (2500 + numel(y)) * dt;
+
+
+% plor
+figure(f3)
+plot(t,(y - y(1))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
+ylabel('LFP (mV)');
+xlabel('Time (s)');
+% xlim([0.5 2]);
+ylim([-70 350]);
+ax = gca;
+ax.FontSize = 12;
+
+[~, X_, F_] = fft_plot(y-mean(y), t,[],false);
+figure(f4)
+f_(F_,X_,colour_);
+xlim([0 100]);
+xlabel('Frequency (Hz)');
+ylabel('Normalized |X| (a.u.)');
+ax = gca;
+ax.YTick = [];
+ax.FontSize = 12;
 

@@ -21,7 +21,7 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABA(varargin)
     params.time = N * params.dt;
     
     % Options  ------------------------------------------------------------
-    params.options.ADD_NOISE = 1; % External input noise (0 = no noise, 1 = noise)
+    params.options.ADD_NOISE = 0; % External input noise (0 = no noise, 1 = noise)
     params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Any other value of CHANGE_U: U changes.
     params.options.CHANGE_AGONIST = 0; % Agonist changes
     

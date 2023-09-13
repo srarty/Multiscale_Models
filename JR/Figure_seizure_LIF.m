@@ -5,16 +5,38 @@
 
 % close all
 
-% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\e_vs_ii\';
-% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\e_vs_i\';
-% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\e_vs_i\';
-% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\e_vs_i_fano\'; type_of_LIF = 'CUBN';
-folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\e_vs_i_fano_cobn\'; type_of_LIF = 'COBN';
-% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\e_vs_i_highexc\';
-% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\e_vs_i_highexc_2\';
-% folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\e_vs_i_highexc_cobn\';
+FIRST = 'ri'; % X-axis, first parameter variation
+SECOND = 'i'; % Y-axis, second parameter variation
 
-d = dir([folder '*_e*.mat']); % Load all files with _e in the name
+AVERAGE = true; % If the simulation was repeated several times for each parameter combination (i.e., in the Linux Remote Desktop)
+PLOT_LFP = false;
+PLOT_FFT = false;
+
+if ~AVERAGE
+    % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\e_vs_ii\';
+    % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\e_vs_i\';
+    % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\e_vs_i\';
+    folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\e_vs_i_fano\'; type_of_LIF = 'CUBN';
+    % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\e_vs_i_fano_cobn\'; type_of_LIF = 'COBN';
+    % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\e_vs_i_highexc\';
+    % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\e_vs_i_highexc_2\';
+    % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\e_vs_i_highexc_cobn\';
+
+    d = dir([folder '*_e*.mat']); % Load all files with _e in the name
+else
+    % folder = 'C:\Users\artemios\OneDrive - The University of Melbourne\Linux Remote Desktop\averages_cubn\'; type_of_LIF = 'CUBN';
+    % folder = 'C:\Users\artemios\OneDrive - The University of Melbourne\Linux Remote Desktop\averages_cobn\'; type_of_LIF = 'COBN';
+    folder = 'C:\Users\artemios\Dropbox\University of Melbourne\LinuxRemoteDesktop\averages_cubn\'; type_of_LIF = 'CUBN';
+    % folder = 'C:\Users\artemios\Dropbox\University of Melbourne\LinuxRemoteDesktop\averages_cobn\'; type_of_LIF = 'COBN';
+
+    data_lfp = load([folder FIRST 'vs' SECOND 'lfp_avg.mat']);
+    data_R_py = load([folder FIRST 'vs' SECOND 'R_py_avg.mat']);
+    data_R_in = load([folder FIRST 'vs' SECOND 'R_in_avg.mat']);
+    data_cv = load([folder FIRST 'vs' SECOND 'cv_avg.mat']);
+    data_si = load([folder FIRST 'vs' SECOND 'si_avg.mat']);
+
+    d = fieldnames(data_lfp);
+end    
 
 % range = round(0:0.05:2, 2, 'significant');
 % range = round(0.4:0.1:4, 2, 'significant');
@@ -22,9 +44,6 @@ range = round(0.5:0.1:2, 2, 'significant');
 % range = round(0:0.5:2, 2, 'significant');
 
 params = set_parameters('gabab');
-
-PLOT_LFP = false;
-PLOT_FFT = false;
 
 % cmap =[0 0 1; 1 1 0; 1 0 0];
 cmap =[0 0 0; 0 0 1; 1 0 1; 1 0.8 0; 1 0 0];
@@ -35,32 +54,59 @@ SI = nan(length(range), length(range));
 FF = nan(length(range), length(range));
 PY_FR = nan(length(range), length(range));
 IN_FR = nan(length(range), length(range));
-for i = 1:length(d)
-% for i = 1629
-    % Load file
-    lif = load([folder d(i).name]);
-    
-    % Idx
-    e_mult = round( str2num( d(i).name(strfind(d(i).name, '_e')+2 :  min(strfind(d(i).name, '_e')+4 , strfind(d(i).name, '_i')-1)) ) , 3, 'significant');
-    i_mult = round( str2num( d(i).name(strfind(d(i).name, '_i')+2 :  min(strfind(d(i).name, '_i')+4 , strfind(d(i).name, '.mat')-1)) ) , 3, 'significant');
-    
-%     if e_mult == 0.3 && i_mult == 0.8
-%         disp('dodgy debugging')
-%     end
-    
-    idx_e = find(range == e_mult);
-    idx_i = find(range == i_mult);
-    if isempty(idx_e) || isempty(idx_i)
-        continue
+for i = 1:length(d)    
+    if ~AVERAGE
+        % Idx
+        e_mult = round( str2num( d(i).name(strfind(d(i).name, '_e')+2 :  min(strfind(d(i).name, '_e')+4 , strfind(d(i).name, '_i')-1)) ) , 3, 'significant');
+        i_mult = round( str2num( d(i).name(strfind(d(i).name, '_i')+2 :  min(strfind(d(i).name, '_i')+4 , strfind(d(i).name, '.mat')-1)) ) , 3, 'significant');
+
+        idx_e = find(range == e_mult);
+        idx_i = find(range == i_mult);
+        if isempty(idx_e) || isempty(idx_i)
+            continue
+        end
+        % Load file
+        lif = load([folder d(i).name]);
+
+        % if e_mult == 0.3 && i_mult == 0.8
+        %     disp('dodgy debugging')
+        % end
+
+        lif.i_pe = lif.i_pe(5001:10000);
+        lif.i_pi = lif.i_pi(5001:10000);
+        lif.i_ie = lif.i_ie(5001:10000);
+        lif.i_ii = lif.i_ii(5001:10000);
+
+        y = -(lif.i_pe - lif.i_pi)/params.g_m_P; % LFP
+        t = 1*lif.lfp_dt : lif.lfp_dt : numel(y) * lif.lfp_dt;
+        
+        %Balance
+        nanoamps_scale = 1e9;    
+        balance(idx_i, idx_e) = (mean(lif.i_pi) + mean(lif.i_pe)) * nanoamps_scale;
+                
+    else% Idx (if AVERAGE == True)
+        lif = struct;
+        
+        e_mult = round( str2num( d{i}(strfind(d{i}, FIRST)+ length(FIRST) :  min(strfind(d{i}, FIRST)+length(FIRST)+2 , strfind(d{i},['_' SECOND])-1)) )/100 , 3, 'significant'); % Adding "+ length(FRIST)" instead of just +1 because the returned index is where the string starts and the +1 only works with 'e' or 'i'.
+        i_mult = round( str2num( d{i}(strfind(d{i},['_' SECOND])+length(SECOND)+1 :  strfind(d{i},['_' SECOND])+length(SECOND)+3) )/100 , 3, 'significant');
+
+        idx_e = find(range == e_mult);
+        idx_i = find(range == i_mult);
+        if isempty(idx_e) || isempty(idx_i)
+            continue
+        end
+                
+        lif.R_py = data_R_py.(d{i});
+        lif.R_in = data_R_in.(d{i});
+        
+        y = data_lfp.(d{i});
+        dt = 1e-4;
+        t = 1*dt : dt : numel(y) * dt;
+        
+        lif.cv_in = data_cv.(d{i});
+        lif.si_in = data_si.(d{i});
+             
     end
-    
-    lif.i_pe = lif.i_pe(5001:10000);
-    lif.i_pi = lif.i_pi(5001:10000);
-    lif.i_ie = lif.i_ie(5001:10000);
-    lif.i_ii = lif.i_ii(5001:10000);
-    
-    y = -(lif.i_pe - lif.i_pi)/params.g_m_P; % LFP
-    t = 1*lif.lfp_dt : lif.lfp_dt : numel(y) * lif.lfp_dt;
     
     % Calculate fft to estimate oscillatory activity
     if PLOT_FFT, fig_101 = figure(101); cla; else, fig_101 = []; end
@@ -84,7 +130,7 @@ for i = 1:length(d)
     else
         state(idx_i, idx_e) = 0; % Normal
     end
-
+    
     if PLOT_LFP
         figure(100);
         cla;
@@ -94,17 +140,12 @@ for i = 1:length(d)
 %         fff=figure; plot(F_,X_); xlim([0 100]);
 %         PLOT_LFP = false; close(fff);
     end
-
-    %Balance
-    nanoamps_scale = 1e9;    
-    balance(idx_i, idx_e) = (mean(lif.i_pi) + mean(lif.i_pe)) * nanoamps_scale;
-    
-    %
-    CV(idx_i, idx_e) = lif.cv_py;
-    SI(idx_i, idx_e) = lif.si_py;
+        
+    CV(idx_i, idx_e) = lif.cv_in;
+    SI(idx_i, idx_e) = lif.si_in;
     IN_FR(idx_i, idx_e) = mean(lif.R_in(500:end));
     PY_FR(idx_i, idx_e) = mean(lif.R_py(500:end));
-%     FF(idx_i, idx_e) = lif.fano;
+    
 end
 
 %%
