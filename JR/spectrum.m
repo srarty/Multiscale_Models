@@ -64,7 +64,11 @@ function varargout = spectrum(x, yy, t, varargin)
 % data_file = 'C:/Users/artemios/Documents/Multiscale_Models_Data/2023/lfp_e1.80_i1.00.mat';
 
 % data_file = 'C://Users/artemios/Documents/Multiscale_Models_Data/2023/fast_oscillation_0.mat';
-data_file = 'C://Users/artemios/Documents/Multiscale_Models_Data/Spartan/e_vs_i_highexc/lfp_e4.00_i1.00.mat';
+% data_file = 'C://Users/artemios/Documents/Multiscale_Models_Data/Spartan/e_vs_i_highexc/lfp_e4.00_i1.00.mat';
+
+% data_file = 'C://Users/artemios/Documents/Multiscale_Models_Data/2023/cubn/lfp_0.mat';
+% data_file = 'C://Users/artemios/Documents/Multiscale_Models_Data/2023/cubn/lfp_1.mat';
+data_file = 'C://Users/artemios/Documents/Multiscale_Models_Data/2023/cubn/lfp_2.mat';
 
     if nargin > 3, PLOT = varargin{1}; else, PLOT = true; end
     if nargin > 4, data_file = varargin{2}; end
@@ -77,14 +81,15 @@ data_file = 'C://Users/artemios/Documents/Multiscale_Models_Data/Spartan/e_vs_i_
     
     if PLOT
         figure(1);clf;
-        plot(t_nmm, x_nmm, 'k');
+        plot(t_nmm, x_nmm*1e3, 'k');
         hold;
-        plot(t_lif, x_lif, '--k');
+        plot(t_lif, x_lif*1e3, '--k');
         legend({'NMM', 'LIF'});
         xlabel('Time (s)');
         title(['Comparison of ' signal]);
         xlim([0.25 max(t_lif)]);
-        ylabel('Normalized V_m (a.u.)')
+        % ylabel('Normalized V_m (a.u.)')
+        ylabel('LFP (mV)')
     end
     
     
@@ -141,14 +146,20 @@ function [x_nmm, x_lif, t_nmm, t_lif, v_pi, v_ip, input_spike_rate, dt] = get_da
         otherwise
             error('Wrong options (signal)');
     end
-    x_nmm = x_nmm(500:end);
-    t_nmm = t_nmm(500:end);
+    x_nmm = x_nmm(); %x_nmm(500:end);
+    t_nmm = t_nmm(); %t_nmm(500:end);
 
     %% LIF
     load(data_file);
     
-    trim = 5000; % Samples to remove from the beginning of the LFP_V vector
-    LFP_ = LFP_V(trim:end); % LFP(trim:end);
+    trim = 0;%5000; % Samples to remove from the beginning of the LFP_V vector
+    % LFP as calculated in the Python Script (old method, wrong):
+    % LFP_ = LFP_V(trim+1:end); % LFP(trim:end);
+    % LFP as calculated in plot_lif_and_nmm.m:    
+    params = set_parameters('gabab', 1);
+    i_pe = i_pe(trim+1:end);
+    i_pi = i_pi(trim+1:end);
+    LFP_ = (-(i_pe - i_pi)/params.g_m_P);%*1e3;
     
     if exist('lfp_dt','var'), dt = lfp_dt; else, dt = 1e-4; end
     
@@ -177,12 +188,14 @@ end
 
 %%
 function [x_nmm, x_lif, t_nmm] = normalization(x_nmm, x_lif, t_nmm, t_lif)
-    x_nmm = x_nmm - mean(x_nmm);
-    x_nmm = x_nmm / rms(x_nmm);
-
-    x_lif = x_lif - mean(x_lif);
-    x_lif = x_lif / rms(x_lif);
+%     x_nmm = x_nmm - mean(x_nmm);
+%     x_nmm = x_nmm / rms(x_nmm);
+% 
+%     x_lif = x_lif - mean(x_lif);
+%     x_lif = x_lif / rms(x_lif);
     
+%     x_nmm = x_nmm - x_nmm(1);
+
     x_nmm = interp1(t_nmm, x_nmm, t_lif);
     t_nmm = t_lif(~isnan(x_nmm)); % Adjust t_nmm
     x_nmm = x_nmm(~isnan(x_nmm)); % Remove parsed NaN values

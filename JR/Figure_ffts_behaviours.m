@@ -8,21 +8,23 @@ f_ = @(F_,X_,colour_) plot(F_,X_/mean(X_), 'Color', cmap(colour_,:), 'LineWidth'
 f1 = figure; hold
 f2 = figure; hold
 
-%% Down
+% Down
 colour_ = 1;
 [x, ~, t, f_e, f_i, params, y] = NMM_GABA('u', 0, 'alpha_ri', 0.5, 'alpha_i', 1); 
 figure(f1)
- plot(t(500:end),(y(500:end) - y(500))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
+%  plot(t(500:end),(y(500:end) - y(500))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
+ plot(t(500:end),y(500:end)*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
 
 [~, X_, F_] = fft_plot(y(500:end)-mean(y(500:end)), t(500:end),[],false);
 figure(f2)
 f_(F_,X_,colour_);
 
-%% Normal
+% Normal
 colour_ = 2;
 [x, ~, t, f_e, f_i, params, y] = NMM_GABA('u', 0, 'alpha_ri', 1, 'alpha_i', 1); 
 figure(f1)
- plot(t(500:end),(y(500:end) - y(500))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
+%  plot(t(500:end),(y(500:end) - y(500))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
+ plot(t(500:end),y(500:end)*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
 ylabel('LFP (mV)');
 xlabel('Time (s)')
 
@@ -30,34 +32,41 @@ xlabel('Time (s)')
 figure(f2)
 f_(F_,X_,colour_);
 
-%% Oscillation, can be called high amplitude/synchrony oscill
+% Oscillation, can be called high amplitude/synchrony oscill
 colour_ = 3;
 [x, ~, t, f_e, f_i, params, y] = NMM_GABA('u', 0, 'alpha_ri', 2, 'alpha_i', 1.5); 
 figure(f1)
- plot(t(500:end),(y(500:end) + 45e-3)*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
+%  plot(t(500:end),(y(500:end) - y(500))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
+ plot(t(500:end),y(500:end)*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
 
 [~, X_, F_] = fft_plot(y(500:end)-mean(y(500:end)), t(500:end),[],false);
 figure(f2)
 f_(F_,X_,colour_);
 
-%% HFO, can be called low amplitude oscill
+% HFO, can be called low amplitude oscill
 colour_ = 4;
 [x, ~, t, f_e, f_i, params, y] = NMM_GABA('u', 0, 'alpha_ri', 1.9, 'alpha_i', 1.8); 
 figure(f1)
- plot(t(500:end),(y(500:end) - y(500))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
+%  plot(t(500:end),(y(500:end) - y(500))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
+ plot(t(500:end),y(500:end)*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
 
 [~, X_, F_] = fft_plot(y(500:end)-mean(y(500:end)), t(500:end),[],false);
 figure(f2)
 f_(F_,X_,colour_);
 
-%% Saturation
+% Saturation
 colour_ = 5;
 [x, ~, t, f_e, f_i, params, y] = NMM_GABA('u', 0, 'alpha_ri', 2, 'alpha_i', 0.5); 
+figure(f1)
+%  plot(t(500:end),(y(500:end) - y(500))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
+ plot(t(500:end),y(500:end)*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
+
 figure(f1)
 ylabel('LFP (mV)');
 xlabel('Time (s)');
 xlim([0.5 1]);
-ylim([-70 350]);
+% ylim([-70 350]);
+ylim([0 350]);
 ax = gca;
 ax.FontSize = 12;
 
@@ -94,12 +103,14 @@ lif.i_pi = lif.i_pi(2501:10000);
 lif.i_ie = lif.i_ie(2501:10000);
 lif.i_ii = lif.i_ii(2501:10000);
 
-y = -(lif.i_pe - lif.i_pi)/params.g_m_P; % LFP
+% y = -(lif.i_pe - lif.i_pi)/params.g_m_P; % LFP
+y = (abs(lif.i_pe) + abs(lif.i_pi)) /params.g_m_P; % LFP
 t = 2501*lif.lfp_dt : lif.lfp_dt : (2500 + numel(y)) * lif.lfp_dt;
 
 % plot
 figure(f3)
-plot(t,(y - y(1))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
+% plot(t,(y - y(1))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
+plot(t,y*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
 ylabel('LFP (mV)');
 xlabel('Time (s)');
 xlim([0.5 1]);
@@ -132,12 +143,14 @@ lif.i_pi = lif.i_pi(2501:10000);
 lif.i_ie = lif.i_ie(2501:10000);
 lif.i_ii = lif.i_ii(2501:10000);
 
-y = -(lif.i_pe - lif.i_pi)/params.g_m_P; % LFP
+% y = -(lif.i_pe - lif.i_pi)/params.g_m_P; % LFP
+y = (abs(lif.i_pe) + abs(lif.i_pi)) /params.g_m_P; % LFP
 t = 2501*lif.lfp_dt : lif.lfp_dt : (2500 + numel(y)) * lif.lfp_dt;
 
 % plot
 figure(f3)
-plot(t,(y - y(1))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
+% plot(t,(y - y(1))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
+plot(t,y*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
 ylabel('LFP (mV)');
 xlabel('Time (s)');
 xlim([0.5 1]);
@@ -169,12 +182,14 @@ lif.i_pi = lif.i_pi(2501:10000);
 lif.i_ie = lif.i_ie(2501:10000);
 lif.i_ii = lif.i_ii(2501:10000);
 
-y = -(lif.i_pe - lif.i_pi)/params.g_m_P; % LFP
+% y = -(lif.i_pe - lif.i_pi)/params.g_m_P; % LFP
+y = (abs(lif.i_pe) + abs(lif.i_pi)) /params.g_m_P; % LFP
 t = 2501*lif.lfp_dt : lif.lfp_dt : (2500 + numel(y)) * lif.lfp_dt;
 
 % plor
 figure(f3)
-plot(t,(y - y(1))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
+% plot(t,(y - y(1))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
+plot(t,y*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
 ylabel('LFP (mV)');
 xlabel('Time (s)');
 % xlim([0.5 2]);
@@ -206,16 +221,18 @@ lif.i_pi = lif.i_pi(2501:10000);
 lif.i_ie = lif.i_ie(2501:10000);
 lif.i_ii = lif.i_ii(2501:10000);
 
-y = -(lif.i_pe - lif.i_pi)/params.g_m_P; % LFP
+% y = -(lif.i_pe - lif.i_pi)/params.g_m_P; % LFP
+y = (abs(lif.i_pe) + abs(lif.i_pi)) /params.g_m_P; % LFP
 t = 2501*lif.lfp_dt : lif.lfp_dt : (2500 + numel(y)) * lif.lfp_dt;
 
 % plor
 figure(f3)
-plot(t,(y - y(1))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
+% plot(t,(y - y(1))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
+plot(t,y*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
 ylabel('LFP (mV)');
 xlabel('Time (s)');
 % xlim([0.5 2]);
-ylim([-70 350]);
+ylim([0 350]);
 ax = gca;
 ax.FontSize = 12;
 
@@ -231,25 +248,31 @@ ax.FontSize = 12;
 
 
 
-%% -CUBN average stored on cloud ------------------------------------------
-folder = 'C:\Users\artemios\Dropbox\University of Melbourne\LinuxRemoteDesktop\averages_cubn\';
-type_of_LIF = 'CUBN';
+%% -COBN average stored on cloud ------------------------------------------
+%TODO
+folder = 'C:\Users\artemios\Dropbox\University of Melbourne\LinuxRemoteDesktop\averages_cobn\';
+type_of_LIF = 'COBN';
+
 params = set_parameters('gabab');
 cmap =[0 0 0; 0 0 1; 1 0 1; 1 0.8 0; 1 0 0];
-f_ = @(F_,X_,colour_) plot(F_,X_/mean(X_), 'Color', cmap(colour_,:), 'LineWidth', 1);
+% f_ = @(F_,X_,colour_) plot(F_,X_/mean(X_), 'Color', cmap(colour_,:), 'LineWidth', 1);
+f_ = @(F_,X_,colour_) plot(F_,X_, 'Color', cmap(colour_,:), 'LineWidth', 1);
 f3 = figure; hold
 f4 = figure; hold
 
+% load
+avg_fft = load([folder 'rivsifft_avg.mat']);
+lif = load([folder 'rivsilfp_avg.mat']);
+
 % %% Down
 colour_ = 1;
-
-% load
 dt = 1e-4;
-lif = load([folder 'rivsilfp_avg.mat']);
 y = lif.ri080_i140;
 t = 2501*dt : dt : (2500 + numel(y)) * dt;
+F_ = avg_fft.xf;
+X_ = avg_fft.ri080_i140;
 
-% plot
+% plot LFP
 figure(f3)
 plot(t,(y - y(1))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
 ylabel('LFP (mV)');
@@ -259,7 +282,7 @@ ylim([0 500]);
 ax = gca;
 ax.FontSize = 12;
 
-[~, X_, F_] = fft_plot(y-mean(y), t,[],false);
+% Plot Spectrum
 figure(f4)
 f_(F_,X_,colour_);
 xlim([0 100]);
@@ -268,19 +291,16 @@ ylabel('Normalized |X| (a.u.)');
 ax = gca;
 ax.YTick = [];
 ax.FontSize = 12;
-
-
 
 % %% Normal
 colour_ = 2;
-
-% load
 dt = 1e-4;
-lif = load([folder 'rivsilfp_avg.mat']);
 y = lif.ri100_i100;
 t = 2501*dt : dt : (2500 + numel(y)) * dt;
+F_ = avg_fft.xf;
+X_ = avg_fft.ri100_i100;
 
-% plot
+% plot LFP
 figure(f3)
 plot(t,(y - y(1))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
 ylabel('LFP (mV)');
@@ -290,7 +310,7 @@ ylim([0 500]);
 ax = gca;
 ax.FontSize = 12;
 
-[~, X_, F_] = fft_plot(y-mean(y), t,[],false);
+% Plot Spectrum
 figure(f4)
 f_(F_,X_,colour_);
 xlim([0 100]);
@@ -299,28 +319,26 @@ ylabel('Normalized |X| (a.u.)');
 ax = gca;
 ax.YTick = [];
 ax.FontSize = 12;
-
 
 % %% LFO
 colour_ = 3;
-
-% load
 dt = 1e-4;
-lif = load([folder 'rivsilfp_avg.mat']);
 y = lif.ri140_i080;
 t = 2501*dt : dt : (2500 + numel(y)) * dt;
+F_ = avg_fft.xf;
+X_ = avg_fft.ri140_i080;
 
-% plor
+% plot LFP
 figure(f3)
 plot(t,(y - y(1))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
 ylabel('LFP (mV)');
 xlabel('Time (s)');
-% xlim([0.5 2]);
-% ylim([-70 350]);
+xlim([0.5 1]);
+ylim([0 500]);
 ax = gca;
 ax.FontSize = 12;
 
-[~, X_, F_] = fft_plot(y-mean(y), t,[],false);
+% Plot Spectrum
 figure(f4)
 f_(F_,X_,colour_);
 xlim([0 100]);
@@ -329,29 +347,26 @@ ylabel('Normalized |X| (a.u.)');
 ax = gca;
 ax.YTick = [];
 ax.FontSize = 12;
-
 
 % %% HFO
 colour_ = 4;
-
-% load
 dt = 1e-4;
-lif = load([folder 'rivsilfp_avg.mat']);
 y = lif.ri200_i150;
 t = 2501*dt : dt : (2500 + numel(y)) * dt;
+F_ = avg_fft.xf;
+X_ = avg_fft.ri200_i150;
 
-
-% plor
+% plot LFP
 figure(f3)
 plot(t,(y - y(1))*1e3,'Color', cmap(colour_,:), 'LineWidth', 1);
 ylabel('LFP (mV)');
 xlabel('Time (s)');
-% xlim([0.5 2]);
-ylim([-70 350]);
+xlim([0.5 1]);
+ylim([0 500]);
 ax = gca;
 ax.FontSize = 12;
 
-[~, X_, F_] = fft_plot(y-mean(y), t,[],false);
+% Plot Spectrum
 figure(f4)
 f_(F_,X_,colour_);
 xlim([0 100]);
@@ -360,4 +375,3 @@ ylabel('Normalized |X| (a.u.)');
 ax = gca;
 ax.YTick = [];
 ax.FontSize = 12;
-

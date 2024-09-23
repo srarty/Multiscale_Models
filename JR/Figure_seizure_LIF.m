@@ -5,7 +5,7 @@
 
 % close all
 
-FIRST = 'ri'; % X-axis, first parameter variation
+FIRST = 'e'; % X-axis, first parameter variation
 SECOND = 'i'; % Y-axis, second parameter variation
 
 AVERAGE = true; % If the simulation was repeated several times for each parameter combination (i.e., in the Linux Remote Desktop)
@@ -17,23 +17,25 @@ if ~AVERAGE
     % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\e_vs_i\';
     % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\e_vs_i\';
     folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\e_vs_i_fano\'; type_of_LIF = 'CUBN';
-    % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\e_vs_i_fano_cobn\'; type_of_LIF = 'COBN';
+%     folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\e_vs_i_fano_cobn\'; type_of_LIF = 'COBN';
     % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\Spartan\e_vs_i_highexc\';
     % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\e_vs_i_highexc_2\';
     % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\e_vs_i_highexc_cobn\';
 
     d = dir([folder '*_e*.mat']); % Load all files with _e in the name
 else
-    % folder = 'C:\Users\artemios\OneDrive - The University of Melbourne\Linux Remote Desktop\averages_cubn\'; type_of_LIF = 'CUBN';
-    % folder = 'C:\Users\artemios\OneDrive - The University of Melbourne\Linux Remote Desktop\averages_cobn\'; type_of_LIF = 'COBN';
-    folder = 'C:\Users\artemios\Dropbox\University of Melbourne\LinuxRemoteDesktop\averages_cubn\'; type_of_LIF = 'CUBN';
-    % folder = 'C:\Users\artemios\Dropbox\University of Melbourne\LinuxRemoteDesktop\averages_cobn\'; type_of_LIF = 'COBN';
+%     folder = 'C:\Users\artemios\Dropbox\University of Melbourne\LinuxRemoteDesktop\averages_cubn\'; type_of_LIF = 'CUBN';
+%     folder = 'C:\Users\artemios\Dropbox\University of Melbourne\LinuxRemoteDesktop\averages_cobn\'; type_of_LIF = 'COBN';
+%     folder = 'C:\Users\artemios\Dropbox\University of Melbourne\LinuxRemoteDesktop\averages_cubn_stats\'; type_of_LIF = 'CUBN';
+    folder = 'C:\Users\artemios\Dropbox\University of Melbourne\LinuxRemoteDesktop\averages_cobn_stats\'; type_of_LIF = 'COBN';
 
     data_lfp = load([folder FIRST 'vs' SECOND 'lfp_avg.mat']);
+    data_fft = load([folder FIRST 'vs' SECOND 'fft_avg.mat']);
     data_R_py = load([folder FIRST 'vs' SECOND 'R_py_avg.mat']);
     data_R_in = load([folder FIRST 'vs' SECOND 'R_in_avg.mat']);
     data_cv = load([folder FIRST 'vs' SECOND 'cv_avg.mat']);
     data_si = load([folder FIRST 'vs' SECOND 'si_avg.mat']);
+    data_balance = load([folder FIRST 'vs' SECOND 'balance_avg.mat']);
 
     d = fieldnames(data_lfp);
 end    
@@ -81,7 +83,7 @@ for i = 1:length(d)
         t = 1*lif.lfp_dt : lif.lfp_dt : numel(y) * lif.lfp_dt;
         
         %Balance
-        nanoamps_scale = 1e9;    
+        nanoamps_scale = 1e9;
         balance(idx_i, idx_e) = (mean(lif.i_pi) + mean(lif.i_pe)) * nanoamps_scale;
                 
     else% Idx (if AVERAGE == True)
@@ -105,15 +107,33 @@ for i = 1:length(d)
         
         lif.cv_in = data_cv.(d{i});
         lif.si_in = data_si.(d{i});
-             
+        lif.balance = data_balance.(d{i});
+        
     end
     
     % Calculate fft to estimate oscillatory activity
     if PLOT_FFT, fig_101 = figure(101); cla; else, fig_101 = []; end
-    [~, X_, F_] = fft_plot( y-mean(y), t, fig_101, PLOT_FFT);
-    if (mean(lif.R_in(500:end)) <= params.nakai.M * 5e-4) || (mean(lif.R_py(500:end)) <= params.naka.M * 5e-4) % 0.05% of the maximum firing rate
+    if ~AVERAGE
+        [~, X_, F_] = fft_plot( y-mean(y), t, fig_101, PLOT_FFT);
+    else
+        try
+            X_ = data_fft.(d{i})(1:4500);
+        catch E % If this fails, the file is empty or corrupted
+            disp(['Found NAN in iteration ' num2str(i)]);
+            continue;
+        end
+        X_ = X_ / 4.153e3;%9.2148e6;
+        F_ = data_fft.xf(1:4500);
+        if PLOT_FFT, plot(F_, X_); xlim([0 200]);ylim([0 1]);end
+    end
+    
+    if (mean(lif.R_py(round(end/3):round(2*end/3))) > 35) && (mean(lif.R_in(round(end/3):round(2*end/3))) > 60)
+        % If either population saturates:
+        state(idx_i, idx_e) = 3; %Saturation
+    
+    elseif (mean(lif.R_in(500:end)) <= params.nakai.M * 10e-4) || (mean(lif.R_py(500:end)) <= params.naka.M * 10e-4) % 0.1% of the maximum firing rate
         state(idx_i, idx_e)  = -1; % Low state
-    elseif max(X_) > 5e-3%0.05
+    elseif max(X_) > 0.1 %5e-3%0.05
         % state(idx_i, idx_e) = 1; % Oscillation
         [~,indice] = max(X_);
         if F_(indice) < 25
@@ -124,9 +144,6 @@ for i = 1:length(d)
             state(idx_i, idx_e) = 2; % Oscillation
             % Gamma-ish, fast oscillations ~60 Hz
         end
-    elseif (mean(lif.R_py(round(end/3):round(2*end/3))) > 35) && (mean(lif.R_in(round(end/3):round(2*end/3))) > 60)
-        % If either population saturates:
-        state(idx_i, idx_e) = 3; %Saturation
     else
         state(idx_i, idx_e) = 0; % Normal
     end
@@ -143,18 +160,32 @@ for i = 1:length(d)
         
     CV(idx_i, idx_e) = lif.cv_in;
     SI(idx_i, idx_e) = lif.si_in;
+    BALANCE(idx_i, idx_e) = lif.balance;
     IN_FR(idx_i, idx_e) = mean(lif.R_in(500:end));
     PY_FR(idx_i, idx_e) = mean(lif.R_py(500:end));
     
 end
 
 %%
+% Define labels
+switch FIRST
+    case 'e'
+        X_LABEL = 'Excitatory gain';
+    case 'ri'
+        X_LABEL = 'Recursive inhibitory gain';
+    otherwise
+        X_LABEL = '';
+end
+
+Y_LABEL = 'Inhibitory gain';
+
+% Plot
 figure('Position', [300 400 400 300]);
 colormap(cmap);    
 imagesc(range, range, state);
 caxis([-1 3]);
-xlabel('Excitatory gain');
-ylabel('Inhibitory gain');
+xlabel(X_LABEL);
+ylabel(Y_LABEL);
 title(type_of_LIF);
 ax = gca;
 ax.View = ([0 -90]);
@@ -165,11 +196,11 @@ ax.FontSize = 12;
 figure('Position', [730 400 490 300]);
 load('custom_colormap_parula.mat')
 colormap(parula_custom);
-imagesc(range, range, balance);
+imagesc(range, range, BALANCE);
 % caxis([-0.25 0.25]);
 caxis([-0.5 0.5]);
-xlabel('Excitatory gain');
-ylabel('Inhibitory gain');
+xlabel(X_LABEL);
+ylabel(Y_LABEL);
 title(type_of_LIF);
 ax = gca;
 ax.FontSize = 12;
@@ -185,14 +216,14 @@ drawnow
 figure('Position',[730 400 490 300])
 % colormap(flipud(jet));    
 imagesc(range, range, CV);
-caxis([0 1]);
+% caxis([0 1]);
 ax = gca;
 ax.View = ([0 -90]);
 ax.FontSize = 12;
 % ax.XTick = [0.4:1.2:4];
 % ax.YTick = [0.4:1.2:4];
-xlabel('Excitatory gain');
-ylabel('Inhibitory gain');
+xlabel(X_LABEL);
+ylabel(Y_LABEL);
 c = colorbar;
 c.Label.String = 'Coefficient of variation';
 c.Label.FontSize = 12;
@@ -206,8 +237,8 @@ c.Label.FontSize = 12;
 % ax = gca;
 % ax.View = ([0 -90]);
 % ax.FontSize = 12;
-% xlabel('Excitatory gain');
-% ylabel('Inhibitory gain');
+% xlabel(X_LABEL);
+% ylabel(Y_LABEL);
 % c = colorbar;
 % c.Label.String = 'Fanofactor';
 % c.Label.FontSize = 12;
@@ -216,14 +247,14 @@ c.Label.FontSize = 12;
 figure('Position',[730 400 490 300])
 % colormap(flipud(jet));    
 imagesc(range, range, SI);
-caxis([0 1]);
+% caxis([0 1]);
 ax = gca;
 ax.View = ([0 -90]);
 ax.FontSize = 12;
 % ax.XTick = [0.4:1.2:4];
 % ax.YTick = [0.4:1.2:4];
-xlabel('Excitatory gain');
-ylabel('Inhibitory gain');
+xlabel(X_LABEL);
+ylabel(Y_LABEL);
 c = colorbar;
 c.Label.String = 'Syncronization index';
 c.Label.FontSize = 12;
@@ -235,7 +266,7 @@ figure('Position', [175 324 490 612])
 % Inhibitory firing rate
 ax = subplot(211);   
 colormap(jet)
-imagesc(range, range, IN_FR);xlabel('Excitatory gain');ylabel('Inhibitory gain');
+imagesc(range, range, IN_FR);xlabel('Excitatory gain');ylabel(Y_LABEL);
 max_fun = @(a,b) max(2*median(a,'all'), b); % maximum between 3 times the median of the LIF and the first nmm's lower than the maximum firing rate    
 maximum_value = max_fun(IN_FR, 0);
 caxis([0 4]);
@@ -251,7 +282,7 @@ drawnow
 % Excitatory firing rate
 ax = subplot(212);    
 colormap(jet)
-imagesc(range, range, PY_FR);xlabel('Excitatory gain');ylabel('Inhibitory gain');
+imagesc(range, range, PY_FR);xlabel('Excitatory gain');ylabel(Y_LABEL);
 maximum_value = max_fun(PY_FR, 0);
 caxis([0 0.4]);
 title('Pyramidal');
@@ -284,8 +315,8 @@ imagesc(range, range, z_);
 ax = gca;
 ax.View = ([0 -90]);
 ax.FontSize = 12;
-xlabel('Excitatory gain');
-ylabel('Inhibitory gain');
+xlabel(X_LABEL);
+ylabel(Y_LABEL);
 c = colorbar;
 c.Label.String = 'Syncronization index';
 c.Label.FontSize = 12;

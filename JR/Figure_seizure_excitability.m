@@ -16,7 +16,7 @@ var_vec = {'no_drug'};
 % change the code) (TODO)
 
 % range_gains = 0:0.05:2;
-range_gains = 0.3:0.05:3;
+range_gains = 0.5:0.1:2;
 % range_gains = 0:0.1:2;
 % range_gains = 0:0.25:2;
 % range_gains = 1;

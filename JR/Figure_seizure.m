@@ -26,7 +26,8 @@ var_vec = {'no_drug'};
 % range_gains = 0:0.1:2;
 % range_gains = 0.4:0.3:4;
 % range_gains = 0.4:0.1:4;
-range_gains = 0.5:0.05:2;
+% range_gains = 0.5:0.05:2;
+range_gains = 0.5:0.1:2;
 % range_gains = 0.4:0.25:4;
 % range_gains = 0:0.1:2;
 % range_gains = 0:0.25:2;
@@ -150,11 +151,11 @@ for j = 1:length(var_vec)
 %         for ii = 1:length(range_current) % Varying excitatory current (alt)
             disp([drug ' | ' num2str(i) ' , ' num2str(ii)]);
             % Modify following line for gains or current variation (alt)
-            [x, ~, t, f_e, f_i, params, y] = NMM_GABA('u', 0,...
-                                            'alpha_e', a_e,... % x axis (alt)
+            [x, ~, t, f_e, f_i, params, y] = NMM_GABA_testing_z_over_c('u', 0,...
+                                            'alpha_e', range_gains(ii) * a_e,... % x axis (alt)
                                             'alpha_i', range_gains(i) * a_i,... % y axis (alt)
                                             'alpha_re', 1,... 
-                                            'alpha_ri', range_gains(ii) * a_ri,... 
+                                            'alpha_ri', a_ri,... 
                                             'alpha_b', a_b,...%range_gains(ii) * a_b,... 
                                             'alpha_u', a_u,... 
                                             'alpha_uinterneuron', a_ui,...
@@ -166,9 +167,9 @@ for j = 1:length(var_vec)
                                             'CURRENT_TIME', 1:2000 );
             % Calculate fft to estimate oscillatory activity
             if PLOT_FFT, fig_101 = figure(101); cla; else, fig_101 = []; end
-            [~, X_, F_] = fft_plot(y(500:end)-mean(y(500:end)), t(500:end),fig_101,PLOT_FFT);
+            [~, X_, F_] = fft_plot(y(end-1000:end)-mean(y(end-1000:end)), t(end-1000:end),fig_101,PLOT_FFT);
             
-            if (mean(f_i(500:end)) > 65) && (mean(f_e(500:end)) > 35)
+            if (mean(f_i(end-1000:end)) > 65) && (mean(f_e(end-1000:end)) > 35)
                 state.(drug)(i,ii) = 3; % Saturation
                 
             elseif max(X_) > 1.5e-3 % 2.5e9
@@ -182,7 +183,7 @@ for j = 1:length(var_vec)
                 %
                 %state.(drug)(i,ii) = 1; % Oscillation
                 [~,indice] = max(X_);
-                if F_(indice) < 13
+                if F_(indice) < 25%13
                     % Alpha-ish, sleep, low freq
                     state.(drug)(i,ii) = 1; % Oscillation
                 elseif F_(indice) < 200
@@ -191,7 +192,7 @@ for j = 1:length(var_vec)
                 else
                     state.(drug)(i,ii) = 0; % Not really oscillation, look closely to the LFP it is likely varying very fast with a very low variance
                 end
-            elseif (mean(f_i(500:end)) == 0) || (mean(f_e(500:end)) == 0)
+            elseif (mean(f_i(end-1000:end)) <= params.nakai.M * 10e-4) || (mean(f_e(end-1000:end)) <= params.naka.M * 10e-4) % 0.1% of the maximum firing rate
                 state.(drug)(i,ii) = -1; % Low state
             else
                 state.(drug)(i,ii) = 0; % Normal
@@ -227,8 +228,8 @@ for j = 1:length(var_vec)
             balance.(drug)(i,ii) = -(mean(nmm_i_pi(round(L/2):end)) + mean(nmm_i_pe(round(L/2):end)))*nanoamps_scale;
             
             % Firing rate
-            firing_rate_in.(drug)(i,ii) = mean(f_i(500:end));
-            firing_rate_py.(drug)(i,ii) = mean(f_e(500:end));
+            firing_rate_in.(drug)(i,ii) = mean(f_i(end-1000:end));
+            firing_rate_py.(drug)(i,ii) = mean(f_e(end-1000:end));
                 
         end
     end
@@ -257,8 +258,8 @@ for j = 1:length(var_vec)
 %     colormap(flipud(jet));    
     load('custom_colormap_parula.mat')
     colormap(parula_custom);
-%     imagesc(range_gains, range_gains, balance.(drug));xlabel('Excitatory gain');ylabel('Inhibitory gain'); % (alt)
-    imagesc(range_gains, range_gains, balance.(drug)); xlabel('Recurrent inhibitory gain');ylabel('Inhibitory gain'); % (alt)
+    imagesc(range_gains, range_gains, balance.(drug));xlabel('Excitatory gain');ylabel('Inhibitory gain'); % (alt)
+%     imagesc(range_gains, range_gains, balance.(drug)); xlabel('Recurrent inhibitory gain');ylabel('Inhibitory gain'); % (alt)
 %     imagesc(range_current*1e12, range_current*1e12, balance.(drug));xlabel('Py input current (pA)');ylabel('In input current (pA)'); % (alt)
 %     caxis([-0.25 0.25]);
     caxis([-0.5 0.5]);
@@ -282,8 +283,8 @@ for j = 1:length(var_vec)
     ax = subplot(2, length(var_vec), j);
 %     colormap(flipud(jet));    
     colormap(jet)
-%     imagesc(range_gains, range_gains, firing_rate_in.(drug));xlabel('Excitatory gain');ylabel('Inhibitory gain'); % (alt)
-    imagesc(range_gains, range_gains, firing_rate_in.(drug)); xlabel('Recurrent inhibitory gain');ylabel('Inhibitory gain'); % (alt)
+    imagesc(range_gains, range_gains, firing_rate_in.(drug));xlabel('Excitatory gain');ylabel('Inhibitory gain'); % (alt)
+%     imagesc(range_gains, range_gains, firing_rate_in.(drug)); xlabel('Recurrent inhibitory gain');ylabel('Inhibitory gain'); % (alt)
 %     imagesc(range_current*1e12, range_current*1e12, firing_rate_in.(drug));xlabel('Py input current (pA)');ylabel('In input current (pA)'); % (alt)
     max_fun = @(a,b) max(3*median(a,'all'), b); % maximum between 3 times the median of the LIF and the first nmm's lower than the maximum firing rate    
     maximum_value = max_fun(firing_rate_in.(drug), 0);
@@ -307,8 +308,8 @@ for j = 1:length(var_vec)
     ax = subplot(2, length(var_vec), length(var_vec)+j);    
 %     colormap(flipud(jet));    
     colormap(jet)
-%     imagesc(range_gains, range_gains, firing_rate_py.(drug));xlabel('Excitatory gain');ylabel('Inhibitory gain'); % (alt)
-    imagesc(range_gains, range_gains, firing_rate_py.(drug)); xlabel('Recurrent inhibitory gain');ylabel('Inhibitory gain'); % (alt)
+    imagesc(range_gains, range_gains, firing_rate_py.(drug));xlabel('Excitatory gain');ylabel('Inhibitory gain'); % (alt)
+%     imagesc(range_gains, range_gains, firing_rate_py.(drug)); xlabel('Recurrent inhibitory gain');ylabel('Inhibitory gain'); % (alt)
 %     imagesc(range_current*1e12, range_current*1e12, firing_rate_py.(drug));xlabel('Py input current (pA)');ylabel('In input current (pA)'); % (alt)
     maximum_value = max_fun(firing_rate_py.(drug), 0);
 %     caxis([0 0.4]);

@@ -1,5 +1,5 @@
-% NMM_GABA.m It is the NMM with 2 populations (pyramidal and inhibitory)
-% and 3 synapses, 1 exc, 2 inh: fast (GABA_A) and slow (GABA_B)).
+% NMM_GABAb.m It is the NMM with 3 populations (1 pyramidal and 2
+% inhibitory: fast (GABA_A) and slow (GABA_B)).
 %
 function [x, y, t, f_e, f_i, params, yy] = NMM_GABA(varargin)
     clear parameter
@@ -13,7 +13,7 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABA(varargin)
         end
     end
     
-    N = 2000; % Number of samples: 1 sample = 1 milisecond
+    N = 3000; % Number of samples: 1 sample = 1 milisecond
     u = 1;
 
 %     params = set_parameters('seizure', u);
@@ -21,7 +21,7 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABA(varargin)
     params.time = N * params.dt;
     
     % Options  ------------------------------------------------------------
-    params.options.ADD_NOISE = 0; % External input noise (0 = no noise, 1 = noise)
+    params.options.ADD_NOISE = 1; % External input noise (0 = no noise, 1 = noise)
     params.options.CHANGE_U = 0; % 0: U doesn't change during simulation. Any other value of CHANGE_U: U changes.
     params.options.CHANGE_AGONIST = 0; % Agonist changes
     
@@ -115,8 +115,10 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABA(varargin)
     % iu = 0.01 | < 30
     
 %     eq = zeros(21,1);
-    eq = [10 10/0.02 -10 -10/0.01 -5 -5/0.02 20 20/0.01 -40 -40/0.02 10 10/0.02 1 1 1 1 1 1 -30 -30/0.01 1];
-    eq = eq.*2;
+%     eq = [10   10/0.02 -10 -10/0.01 -5   -5/0.02 20 20/0.01 -5  -5/0.02  10   10/0.02 1 1 1 1 1 1 -30 -30/0.01 1];
+    eq = [-30 -30/0.02  5    5/0.01 3.5 3.5/0.02 60 60/0.01 -30 -30/0.02 -40 -40/0.02 1 1 1 1 1 1  50  50/0.01 1];
+%     eq = eq.*2;
+    eq = eq.*0.1;
     
 %     eq = -25 * ones(21,1);
 %     eq = -1000 * ones(21,1);
@@ -166,7 +168,9 @@ function [x, y, t, f_e, f_i, params, yy] = NMM_GABA(varargin)
     for i = 2:size(x,1)
         y(i) = x(i,1) + x(i,5) + x(i,7) + x(i,9) + I_py(i);
 %         yy(i) = I_py(i) + 1e-3 * ( params.C_P * (x(i,6) - x(i,10) - x(i,2) + x(i,8)) ) / params.g_m_P; % Current based LFP
-        yy(i) = I_py(i) + 1e-3 * ( params.C_P * (abs(x(i,6)) + abs(x(i,10)) + abs(x(i,2)) + abs(x(i,8))) ) / params.g_m_P; % Current based LFP
+%         yy(i) = I_py(i) + 1e-3 * ( params.C_P * (abs(x(i,6)) + abs(x(i,10)) + abs(x(i,2)) + abs(x(i,8))) ) / params.g_m_P; % Current based LFP
+        yy(i) = I_py(i) + 1e-3 * ( (abs(x(i,6)) + abs(x(i,10)) + abs(x(i,2)) + abs(x(i,8))) ) / params.g_m_P; % Current based LFP
+        
 %         yy(i) = I_py(i) + 1e-3 * ( params.C_P * (abs(x(i,6)-x(i,5)) + abs(x(i,10)-x(i,9)) + abs(x(i,2)-x(i,1)) + abs(x(i,8)-x(i,7))) ) / params.g_m_P; % Current based LFP
 %         yy(i) = I_py(i) + 1e-3 * ( (x(i,6) - x(i,10) - x(i,2) + x(i,8)) ) / params.g_m_P; % Current based LFP
 %         yy(i) = I_py(i) + 1e-3 * ((( params.C_P * (x(i,6)-x(i,10)-x(i,2)+x(i,8) ) ) / params.g_m_P) - (x(i,5)-x(i,9)-x(i,1)+x(i,7))); % Current based LFP
@@ -221,13 +225,13 @@ function dx = ode(t,x,params,dt, S1, S2)
     Tau_coeff = @(m, s) 1/(m*s);% Nicola Campbell
     
     c_constant = params.c_constant;
-    c1 = 29.25 * c_constant * params.P_inTOpy;      % Inhibitory synapses into pyramidal population
-    c2 = 70.25 * c_constant * params.P_pyTOin;      % Excitatory synapses into inhibitory population
-    c3 = 140.0 * c_constant * params.P_pyTOpy;      % Recursive excitation to pyramidal cells
-    c4 = 9.8   * c_constant * params.P_inTOin;      % Recursive inhibition to inhibitory cells
-    c5 = 17.59;                                      % External excitatory synapses into pyramidal population
-    c6 = 64.36 * c_constant * params.P_inTOpy;      % GABA_B synapses into pyramidal population % 166.4415
-    c7 = 8.8; % external on inhibitory interneurons
+    c1 = (1/7.0019e07) * c_constant * params.P_inTOpy;      % Inhibitory synapses into pyramidal population
+    c2 = (1/7.0807e+07) * c_constant * params.P_pyTOin;      % Excitatory synapses into inhibitory population
+    c3 = (1/1.4198e+07) * c_constant * params.P_pyTOpy;      % Recursive excitation to pyramidal cells
+    c4 = (1/5.2592e+08) * c_constant * params.P_inTOin;      % Recursive inhibition to inhibitory cells
+    c5 = 1/9.4734e+07;                                      % External excitatory synapses into pyramidal population
+    c6 = (1/3.0890e+07) * c_constant * params.P_inTOpy;      % GABA_B synapses into pyramidal population % 166.4415
+    c7 = 1/4.7367e+08; % external on inhibitory interneurons
     
     tau_sp = params.tau_sp;
     tau_mp = params.tau_mp;
@@ -254,38 +258,38 @@ function dx = ode(t,x,params,dt, S1, S2)
     
     % Add noise to external input
     U = u + params.u_bkg;
-    U = (U + (params.options.ADD_NOISE * (3*sqrt(U).*randn(1,1))));
+    U = (U + (params.options.ADD_NOISE * (2*sqrt(U).*randn(1,1))));
     
     %% Diff equations ------------------------------------------------------
-    dx = zeros(18,1);
+    dx = zeros(21,1);
 
     % Double exponential from Nicola-Campbell (2013):
     % GABAa->P
-    dx(1) = x(2) - x(1)/tau_mp;
+    dx(1) = (x(2)/params.C_P) - x(1)/tau_mp;
     dx(2) = - x(2)/tau_sp + AmplitudeI * S1(x(3) + x(11) + x(19) + INPUT_CURRENT_IN);
     
     % P->I
-    dx(3) = x(4) - x(3)/tau_mi;
+    dx(3) = (x(4)/params.C_I) - x(3)/tau_mi;
     dx(4) = - x(4)/tau_si + AmplitudeE * S2(x(1) + x(5) + x(7) + x(9) + INPUT_CURRENT_PY);
     
     % Recurrent Pyramidal P->P
-    dx(5) = x(6) - x(5)/tau_mrp;
+    dx(5) = (x(6)/params.C_P) - x(5)/tau_mrp;
     dx(6) = - x(6)/tau_srp + AmplitudeRE * S2(x(1) + x(5) + x(7)+ x(9) + INPUT_CURRENT_PY );
     
     % External input u->P
-    dx(7) = x(8) - x(7)/tau_mrp;
+    dx(7) = (x(8)/params.C_P) - x(7)/tau_mrp;
     dx(8) = - x(8)/tau_srp + AmplitudeU * U;
     
     % GABAb -> P
-    dx(9) = x(10) - x(9)/tau_mp;
+    dx(9) = (x(10)/params.C_P) - x(9)/tau_mp;
     dx(10) = - x(10)/tau_sb + AmplitudeB * S1(x(3) + x(11) + x(19) + INPUT_CURRENT_IN); % S3(x(13) + x(7) + INPUT_CURRENT_B);
     
     % Recurrent Inhibition GABAa -> I
-    dx(11) = x(12) - x(11)/tau_mri;
+    dx(11) = (x(12)/params.C_I) - x(11)/tau_mri;
 	dx(12) = - x(12)/tau_sri + AmplitudeRI * S1(x(3) + x(11) + x(19) + INPUT_CURRENT_IN);
     
     % External input u->I
-    dx(19) = x(20) - x(19)/tau_mi;
+    dx(19) = (x(20)/params.C_I) - x(19)/tau_mi;
     dx(20) = - x(20)/tau_si + AmplitudeU_interneurons * U;
     
     % Parameters:

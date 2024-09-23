@@ -4,7 +4,7 @@
 
 function plot_lif_and_nmm(lif, t, f_e, f_i, yy, x, params, title_str, varargin)
     
-    yy = yy(500:1000) - yy(1); % Adjust to start at zero like the LIF
+    yy = yy(500:1000);% - yy(1); % Adjust to start at zero like the LIF
     t = t(500:1000);
     f_e = f_e(500:1000);
     f_i = f_i(500:1000);

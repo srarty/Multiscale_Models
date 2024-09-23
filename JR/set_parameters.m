@@ -75,8 +75,8 @@ params.P_inTOin = 0.451; % 0.451;   % Probability of connection between In -> In
 params.g_m_P = 25e-9; % Membrane conductance Pyramidal cells
 params.g_m_I = 20e-9; % Membrane conductance Inhibitory cells
 
-params.C_P = 0.5e-9; % Membrane conductance Pyramidal cells
-params.C_I = 0.2e-9; % Membrane conductance Inhibitory cells
+params.C_P = 0.5e-9; % Membrane capacitance Pyramidal cells
+params.C_I = 0.2e-9; % Membrane capacitance Inhibitory cells
 
 % External input
 params.u = mu; % mean input firing rate

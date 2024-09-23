@@ -62,21 +62,37 @@ lif = load(['C://Users/artemios/Documents/Multiscale_Models_Data/Spartan/e_vs_i_
 [x,~,t,f_e,f_i, params, yy]=NMM_GABA('u',0,'alpha_e', 4.55 , 'alpha_i', 1.1, 'alpha_ri', 1.3);
 plot_lif_and_nmm(lif, t, f_e, f_i, yy, x, params, 'high freq oscillations');
 
-%% COBN
+%% COBN bkg
 lif_co = load(['C://Users/artemios/Documents/Multiscale_Models_Data/2023/cobn/' 'cobn_0.mat']);
 lif = load(['C://Users/artemios/Documents/Multiscale_Models_Data/2023/cobn/' 'cubn_0.mat']);
 rng(0);
-[x,~,t,f_e,f_i, params, yy]=NMM_GABA('u',0,'alpha_e', 1 , 'alpha_i', 1, 'alpha_ri', 1);
+[x,~,t,f_e,f_i, params, yy]=NMM_GABA_testing_z_over_c('u',0,'alpha_e', 1 , 'alpha_i', 1, 'alpha_ri', 1);
+x = x(end-999:end);
+t = t(1:1000); % t(end-999:end);
+f_e = f_e(end-999:end);
+f_i = f_i(end-999:end);
+yy = yy(end-999:end);
 plot_lif_and_nmm(lif, t, f_e, f_i, yy, x, params, 'Background activity', lif_co);
+
+%% COBN u=1
+% lif_co = load(['C://Users/artemios/Documents/Multiscale_Models_Data/2023/e_vs_i_fano_cobn/' 'lfp_e1.00_i1.00.mat']);
+lif = load(['C://Users/artemios/Documents/Multiscale_Models_Data/2023/e_vs_i_fano/' 'lfp_e1.00_i1.00.mat']);
+rng(0);
+[x, ~, t, f_e, f_i, params, yy]=NMM_GABA_testing_z_over_c('u',1,'alpha_e', 1 , 'alpha_i', 1, 'alpha_ri', 1);
+x = x(end-999:end);
+t = t(1:1000); % t(end-999:end);
+f_e = f_e(end-999:end);
+f_i = f_i(end-999:end);
+yy = yy(end-999:end);
+plot_lif_and_nmm(lif, t, f_e, f_i, yy, x, params, 'Background activity');%, lif_co);
 
 %% Loop through a folder
 % folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\e_vs_i\';
-folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\e_vs_i_fano\';
+folder = 'C:\Users\artemios\Documents\Multiscale_Models_Data\2023\e_vs_i_fano_cobn\';
 d = dir([folder '*_e*.mat']); % Load all files with _e in the name
 range = round(0:0.1:2, 2, 'significant');
 
-
-for i = 1:length(d)
+for i = (round(length(d)/2)+16) : (round(length(d)/2)+16)%1:length(d)
     % Idx
     e_mult = round( str2num( d(i).name(strfind(d(i).name, '_e')+2 :  min(strfind(d(i).name, '_e')+4 , strfind(d(i).name, '_i')-1)) ) , 3, 'significant');
     i_mult = round( str2num( d(i).name(strfind(d(i).name, '_i')+2 :  min(strfind(d(i).name, '_i')+4 , strfind(d(i).name, '.mat')-1)) ) , 3, 'significant');
@@ -87,7 +103,7 @@ for i = 1:length(d)
     % Load file
     lif = load([folder d(i).name]);
     
-    [x,~,t,f_e,f_i, params, yy]=NMM_GABA('u',0,'alpha_e', e_mult, 'alpha_i', i_mult);
+    [x,~,t,f_e,f_i, params, yy]=NMM_GABA('u',1,'alpha_e', e_mult, 'alpha_i', i_mult);
     plot_lif_and_nmm(lif, t, f_e, f_i, yy, x, params, ['Excitatory = ' num2str(e_mult) ' | Inhibitory = ' num2str(i_mult) ]);
     
 end

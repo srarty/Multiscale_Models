@@ -16,7 +16,9 @@ prefs.codegen.target = 'numpy'  # use the Python fallback instead of C compilati
 devices.device.shape = []       # This and the following line remove an annoying warning when brian2 is imported and loaded into RAM
 devices.device.size = []
 
-from lif_model_CUBN import set_params, get_equations
+# from lif_model_COBN import set_params, get_equations
+# from lif_model_CUBN import set_params, get_equations
+from lif_model_wang import set_params, get_equations
 
 # # Save commands:
 # # Pyramidal:
@@ -137,23 +139,23 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     # AMPA (external)
     if synaptic_type == 'AMPA':
         if external:
-            j =  params["j_AMPA_ext"]
+            j =  params["g_AMPA_ext"]
             alpha_weight = params["external_input_weight"] #* 0.45
         else:
-            j =  params["j_AMPA"]        
+            j =  params["g_AMPA"]        
             alpha_weight = params["weight"]
 
     elif synaptic_type == 'GABAb':
-        j =  params["j_GABAb"]
+        j =  params["g_GABAb"]
         alpha_weight = params["weight"]
 
     elif synaptic_type == 'GABAs':
-        j =  params["j_GABAs"]
+        j =  params["g_GABAs"]
         alpha_weight = params["weight"]
 
     else:
-        j =  params["j_GABA"] #*1.2 # * 0.21
-        jb = params["j_GABAb"]
+        j =  params["g_GABA"] #*1.2 # * 0.21
+        jb = params["g_GABAb"]
         alpha_weight = params["weight"]
     
     
@@ -175,7 +177,7 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
         
             dv1 /dt = (-v1 -(I_AMPA1 / g_m)) / tau_m : volt (unless refractory)
             
-            I_AMPA1 = (j * s_AMPA1) + (jb * s_AMPA2) : amp
+            I_AMPA1 = (j * s_AMPA1) + (jb * s_AMPA2) * : amp
             ds_AMPA1 / dt = -s_AMPA1 / tau_s : 1
             ds_AMPA2 / dt = -s_AMPA2 / taub_s : 1
         '''
@@ -190,7 +192,7 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
         
             dv1 /dt = (-v1 -(I_AMPA1 / g_m)) / tau_m : volt (unless refractory)
             
-            I_AMPA1 = j * s_AMPA1 : amp
+            I_AMPA1 = j * s_AMPA1 * (v-v1): amp
             ds_AMPA1 / dt = - s_AMPA1 / tau_s : 1
         '''
         eqs_pre_ampa1 = '''
@@ -227,7 +229,7 @@ def synaptic_functions_exploration(alpha_ei='',alpha_ie='',alpha_ee='',alpha_ii=
     if PLOT:
         f, axs = plt.subplots(2, 1, sharex=True, figsize=(10, 6.25)) # New figure with two subplots
             
-        axs[0].set_title('Neuron type: {} | Synapses: {} | j: {} pA'.format(neuron_type, synaptic_type, j/pA))
+        axs[0].set_title('Neuron type: {} | Synapses: {} | j: {} nS'.format(neuron_type, synaptic_type, j/nS))
         axs[0].set_ylabel('PSP (mV)')
         axs[0].plot(T * 1e3, (np.transpose(Py_monitor.v1) * 1e3), lw=1, label='v1 (single exp)')
         print('min: %s | max: %s' %(min((np.transpose(Py_monitor.v1))), max((np.transpose(Py_monitor.v1)))))

@@ -30,8 +30,8 @@ from termcolor import colored  # Coloured text in the terminal
 import matplotlib.pyplot as plt
 import pyspike as spk
 prefs.codegen.target = 'numpy'  # use the Python fallback instead of C compilation
-devices.device.shape = []       # This and the following line remove an annoying warning when brian2 is imported and loaded into RAM
-devices.device.size = []
+# devices.device.shape = []       # This and the following line remove an annoying warning when brian2 is imported and loaded into RAM
+# devices.device.size = []
 from lif_model import set_params, get_equations
 import lif_model_CUBN as cubn
 import lif_model_COBN as cobn
@@ -48,7 +48,7 @@ def brunel(e_multiplier = 1, i_multiplier = 1, b_multiplier = 1, ri_multiplier =
     plt.close('all')
         
     #%% Options:
-    MODEL           = 'cobn'        # cubn vs cobn
+    MODEL           = 'cubn'        # cubn vs cobn
     PARAMS_SOURCE   = 'three_pop'   # 'brunel' or 'allen' or 'three_pop' or''
     
     RECURRENT_PYRAMIDAL     = True  # Self excitation 
@@ -63,12 +63,12 @@ def brunel(e_multiplier = 1, i_multiplier = 1, b_multiplier = 1, ri_multiplier =
     GAUSSIAN_REFRACTORY = True      # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
     GAUSSIAN_THRESHOLD  = True      # If true, the refractory period of each cell is taken from a gaussian distribution, otherwise it is the same for all
     
-    SAVE = True                    # Save ground truth data
-    PLOT = False                     # Plot results 
-    STATS = True                    # Calculate spike statistics (ISI distance, CV, etc)
+    SAVE = False                    # Save ground truth data
+    PLOT = True                     # Plot results 
+    STATS = False                    # Calculate spike statistics (ISI distance, CV, etc)
     
-    PSP_FR   = 0                    # Presynaptic firing rate for TEST_PSP (TEST_PSP needs to be diff to none for this to take effect)                               
-    TEST_PSP = 'none'               # Testing the post synaptic potential of given synapses to a specified input firing rate. Options: 'pu', 'pp', 'pi', 'ii', 'ip', 'bp', 'bi', 'pb', 'none'. To prevent neurons spiking, make V_thr large.
+    PSP_FR   = 5                    # Presynaptic firing rate for TEST_PSP (TEST_PSP needs to be diff to none for this to take effect)                               
+    TEST_PSP = 'pb'               # Testing the post synaptic potential of given synapses to a specified input firing rate. Options: 'pu', 'pp', 'pi', 'ii', 'ip', 'bp', 'bi', 'pb', 'none'. To prevent neurons spiking, make V_thr large.
     RUNTYPE  = 'normal'             # Simulation: 'normal', 'current_pulse' or 'gaba_agonist'
     
     corriente = 0#500 #50
@@ -76,7 +76,7 @@ def brunel(e_multiplier = 1, i_multiplier = 1, b_multiplier = 1, ri_multiplier =
     input_current   = corriente    # Injected current to Pyramidal population # Use this to calculate the nonlinearity (Vm -> Spike_rate sigmoid) on the disconnected model
     input_current_I = corriente  # Inhibitory interneurons
     
-    input_spike_rate = [u] #[5] #  [0, 2.5, 5] # spikes/ms/cell (driving input)
+    input_spike_rate = [u] # [0, 2.5, 5] # spikes/ms/cell (driving input)
     input_spike_rate_thalamic = 1 #1.5#1.5 #1.5 # spikes/ms/cell (spontaneous activity)
     input_spike_rate_thalamic_in = 1 #1.5#1.5 #1.5 # spikes/ms/cell (spontaneous activity)
     
@@ -615,23 +615,24 @@ def brunel(e_multiplier = 1, i_multiplier = 1, b_multiplier = 1, ri_multiplier =
     # folder_path = 'C://Users/artemios/Documents/Multiscale_Models_Data/2023/excitability/'
     # folder_path = 'C://Users/artemios/Documents/Multiscale_Models_Data/2023/firing_rates/'
     # folder_path = 'C://Users/artemios/Documents/Multiscale_Models_Data/2023/e_vs_i_fano/'
-    folder_path = 'C://Users/artemios/Documents/Multiscale_Models_Data/2023/e_vs_i_fano_cobn/'
+    # folder_path = 'C://Users/artemios/Documents/Multiscale_Models_Data/2023/e_vs_i_fano_cobn/'
     # folder_path = 'C://Users/artemios/Documents/Multiscale_Models_Data/2023/e_vs_i_highexc_2/'
     # folder_path = 'C://Users/artemios/Documents/Multiscale_Models_Data/2023/e_vs_i_highexc_cobn/'
-    # folder_path = 'C://Users/artemios/Documents/Multiscale_Models_Data/2023/cobn/'
+    folder_path = 'C://Users/artemios/Documents/Multiscale_Models_Data/2023/' + MODEL + '/'
     
     if SAVE:
     
-        i = 0
         # while os.path.exists(folder_path + 'lfp_e%.2f_i%.2f.mat' % (e_multiplier/1.3,i_multiplier)):
-        while os.path.exists(folder_path + 'lfp_e%.2f_i%.2f.mat' % (e_multiplier, i_multiplier)):
         # while os.path.exists(folder_path + 'fast_oscillation_%s.mat' % (i)):
         # while os.path.exists(folder_path + 'cubn_%s.mat' % (i)):
+        i = 0
+        while os.path.exists(folder_path + 'lfp_%s.mat' % (i)):
             i += 1
+        save_str = format('lfp_%s.mat' % (i))
             
         # save_str = format('cubn_%s.mat' % (i))
         # save_str = format('lfp_e%.2f_i%.2f.mat' % (e_multiplier/1.3,i_multiplier))
-        save_str = format('lfp_e%.2f_i%.2f.mat' % (e_multiplier, i_multiplier))
+        # save_str = format('lfp_e%.2f_i%.2f.mat' % (e_multiplier, i_multiplier))
         # save_str = format('fast_oscillation_%s.mat' % (i))
     
             
@@ -725,21 +726,21 @@ def brunel(e_multiplier = 1, i_multiplier = 1, b_multiplier = 1, ri_multiplier =
 
 # ## ranges = np.arange(0.40,4.10,0.10)
 # ranges = np.arange(0.5,2.1,0.1)
-ranges = np.arange(0.5,2.1,0.05)
-for jj in ranges:
-    for ii in ranges:        
-        # folder_path = 'C://Users/artemios/Documents/Multiscale_Models_Data/2023/e_vs_i_highexc_cobn/'
-        # folder_path = 'C://Users/artemios/Documents/Multiscale_Models_Data/2023/e_vs_i_fano/'
-        folder_path = 'C://Users/artemios/Documents/Multiscale_Models_Data/2023/e_vs_i_fano_cobn/'
-        if os.path.exists(folder_path + 'lfp_e%.2f_i%.2f.mat' % (jj,ii)):
-            print('lfp_e%.2f_i%.2f.mat already exists' % (jj,ii))
-        else:
-            # brunel(e_multiplier = jj*1.3, i_multiplier = ii, ri_multiplier = 1.3)        
-            brunel(e_multiplier = jj, i_multiplier = ii)        
+# ranges = np.arange(0.5,2.1,0.05)
+# for jj in ranges:
+#     for ii in ranges:        
+#         # folder_path = 'C://Users/artemios/Documents/Multiscale_Models_Data/2023/e_vs_i_highexc_cobn/'
+#         # folder_path = 'C://Users/artemios/Documents/Multiscale_Models_Data/2023/e_vs_i_fano/'
+#         folder_path = 'C://Users/artemios/Documents/Multiscale_Models_Data/2023/e_vs_i_fano_cobn/'
+#         if os.path.exists(folder_path + 'lfp_e%.2f_i%.2f.mat' % (jj,ii)):
+#             print('lfp_e%.2f_i%.2f.mat already exists' % (jj,ii))
+#         else:
+#             # brunel(e_multiplier = jj*1.3, i_multiplier = ii, ri_multiplier = 1.3)        
+#             brunel(e_multiplier = jj, i_multiplier = ii)        
             
         
 # brunel(ri_multiplier = 1, b_multiplier = 1, i_multiplier=1.5,u=1);
-# brunel(e_multiplier = 1, i_multiplier = 1)
+brunel(e_multiplier = 1, i_multiplier = 1, u=1)
 # brunel(e_multiplier = 0.8, i_multiplier = 0.7)
 # brunel(e_multiplier = 1.8, i_multiplier = 1, b_multiplier = 0.67)
 # brunel(e_multiplier = 4.55, i_multiplier = 1.1, ri_multiplier = 1.3)
